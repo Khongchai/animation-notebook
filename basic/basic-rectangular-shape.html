@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body onload="draw();">
+    <!-- If canvas is scaled differently with CSS, it can appear distorted
+      when the resulting ratio does not respect the ratio of the initial canvas. -->
+    <canvas
+      style="border: solid black 1px"
+      id="tutorial"
+      width="150"
+      height="150"
+    >
+      Browsers that do not support canvas will show this.
+    </canvas>
+  </body>
+  <script>
+    function draw() {
+      /*
+        The <canvas> element creates a fixed-size drawing surface that exposes one or more rendering contexts,
+        The  cnvas is initially blank. To display something, a script needs to access the rendering context and draw on it.
+     */
+      const theCanvas = document.getElementById("tutorial");
+      //If you wanna draw in the above canvas, you will have to refer to its context.
+      const ctx = theCanvas.getContext("2d");
+      /*
+            1 unit corresponds to 1 pixel
+            Grid origin is at 1, 1
+      */
+      /*
+            
+     */
+      const firstPos = [10, 10, 50, 50];
+      ctx.fillStyle = "rgb(200, 0, 0)";
+      ctx.fillRect(...firstPos);
+
+      const secondPos = [30, 30, 50, 50];
+      ctx.fillStyle = "rgba(0, 0, 200, 0.5)";
+      ctx.fillRect(...secondPos);
+
+      ctx.clearRect(30, 30, 10, 10);
+      ctx.clearRect(10, 10, 10, 10);
+
+      ctx.fillRect(50, 50, 100, 100);
+      //clear in the middle
+      const mid = 100;
+      const clearSize = 50;
+      ctx.clearRect(
+        mid - clearSize / 2,
+        mid - clearSize / 2,
+        clearSize,
+        clearSize
+      );
+      const strokeSize = clearSize - 10;
+      ctx.strokeRect(
+        mid - strokeSize / 2,
+        mid - strokeSize / 2,
+        strokeSize,
+        strokeSize
+      );
+    }
+  </script>
+</html>
