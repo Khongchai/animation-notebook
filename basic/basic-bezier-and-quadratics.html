@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body onload="draw();">
+    <div style="display: flex">
+      <canvas
+        style="border: solid black 1px; margin-right: 1rem"
+        id="quad"
+        width="150px"
+        height="150px"
+      ></canvas>
+      <canvas
+        style="border: solid black 1px"
+        id="cubic"
+        width="150px"
+        height="150px"
+      >
+      </canvas>
+    </div>
+  </body>
+  <script>
+    function draw() {
+      const quad = document.getElementById("quad");
+      ctx = quad.getContext("2d");
+
+      ctx.beginPath();
+      ctx.moveTo(75, 25);
+      ctx.quadraticCurveTo(25, 25, 25, 62.5);
+      ctx.quadraticCurveTo(25, 100, 50, 100);
+      ctx.quadraticCurveTo(50, 120, 30, 125);
+      ctx.quadraticCurveTo(60, 120, 65, 100);
+      ctx.quadraticCurveTo(125, 100, 125, 62.5);
+      ctx.quadraticCurveTo(125, 25, 75, 25);
+      ctx.stroke();
+
+      const cubic = document.getElementById("cubic");
+      var ctxII = cubic.getContext("2d");
+      ctxII.beginPath();
+      ctxII.moveTo(75, 40);
+      ctxII.bezierCurveTo(75, 37, 70, 25, 50, 25);
+      ctxII.bezierCurveTo(20, 25, 20, 62.5, 20, 62.5);
+      ctxII.bezierCurveTo(20, 80, 40, 102, 75, 120);
+      ctxII.bezierCurveTo(110, 102, 130, 80, 130, 62.5);
+      ctxII.bezierCurveTo(130, 62.5, 130, 25, 100, 25);
+      ctxII.bezierCurveTo(85, 25, 75, 37, 75, 40);
+      ctxII.fill();
+    }
+  </script>
+</html>
