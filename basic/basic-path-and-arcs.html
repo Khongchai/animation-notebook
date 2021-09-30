@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div style="display: flex">
+      <canvas
+        id="triangle"
+        width="150px"
+        height="150px"
+        style="border: 1px solid black; margin-right: 10px"
+      ></canvas>
+      <canvas
+        id="smiley-face"
+        width="150px"
+        height="150px"
+        style="border: 1px solid black"
+      ></canvas>
+    </div>
+  </body>
+  <script>
+    /*
+        Unlike previous rectangles example, a path is not immediately drawn to the canvas.
+        A path is a list of points, connected by lines, just like in threejs. 
+        Lines connecting dots in a path can be of different shapes, curved or not.
+
+        Paths require extra steps to create
+        "
+            First, you create the path.
+            Then you use drawing commands to draw into the path.
+            Once the path has been created, you can stroke or fill the path to render it.
+
+            beginPath()
+            Creates a new path. Once created, future drawing commands are directed into the path and used to build the path up.
+
+            Path methods
+            Methods to set different paths for objects.
+
+            closePath()
+            Adds a straight line to the path, going to the start of the current sub-path.
+
+            stroke()
+            Draws the shape by stroking its outline.
+
+            fill()
+            Draws a solid shape by filling the path's content area.
+        "
+    */
+    const triangleCanvas = document.getElementById("triangle");
+    const triangleCtx = triangleCanvas.getContext("2d");
+
+    triangleCtx.beginPath();
+    triangleCtx.moveTo(75, 50);
+    triangleCtx.lineTo(100, 75);
+    triangleCtx.lineTo(100, 25);
+    //closePath() is not necessary, fill also connects the path.
+    // triangleCtx.closePath();
+    // triangleCtx.stroke();
+    triangleCtx.fill();
+  </script>
+  <script>
+    const smileyCanvas = document.getElementById("smiley-face");
+    const smileyCtx = smileyCanvas.getContext("2d");
+    smileyCtx.beginPath();
+    //x and y corresponds to the middle of the circle.
+    smileyCtx.arc(75, 75, 50, 0, Math.PI * 2, true); // Outer circle
+    /*
+      The x value of move to is not the same as the next .arc method because the x and y of the arc method
+      define the position of the middle point of the circle. Actual stroke resides at x & y + radius.
+    */
+    smileyCtx.moveTo(110, 75);
+    smileyCtx.arc(75, 75, 35, 0, Math.PI, false); // Mouth (clockwise)
+    smileyCtx.moveTo(65, 65);
+    smileyCtx.arc(60, 65, 5, 0, Math.PI * 2, true); // Left eye
+    smileyCtx.moveTo(95, 65);
+    smileyCtx.arc(90, 65, 5, 0, Math.PI * 2, true); // Right eye
+    smileyCtx.stroke();
+  </script>
+</html>
