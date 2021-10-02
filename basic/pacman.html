@@ -16,16 +16,24 @@
       var canvas = document.getElementById("canvas");
       if (canvas.getContext) {
         var ctx = canvas.getContext("2d");
+        const pacmanRadius = 13;
 
-        roundedRect(ctx, 12, 12, 160 + 14, 160 + 14, 15);
-        roundedRect(ctx, 19, 19, 160, 160, 9);
+        roundedRect(
+          ctx,
+          12,
+          12,
+          160 + 14 + pacmanRadius,
+          160 + 14 + pacmanRadius,
+          15
+        );
+        roundedRect(ctx, 19, 19, 160 + pacmanRadius, 160 + pacmanRadius, 9);
         roundedRect(ctx, 53, 53, 49, 33, 10);
         roundedRect(ctx, 53, 119, 49, 16, 6);
         roundedRect(ctx, 135, 53, 49, 33, 10);
         roundedRect(ctx, 135, 119, 25, 49, 10);
 
         ctx.beginPath();
-        ctx.arc(37, 37, 13, Math.PI / 7, -Math.PI / 7, false);
+        ctx.arc(37, 37, pacmanRadius, Math.PI / 7, -Math.PI / 7, false);
         ctx.lineTo(31, 37);
         ctx.fill();
 
