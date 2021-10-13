@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body onload="draw();">
+    <canvas
+      style="border: solid black 1px"
+      id="canvas"
+      width="400"
+      height="400"
+    >
+    </canvas>
+  </body>
+  <script>
+    let time = 0;
+
+    function lerp(x, y, t) {
+      const v = x + (y - x) * t;
+      return v;
+    }
+
+    function inverseLerp(x, y, v) {
+      const t = (v - x) / (x - y);
+      return t;
+    }
+
+    function quadraticBezier(p0, p1, p2, t, pFinal = {}) {
+      /**
+       * You can prove the equation below by expanding the following (did once)
+       * lerp = (x, y, t) => (1-t) * x + t * y;
+       *
+       * pB = lerp(p0, p1, t);
+       * pA = lerp(p1, p2, t);
+       * pFinal = lerp(pA, pB, t);
+       */
+
+      pFinal.x =
+        Math.pow(1 - t, 2) * p0.x + 2 * (1 - t) * t * p1.x + t * t * p2.x;
+      pFinal.y =
+        Math.pow(1 - t, 2) * p0.y + 2 * (1 - t) * t * p1.y + t * t * p2.y;
+
+      return pFinal;
+    }
+
+    function cubicBezier(p0, p1, p2, p3, t, pFinal = {}) {
+      pFinal.x =
+        Math.pow(1 - t, 3) * p0.x +
+        Math.pow(1 - t, 2) * 3 * t * p1.x +
+        (1 - t) * 3 * t * t * p2.x +
+        t * t * t * p3.x;
+      pFinal.y =
+        Math.pow(1 - t, 3) * p0.y +
+        Math.pow(1 - t, 2) * 3 * t * p1.y +
+        (1 - t) * 3 * t * t * p2.y +
+        t * t * t * p3.y;
+
+      return pFinal;
+    }
+
+    const draw = () => {
+      var canvas = document.getElementById("canvas");
+      if (canvas.getContext) {
+        /*
+          You can do a cool loading animation with this.
+        */
+
+        let curve = 2;
+        time = time + 1;
+        const threshold = 61;
+        time %= threshold;
+
+        //function behavior
+        /*
+          Examples:
+          # linear speed
+          let extraAngle = time
+
+          # quadratic speed (with a sudden stop at angle 0)
+          let extraAngle =
+          (Math.pow(time, curve) / Math.pow(threshold, curve)) * threshold;
+
+          # then to contain within 1 rotation per minute (60 secs), call:
+          extraAngle = extraAngle * ((Math.PI * 2) / 60);
+
+          for (let row = 0; row < 4; row++) {
+          for (let column = 0; column < 3; column++) {
+            ctx.beginPath();
+
+            const x = 25 + column * 50;
+            const y = 25 + row * 50;
+            const radius = 20;
+            let startAngle = 0;
+            let endAngle = Math.PI + (Math.PI * column) / 2;
+            const counterclockwise = row % 2 !== 0;
+
+            // Rotate only if not a full circle sprite
+            if (column !== 2) {
+              endAngle += extraAngle;
+              startAngle += extraAngle;
+            }
+
+            ctx.arc(x, y, radius, startAngle, endAngle, counterclockwise);
+            row > 1 ? ctx.fill() : ctx.stroke();
+          }
+        }
+        */
+
+        //Below is using cubic bezier
+
+        //contain within 1 rotation;
+        let t = time * ((Math.PI * 2) / 60);
+        //contain within the value of 1
+        let inversedLerpedT = Math.abs(inverseLerp(0, Math.PI * 2, t));
+
+        let p0 = { x: 0, y: 0 };
+        let p1 = { x: 3, y: 0 };
+        //IDK why this works; why does setting these two to Math.PI * 2 makes the integral over a second Math.PI * 2?, => TODO
+        let p2 = { x: 6, y: Math.PI * 2 };
+        let p3 = { x: 0, y: Math.PI * 2 };
+        let pFinal = cubicBezier(p0, p1, p2, p3, inversedLerpedT);
+
+        var ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+
+        for (let row = 0; row < 4; row++) {
+          for (let column = 0; column < 3; column++) {
+            ctx.beginPath();
+
+            const x = 25 + column * 50;
+            const y = 25 + row * 50;
+            const radius = 20;
+            let startAngle = 0;
+            let endAngle = Math.PI + (Math.PI * column) / 2;
+            const counterclockwise = row % 2 !== 0;
+
+            // Rotate only if not a full circle sprite
+            if (column !== 2) {
+              endAngle += pFinal.y;
+              startAngle += pFinal.y;
+            }
+
+            ctx.arc(x, y, radius, startAngle, endAngle, counterclockwise);
+            row > 1 ? ctx.fill() : ctx.stroke();
+          }
+        }
+      }
+
+      requestAnimationFrame(draw);
+    };
+  </script>
+</html>
