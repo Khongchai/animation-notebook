@@ -1,4 +1,5 @@
 <!-- Follow along with this vid and animate the curves:
+  test the one you didn't understand here, draw it out.
 https://www.youtube.com/watch?v=dXECQRlmIaE -->
 <!DOCTYPE html>
 <html lang="en">
@@ -8,5 +9,59 @@ https://www.youtube.com/watch?v=dXECQRlmIaE -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
   </head>
-  <body></body>
+  <body onload="draw();">
+    <div style="display: flex">
+      <canvas id="canvas" width="500px" height="500px"></canvas>
+    </div>
+  </body>
+  <script>
+    function draw() {
+      const canvas = document.getElementById("canvas");
+      context = canvas.getContext("2d");
+      const width = (canvas.width = window.innerWidth);
+      const height = (canvas.height = window.innerHeight);
+      context.save();
+      context.translate(canvas.width / 2, canvas.height / 2);
+      const scalar = 100;
+      const p0 = {
+        x: 10.01 * scalar,
+        y: -Math.PI * 2 * scalar,
+      };
+      const p1 = {
+        x: 9.9 * scalar,
+        y: -2.09 * scalar,
+      };
+      const p2 = {
+        x: 7.96 * scalar,
+        y: -0.01 * scalar,
+      };
+      const p3 = {
+        x: -0.04 * scalar,
+        y: 0.07 * scalar,
+      };
+
+      context.beginPath();
+      context.arc(p0.x, p0.y, 4, 0, Math.PI * 2, false);
+      context.fill();
+
+      context.beginPath();
+      context.arc(p1.x, p1.y, 4, 0, Math.PI * 2, false);
+      context.fill();
+
+      context.beginPath();
+      context.arc(p2.x, p2.y, 4, 0, Math.PI * 2, false);
+      context.fill();
+
+      context.beginPath();
+      context.arc(p3.x, p3.y, 4, 0, Math.PI * 2, false);
+      context.fill();
+
+      context.beginPath();
+      context.moveTo(p0.x, p0.y);
+      context.bezierCurveTo(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
+      context.stroke();
+
+      context.restore();
+    }
+  </script>
 </html>

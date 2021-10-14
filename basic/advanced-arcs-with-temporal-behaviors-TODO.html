@@ -61,6 +61,11 @@
       return pFinal;
     }
 
+    const x = 25;
+    const y = 25;
+    const radius = 20;
+    let startAngle = 0;
+    let endAngle = Math.PI;
     const draw = () => {
       var canvas = document.getElementById("canvas");
       if (canvas.getContext) {
@@ -112,41 +117,33 @@
         //Below is using cubic bezier
 
         //contain within 1 rotation;
-        let t = time * ((Math.PI * 2) / 60);
+        let t = (time * Math.PI * 2) / 60;
         //contain within the value of 1
         let inversedLerpedT = Math.abs(inverseLerp(0, Math.PI * 2, t));
 
-        let p0 = { x: 0, y: 0 };
-        let p1 = { x: 3, y: 0 };
-        //IDK why this works; why does setting these two to Math.PI * 2 makes the integral over a second Math.PI * 2?, => TODO
-        let p2 = { x: 6, y: Math.PI * 2 };
-        let p3 = { x: 0, y: Math.PI * 2 };
+        /**
+         * When using bezier, think of position, not the rate of change.
+         */
+        let p0 = { x: 10.01, y: Math.PI * 2 };
+        let p1 = { x: 9.9, y: 2.09 };
+        let p2 = { x: 7.96, y: 0.01 };
+        let p3 = { x: 0.04, y: 0.07 };
         let pFinal = cubicBezier(p0, p1, p2, p3, inversedLerpedT);
 
         var ctx = canvas.getContext("2d");
+
         ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+        ctx.save();
 
-        for (let row = 0; row < 4; row++) {
-          for (let column = 0; column < 3; column++) {
-            ctx.beginPath();
+        ctx.translate(canvas.clientWidth / 2, canvas.clientHeight / 2);
 
-            const x = 25 + column * 50;
-            const y = 25 + row * 50;
-            const radius = 20;
-            let startAngle = 0;
-            let endAngle = Math.PI + (Math.PI * column) / 2;
-            const counterclockwise = row % 2 !== 0;
+        ctx.rotate(pFinal.y);
 
-            // Rotate only if not a full circle sprite
-            if (column !== 2) {
-              endAngle += pFinal.y;
-              startAngle += pFinal.y;
-            }
+        ctx.beginPath();
+        ctx.arc(0, 0, radius, startAngle, endAngle);
+        ctx.stroke();
 
-            ctx.arc(x, y, radius, startAngle, endAngle, counterclockwise);
-            row > 1 ? ctx.fill() : ctx.stroke();
-          }
-        }
+        ctx.restore();
       }
 
       requestAnimationFrame(draw);
