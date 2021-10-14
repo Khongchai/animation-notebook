@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+  </head>
+  <body onload="draw();">
+    <div>
+      <canvas
+        id="canvas"
+        style="border: 1px solid black"
+        width="500px"
+        height="500px"
+      ></canvas>
+    </div>
+  </body>
+  <script>
+    let mouseX = 0;
+    window.addEventListener("mousemove", (e) => {
+      mouseX = e.clientX;
+    });
+    function draw() {
+      /**
+       *  Be careful not to draw the lines on the edge of the screen pixel, it could
+       * result in an uncrisp line: https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial/Applying_styles_and_colors#a_linewidth_example
+       */
+      var ctx = document.getElementById("canvas").getContext("2d");
+      for (let i = 0; i < 10; i++) {
+        const beginningPos = 5 + i * 14 * 3;
+        ctx.lineWidth = 1 + i * 2;
+        ctx.beginPath();
+        ctx.moveTo(beginningPos, 5);
+        ctx.lineTo(beginningPos, 500);
+
+        ctx.strokeStyle =
+          beginningPos <= mouseX && mouseX <= beginningPos + ctx.lineWidth
+            ? "green"
+            : "black";
+
+        ctx.stroke();
+      }
+
+      requestAnimationFrame(draw);
+    }
+  </script>
+</html>
