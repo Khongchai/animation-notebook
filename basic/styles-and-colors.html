@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+  </head>
+  <body onload="draw();">
+    <div style="display: flex; flex-direction: row">
+      <canvas id="strokestyle-canvas" width="500px" height="500px"></canvas>
+      <canvas id="fillstyle-canvas" width="500px" height="500px"></canvas>
+    </div>
+  </body>
+  <script>
+    /*
+      Two main stylings methods => fillStyle and strokeStyle
+
+      The style set will become the default for all subsequent shapes. So
+      every time you want something different, you gotta reassign a value
+      to the property.
+    */
+    var fillStyleCtx = document
+      .getElementById("fillstyle-canvas")
+      .getContext("2d");
+    var strokeStyleCtx = document
+      .getElementById("strokestyle-canvas")
+      .getContext("2d");
+
+    let x = 0;
+    //stroke style
+    function draw() {
+      //Fill style
+      x += 0.01;
+      x %= Math.PI * 2;
+      for (let i = 0; i < 6; i++) {
+        for (let j = 0; j < 6; j++) {
+          fillStyleCtx.fillStyle = `rgb(${Math.floor(
+            255 - 42.5 * i
+          )}, ${Math.floor(255 - 42.5 * j)}, ${(Math.sin(x) + 1) * 255 * i})`;
+          fillStyleCtx.fillRect(j * 25, i * 25, 25, 25);
+        }
+      }
+
+      for (let i = 0; i < 6; i++) {
+        for (let j = 0; j < 6; j++) {
+          strokeStyleCtx.strokeStyle = `rgb(0, ${Math.floor(
+            255 - 42.5 * i
+          )}, ${Math.floor(255 - 42.5 * j)})`;
+
+          strokeStyleCtx.beginPath();
+          strokeStyleCtx.arc(
+            12.5 + j * 25,
+            12.5 + i * 25,
+            10,
+            0,
+            Math.PI * 2,
+            true
+          );
+          strokeStyleCtx.stroke();
+        }
+      }
+      requestAnimationFrame(draw);
+    }
+  </script>
+</html>
