@@ -17,14 +17,19 @@
     </div>
   </body>
   <script>
+    /*
+      Move the cursor around and play with the mieter limit to see how it behaves
+    */
     let mouseX = 0;
     let mouseY = 0;
     let delayedX = 0;
     let delayedY = 0;
+    let miterLimit = 10;
     let tx = 0.08;
     let ty = 0.05;
     const canvas = document.getElementById("canvas");
     var ctx = canvas.getContext("2d");
+    ctx.miterLimit = miterLimit;
     window.addEventListener("mousemove", (e) => {
       mouseX = Math.min(Math.max(0, e.clientX), canvas.clientWidth);
       mouseY = Math.min(Math.max(0, e.clientY), canvas.clientHeight);
@@ -41,9 +46,9 @@
         ctx.beginPath();
         ctx.moveTo(delayedX, 5 + i * 40 + delayedY);
         ctx.lineTo(delayedX + 40, 45 + i * 40 + delayedY);
-        ctx.lineTo(delayedX + 40 * 2, 5 + i * 40 + delayedY);
-        ctx.lineTo(delayedX + 40 * 3, 45 + i * 40 + delayedY);
-        ctx.lineTo(delayedX + 40 * 4, 5 + i * 40 + delayedY);
+        ctx.lineTo(40 * 2, 5 + i * 40);
+        ctx.lineTo(40 * 3, 45 + i * 40);
+        ctx.lineTo(40 * 4, 5 + i * 40);
         ctx.stroke();
       }
       requestAnimationFrame(draw);

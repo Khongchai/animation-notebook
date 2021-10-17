@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+  </head>
+  <body onload="draw();">
+    <div>
+      <canvas
+        id="canvas"
+        style="border: 1px solid black"
+        width="500px"
+        height="500px"
+      ></canvas>
+    </div>
+  </body>
+  <script>
+    let mouseX = 0;
+    let mouseY = 0;
+    let prevMouseX = 0;
+    let prevMouseY = 0;
+    const offset = 1;
+    const padding = 40;
+
+    let mouseIn = false;
+    const t = 0.15;
+    const t2 = 0.12;
+    const radius = 1;
+    let lerpedRadius = 1;
+    addEventListener("mousemove", (e) => {
+      mouseIn = true;
+      mouseX = e.clientX - (canvas.width / 2) * lerpedRadius;
+      mouseX -= padding / 2;
+      mouseY = e.clientY - (canvas.height / 2) * lerpedRadius;
+      mouseY -= padding / 2;
+    });
+    /*
+        setLineDash accepts an array of numbers.
+        The numbers, alternately describe the length
+        of the line and the gap.
+        [20, 3, 3, 20] = line 20, gap 3, line 3, gap 20, repeat
+        [1, 3, 4] => odd length interpeted as [1, 3, 4, 1, 3, 4] =
+        line 1, gap3, line 4, gap 1, line 3, gap 4, repeat
+      */
+    const ctx = document.getElementById("canvas").getContext("2d");
+    const draw = () => {
+      prevMouseX = lerp(prevMouseX, mouseX, t);
+      prevMouseY = lerp(prevMouseY, mouseY, t);
+      lerpedRadius = lerp(lerpedRadius, 0.2, mouseIn ? t2 : 0);
+
+      ctx.beginPath();
+      ctx.setLineDash([20, 2]);
+      ctx.lineDashOffset -= offset;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const widthPadded = (canvas.width - padding * 2) * lerpedRadius;
+      const heightPadded = (canvas.height - padding * 2) * lerpedRadius;
+      //   draw with lines
+      ctx.moveTo(prevMouseX + padding, prevMouseY + padding);
+      ctx.lineTo(prevMouseX + widthPadded, prevMouseY + padding);
+      ctx.lineTo(prevMouseX + widthPadded, prevMouseY + heightPadded);
+      ctx.lineTo(prevMouseX + padding, prevMouseY + heightPadded);
+      ctx.lineTo(prevMouseX + padding, prevMouseY + padding);
+
+      //   ctx.strokeRect(
+      //     mouseX - widthPadded / 2,
+      //     mouseY - heightPadded / 2,
+      //     widthPadded,
+      //     heightPadded
+      //   );
+
+      ctx.stroke();
+      requestAnimationFrame(draw);
+    };
+
+    const lerp = (x, y, t) => x + (y - x) * t;
+  </script>
+</html>
