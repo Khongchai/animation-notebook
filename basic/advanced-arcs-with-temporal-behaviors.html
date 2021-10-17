@@ -65,7 +65,7 @@
     const y = 25;
     const radius = 20;
     let startAngle = 0;
-    let endAngle = Math.PI;
+    let endAngle = Math.PI + 0.1;
     const draw = () => {
       var canvas = document.getElementById("canvas");
       if (canvas.getContext) {
@@ -123,6 +123,10 @@
 
         /**
          * When using bezier, think of position, not the rate of change.
+
+          If you do x = 1, it's constant, but if you do, x += 1, it's linear
+          You were thinking of the rate of change. When dealing with bezier,
+          it's best to set the output of a bezier to the position of an element.
          */
         let p0 = { x: 10.01, y: Math.PI * 2 };
         let p1 = { x: 9.9, y: 2.09 };
@@ -137,7 +141,15 @@
 
         ctx.translate(canvas.clientWidth / 2, canvas.clientHeight / 2);
 
-        ctx.rotate(pFinal.y);
+        // ctx.rotate(pFinal.y);
+        startAngle = startAngle + pFinal.y * 0.02;
+        endAngle = endAngle + pFinal.y * 0.03;
+        const angleDiff = Math.abs(startAngle - endAngle) % (Math.PI * 2);
+        if (angleDiff < 0.1) {
+          endAngle = startAngle + 0.1;
+        }
+
+        // console.log((finalEndAngle % Math.PI) * 2 === 0);
 
         ctx.beginPath();
         ctx.arc(0, 0, radius, startAngle, endAngle);
