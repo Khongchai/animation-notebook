@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+  </head>
+  <body onload="draw();">
+    <div>
+      <canvas
+        id="canvas"
+        style="border: 1px solid black"
+        width="500px"
+        height="500px"
+      ></canvas>
+    </div>
+  </body>
+  <script>
+    const ctx = document.getElementById("canvas").getContext("2d");
+    const draw = () => {
+      requestAnimationFrame(draw);
+    };
+  </script>
+</html>
