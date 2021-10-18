@@ -17,10 +17,6 @@
     </div>
   </body>
   <script>
-    let mouseX = 0;
-    let mouseY = 0;
-    let prevMouseX = 0;
-    let prevMouseY = 0;
     const offset = 1;
     const padding = 40;
 
@@ -28,13 +24,20 @@
     const t = 0.15;
     const t2 = 0.12;
     const radius = 1;
+
     let lerpedRadius = 1;
+    let lerpedBorderRadius = 20; //arbitrary beginning value that looks nice
+    let finalLerpedValue = 0.2;
+
+    let mouseX = canvas.width / 2 + padding;
+    let mouseY = canvas.height / 2 + padding;
+    let prevMouseX = canvas.width / 2 + padding;
+    let prevMouseY = canvas.height / 2 + padding;
+
     addEventListener("mousemove", (e) => {
       mouseIn = true;
-      mouseX = e.clientX - (canvas.width / 2) * lerpedRadius;
-      mouseX -= padding / 2;
-      mouseY = e.clientY - (canvas.height / 2) * lerpedRadius;
-      mouseY -= padding / 2;
+      mouseX = e.clientX;
+      mouseY = e.clientY;
     });
     /*
         setLineDash accepts an array of numbers.
@@ -46,9 +49,17 @@
       */
     const ctx = document.getElementById("canvas").getContext("2d");
     const draw = () => {
-      prevMouseX = lerp(prevMouseX, mouseX, t);
-      prevMouseY = lerp(prevMouseY, mouseY, t);
-      lerpedRadius = lerp(lerpedRadius, 0.2, mouseIn ? t2 : 0);
+      prevMouseX = lerp(
+        prevMouseX,
+        mouseX - (canvas.width / 2) * lerpedRadius,
+        t
+      );
+      prevMouseY = lerp(
+        prevMouseY,
+        mouseY - (canvas.height / 2) * lerpedRadius,
+        t
+      );
+      lerpedRadius = lerp(lerpedRadius, finalLerpedValue, mouseIn ? t2 : 0);
 
       ctx.beginPath();
       ctx.setLineDash([20, 2]);
@@ -58,12 +69,28 @@
 
       const widthPadded = (canvas.width - padding * 2) * lerpedRadius;
       const heightPadded = (canvas.height - padding * 2) * lerpedRadius;
+      lerpedBorderRadius = lerp(
+        lerpedBorderRadius,
+        //To prevent overshoot, just get the final lerped value
+        ((canvas.width - padding * 2) * finalLerpedValue) / 2,
+        mouseIn ? t2 : 0
+      );
       //   draw with lines
-      ctx.moveTo(prevMouseX + padding, prevMouseY + padding);
-      ctx.lineTo(prevMouseX + widthPadded, prevMouseY + padding);
-      ctx.lineTo(prevMouseX + widthPadded, prevMouseY + heightPadded);
-      ctx.lineTo(prevMouseX + padding, prevMouseY + heightPadded);
-      ctx.lineTo(prevMouseX + padding, prevMouseY + padding);
+      roundedRect(
+        ctx,
+        prevMouseX,
+        prevMouseY,
+        //Same thing cus square, yo
+        widthPadded,
+        widthPadded,
+        lerpedBorderRadius
+      );
+
+      // ctx.moveTo(prevMouseX + padding, prevMouseY + padding);
+      // ctx.lineTo(prevMouseX + widthPadded, prevMouseY + padding);
+      // ctx.lineTo(prevMouseX + widthPadded, prevMouseY + heightPadded);
+      // ctx.lineTo(prevMouseX + padding, prevMouseY + heightPadded);
+      // ctx.lineTo(prevMouseX + padding, prevMouseY + padding);
 
       //   ctx.strokeRect(
       //     mouseX - widthPadded / 2,
@@ -72,10 +99,25 @@
       //     heightPadded
       //   );
 
-      ctx.stroke();
+      // ctx.stroke();
       requestAnimationFrame(draw);
     };
 
     const lerp = (x, y, t) => x + (y - x) * t;
+
+    //Radius is used to offset the control points => https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/arcTo
+    function roundedRect(ctx, x, y, width, height, radius) {
+      ctx.beginPath();
+      ctx.moveTo(x, y + radius);
+      ctx.lineTo(x, y + height - radius);
+      ctx.arcTo(x, y + height, x + radius, y + height, radius);
+      ctx.lineTo(x + width - radius, y + height);
+      ctx.arcTo(x + width, y + height, x + width, y + height - radius, radius);
+      ctx.lineTo(x + width, y + radius);
+      ctx.arcTo(x + width, y, x + width - radius, y, radius);
+      ctx.lineTo(x + radius, y);
+      ctx.arcTo(x, y, x, y + radius, radius);
+      ctx.stroke();
+    }
   </script>
 </html>
