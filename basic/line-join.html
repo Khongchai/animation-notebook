@@ -39,11 +39,16 @@
       for (var i = 0; i < lineJoin.length; i++) {
         ctx.lineJoin = lineJoin[i];
         ctx.beginPath();
+
+        //How long can the sharp edges be.
+        //If this value is exceeded, the bevel join will be used instead
+        ctx.miterLimit = 100;
+
         ctx.moveTo(delayedX, 5 + i * 40 + delayedY);
         ctx.lineTo(delayedX + 40, 45 + i * 40 + delayedY);
-        ctx.lineTo(delayedX + 40 * 2, 5 + i * 40 + delayedY);
-        ctx.lineTo(delayedX + 40 * 3, 45 + i * 40 + delayedY);
-        ctx.lineTo(delayedX + 40 * 4, 5 + i * 40 + delayedY);
+        ctx.lineTo(40 * 2, 5 + i * 40);
+        ctx.lineTo(40 * 3, 45 + i * 40);
+        ctx.lineTo(40 * 4, 5 + i * 40);
         ctx.stroke();
       }
       requestAnimationFrame(draw);
