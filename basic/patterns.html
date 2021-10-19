@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+  </head>
+  <body onload="draw();">
+    <div>
+      <canvas
+        id="canvas"
+        style="border: 1px solid black"
+        width="500px"
+        height="500px"
+      ></canvas>
+    </div>
+  </body>
+  <script>
+    let canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+
+    const draw = () => {
+      //The CanvasImageSource is an HTMLImageElement, another canvas, a video, or a type indicating how to use the image.
+      //   const img = new Image();
+      //   img.src =
+      //     "https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial/Applying_styles_and_colors/canvas_createpattern.png";
+      //   img.onload = function () {
+      //     const pattern = ctx.createPattern(img, "repeat");
+      //     ctx.fillStyle = pattern;
+      //     ctx.fillRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+      //   };
+
+      /**
+       * With offscreen canvas
+       */
+      const patternCanvas = document.createElement("canvas");
+      const patternContext = patternCanvas.getContext("2d");
+
+      patternCanvas.width = 50;
+      patternCanvas.height = 50;
+
+      patternContext.fillStyle = "#fec";
+      patternContext.fillRect(0, 0, patternCanvas.width, patternCanvas.height);
+      patternContext.arc(0, 0, 50, 0, 0.5 * Math.PI);
+      patternContext.stroke();
+
+      //fill primary canvas with pattern
+      const pattern = ctx.createPattern(patternCanvas, "repeat");
+      ctx.fillStyle = pattern;
+      ctx.fillRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+    };
+  </script>
+</html>

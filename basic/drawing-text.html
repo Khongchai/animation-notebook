@@ -20,9 +20,13 @@
     let canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
     const draw = () => {
-      ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+      ctx.font = "48px serif";
+      const text = "Hello World";
+      ctx.strokeText(text, 10, 100);
+      ctx.fillText(text, 10, 50);
 
-      requestAnimationFrame(draw);
+      const metric = ctx.measureText(text);
+      console.log(metric);
     };
   </script>
 </html>

@@ -20,9 +20,11 @@
     let canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
     const draw = () => {
-      ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
-
-      requestAnimationFrame(draw);
+      //fill-rule is like the Boolean modifier in Blender.
+      ctx.beginPath();
+      ctx.arc(50, 50, 30, 0, Math.PI * 2, true);
+      ctx.arc(50, 50, 15, 0, Math.PI * 2, true);
+      ctx.fill("nonzero");
     };
   </script>
 </html>

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+  </head>
+  <body onload="drawLingrad(); drawRadgrad();">
+    <div style="display: flex; gap: 0.65rem; flex-wrap: wrap">
+      <div>
+        <p>Linear Gradient</p>
+        <canvas
+          id="canvas-linear-gradient"
+          style="border: 1px solid black"
+          width="500px"
+          height="500px"
+        ></canvas>
+      </div>
+      <div>
+        <p>Radial Gradient</p>
+        <canvas
+          id="canvas-radial-gradient"
+          style="border: 1px solid black"
+          width="500px"
+          height="500px"
+        ></canvas>
+      </div>
+      <div>
+        <p>Conic Gradient</p>
+        <canvas
+          id="canvas-conic-gradient"
+          style="border: 1px solid black"
+          width="500px"
+          height="500px"
+        ></canvas>
+      </div>
+    </div>
+  </body>
+  <script>
+    const ctx = document
+      .getElementById("canvas-linear-gradient")
+      .getContext("2d");
+    const drawLingrad = () => {
+      /*
+            Gradients are defined just like normal graphics programs.
+            Define the beginning and end points + the color stops between 0 and 1 for the colors.
+        */
+      const lingrad = ctx.createLinearGradient(0, 0, 0, 150);
+      lingrad.addColorStop(0, "#00ABEB");
+      lingrad.addColorStop(0.5, "#fff");
+      lingrad.addColorStop(0.5, "#26c000");
+      lingrad.addColorStop(1, "#fff");
+
+      const lingrad2 = ctx.createLinearGradient(0, 50, 0, 95);
+      //Not assigning the starting color will make the starting color the same as the first stop in the gradient
+      //in our case, black
+      lingrad2.addColorStop(0.5, "#000");
+      lingrad2.addColorStop(1, "rgba(0,0,0,0)");
+
+      ctx.fillStyle = lingrad;
+      ctx.strokeStyle = lingrad2;
+
+      ctx.fillRect(10, 10, 130, 130);
+      ctx.strokeRect(50, 50, 50, 50);
+    };
+
+    /*
+        Canvas's radial gradient has more control over 
+    */
+    const drawRadgrad = () => {
+      let canvas;
+      const ctx = (canvas = document.getElementById(
+        "canvas-radial-gradient"
+      )).getContext("2d");
+      ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+
+      // Create gradients
+      //TODO => Make the offset (inner) gradient follow the cursor. Gonna need arctangent, probably
+      var radgrad = ctx.createRadialGradient(45, 45, 10, 50, 50, 30);
+      radgrad.addColorStop(0, "#A7D30C");
+      radgrad.addColorStop(0.9, "#019F62");
+      radgrad.addColorStop(1, "rgba(1, 159, 98, 0)");
+
+      var radgrad2 = ctx.createRadialGradient(105, 105, 20, 112, 120, 50);
+      radgrad2.addColorStop(0, "#FF5F98");
+      radgrad2.addColorStop(0.75, "#FF0188");
+      radgrad2.addColorStop(1, "rgba(255, 1, 136, 0)");
+
+      var radgrad3 = ctx.createRadialGradient(95, 15, 15, 102, 20, 40);
+      radgrad3.addColorStop(0, "#00C9FF");
+      radgrad3.addColorStop(0.8, "#00B5E2");
+      radgrad3.addColorStop(1, "rgba(0, 201, 255, 0)");
+
+      var radgrad4 = ctx.createRadialGradient(0, 150, 50, 0, 140, 90);
+      radgrad4.addColorStop(0, "#F4F201");
+      radgrad4.addColorStop(0.8, "#E4C700");
+      radgrad4.addColorStop(1, "rgba(228, 199, 0, 0)");
+
+      // draw shapes
+      ctx.fillStyle = radgrad4;
+      //canvas is a square as of writing, so use whatever side
+      ctx.fillRect(0, 0, canvas.clientWidth, canvas.clientWidth);
+      ctx.fillStyle = radgrad3;
+      ctx.fillRect(0, 0, canvas.clientWidth, canvas.clientWidth);
+      ctx.fillStyle = radgrad2;
+      ctx.fillRect(0, 0, canvas.clientWidth, canvas.clientWidth);
+      ctx.fillStyle = radgrad;
+      ctx.fillRect(0, 0, canvas.clientWidth, canvas.clientWidth);
+
+      requestAnimationFrame(drawRadgrad);
+    };
+
+    //19/10/2021 => only works on Firefox
+    const drawCongrad = () => {
+      var canvas = document.getElementById("canvas-conic-gradient");
+      var ctx = canvas.getContext("2d");
+
+      // Create a conic gradient
+      // The start angle is 0
+      // The centre position is 100, 100
+      var gradient = ctx.createConicGradient(0, 100, 100);
+
+      // Add five color stops
+      gradient.addColorStop(0, "red");
+      gradient.addColorStop(0.25, "orange");
+      gradient.addColorStop(0.5, "yellow");
+      gradient.addColorStop(0.75, "green");
+      gradient.addColorStop(1, "blue");
+
+      // Set the fill style and draw a rectangle
+      ctx.fillStyle = gradient;
+      ctx.fillRect(20, 20, 200, 200);
+    };
+  </script>
+</html>
