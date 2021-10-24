@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+  </head>
+  <body onload="draw();">
+    <div style="display: flex; gap: 0.7rem">
+      <div>
+        <h2>Chart</h2>
+        <canvas
+          id="chart-canvas"
+          style="border: 1px solid black"
+          width="500px"
+          height="500px"
+        ></canvas>
+      </div>
+      <div>
+        <h2>Frame</h2>
+        <canvas
+          id="frame-canvas"
+          style="border: 1px solid black"
+          width="500px"
+          height="500px"
+        ></canvas>
+      </div>
+    </div>
+  </body>
+  <script>
+    let chartCanvas = document.getElementById("chart-canvas");
+    const ctx = chartCanvas.getContext("2d");
+    ctx.miterLimit = 20;
+    const img = new Image();
+    //use image as a backdrop for the line
+    img.src =
+      "https://github.com/mdn/content/blob/main/files/en-us/web/api/canvas_api/tutorial/using_images/backdrop.png?raw=true";
+
+    let line1Pos = 0;
+    let line2Pos = 0;
+    let line3Pos = 0;
+
+    const draw = () => {
+      ctx.clearRect(0, 0, chartCanvas.clientWidth, chartCanvas.clientHeight);
+      ctx.drawImage(img, 0, 0);
+      ctx.beginPath();
+      ctx.moveTo(30, 96);
+      ctx.lineTo(30 + 40 * line1Pos, 96 - 33 * line1Pos);
+      line1Pos += 0.01;
+      line1Pos = Math.min(line1Pos, 1);
+
+      if (line1Pos === 1) {
+        line2Pos += 0.01;
+        line2Pos = Math.min(line2Pos, 1);
+        ctx.lineTo(70 + 33 * line2Pos, 63 + 13 * line2Pos);
+
+        if (line2Pos === 1) {
+          line3Pos += 0.01;
+          line3Pos = Math.min(line3Pos, 1);
+          ctx.lineTo(103 + 67 * line3Pos, 76 - 61 * line3Pos);
+        }
+      }
+
+      ctx.stroke();
+      requestAnimationFrame(draw);
+    };
+
+    //You can also slice (crop) an image dynamically
+    //https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial/Using_images#slicing
+    //We'll crop images and put them in an art gallery
+    const frameCanvas = document.getElementById("frame-canvas");
+    const frameCtx = frameCanvas.getContext("2d");
+  </script>
+</html>
