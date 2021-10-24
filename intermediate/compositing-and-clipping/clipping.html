@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+  </head>
+  <body onload="draw();">
+    <div>
+      <canvas
+        id="canvas"
+        style="border: 1px solid black"
+        width="150px"
+        height="150px"
+      ></canvas>
+    </div>
+  </body>
+  <script>
+    var mousePosX = 0;
+    var mousePosY = 0;
+    window.addEventListener("mousemove", (e) => {
+      mousePosX = e.clientX + 75;
+      mousePosY = e.clientY + 75;
+    });
+
+    let canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const draw = () => {
+      //Another method we can use to draw other than stroke() and fill() is  the
+      //clip() method
+      /*
+	"clip() turns the path currently being built into the current clipping path"
+      */
+      //By default, the <canvas> element has a clipping path that's the exact same size as the canvas
+      ctx.fillRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+
+      //Center the canvas in the middle
+      ctx.translate(75, 75);
+
+      ctx.beginPath();
+      ctx.arc(mousePosX, mousePosY, 60, 0, Math.PI * 2, true);
+      //use the recently drawn shape as a clipping area
+      ctx.clip();
+
+      //draw background
+      const lingrad = ctx.createLinearGradient(0, -75, 0, 75);
+      //TODO, make a pull request to remove this line
+      //lingrad.addColorStop(0, "#252256");
+      lingrad.addColorStop(0, "#143778");
+
+      ctx.fillStyle = lingrad;
+      //Begin at top left; because the translate method
+      //above, -75 is now the top left
+      ctx.fillRect(-75, -75, 150, 150);
+
+      //draw stars
+      for (let j = 1; j < 50; j++) {
+        ctx.save();
+        ctx.fillStyle = "#fff";
+        ctx.translate(
+          75 - Math.floor(Math.random() * 150),
+          75 - Math.floor(Math.random() * 150)
+        );
+        drawStar(ctx, Math.floor(Math.random() * 4) + 2);
+        ctx.restore();
+      }
+    };
+
+    function drawStar(ctx, r) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(r, 0);
+      for (var i = 0; i < 9; i++) {
+        ctx.rotate(Math.PI / 5);
+        if (i % 2 === 0) {
+          ctx.lineTo((r / 0.525731) * 0.200811, 0);
+        } else {
+          ctx.lineTo(r, 0);
+        }
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+  </script>
+</html>

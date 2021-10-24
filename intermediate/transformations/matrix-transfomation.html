@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+  </head>
+  <body onload="draw();">
+    <div>
+      <canvas
+        id="canvas"
+        style="border: 1px solid black"
+        width="300px"
+        height="300px"
+      ></canvas>
+    </div>
+  </body>
+  <script>
+    let canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const draw = () => {
+      //       ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+
+      //This one's pretty self-explanatory
+      const sin = Math.sin(Math.PI / 6);
+      const cos = Math.cos(Math.PI / 6);
+      ctx.translate(100, 100);
+      let color = 0;
+      for (let i = 0; i <= 12; i++) {
+        color = Math.floor((255 / 12) * i);
+        ctx.fillStyle = `rgb(${color}, ${color}, ${color})`;
+        ctx.fillRect(0, 0, 100, 10);
+        ctx.transform(cos, sin, -sin, cos, 0, 0); //same as => ctx.rotate(Math.PI / 6);
+      }
+      //Set transform resets the current canvas and call the transform() method
+      ctx.setTransform(-1, 0, 0, 1, 100, 100);
+      ctx.fillStyle = "rgba(255, 128, 255, 0.5)";
+      ctx.fillRect(0, 50, 100, 100);
+
+      //       requestAnimationFrame(draw);
+    };
+  </script>
+</html>

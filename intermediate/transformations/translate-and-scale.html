@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+  </head>
+  <body onload="draw(); drawII();">
+    <div style="display: flex">
+      <canvas
+        id="canvas-translate"
+        style="border: 1px solid black"
+        width="200px"
+        height="200px"
+      ></canvas>
+      <canvas
+        id="canvas-rotate"
+        style="border: 1px solid black"
+        width="500px"
+        height="500px"
+      ></canvas>
+    </div>
+  </body>
+  <script>
+    let canvas = document.getElementById("canvas-translate");
+    const ctx = canvas.getContext("2d");
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+      //We often see save() and restore() sandwiching the translate()
+      //because it's often easier to restore to the prev state from a saved one
+      //rather than translating back.
+      for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 3; j++) {
+          ctx.save();
+          ctx.fillStyle = `rgb(${51 * i}, ${255 - 51 * i}, 255)`;
+          ctx.translate(10 + j * 50, 10 + i * 50);
+          ctx.fillRect(0, 0, 25, 25);
+          //Without restore, we would be applying transformations to transformations,
+          //not to the original matrix
+          ctx.restore();
+        }
+      }
+    };
+    const canvasII = document.getElementById("canvas-rotate");
+    const ctxII = canvasII.getContext("2d");
+    function drawII() {
+      //rotation is always done at the canvas origin (0, 0)
+      //to move the center point, the entire canvas will have to
+      //be moved with the translate() method
+      ctxII.save();
+
+      //First two rectangles with translate
+      //right on the top left
+      ctxII.fillStyle = "#0095dd";
+      ctxII.fillRect(30, 30, 100, 100);
+      ctxII.rotate((Math.PI / 180) * 25);
+
+      ctxII.fillStyle = "#4D4E53";
+      ctxII.fillRect(30, 30, 100, 100);
+      ctxII.restore();
+
+      //Now we translate the canvas origin
+      //And do the rotation directly on the center of the rectangles
+      ctxII.fillStyle = "#0095dd";
+      ctxII.fillRect(150, 30, 100, 100);
+
+      //x = x + 0.5 * width
+      //y = x + 0.5 * width
+      ctxII.translate(200, 80);
+      //If you want an easy cartesian coordinate at the bottom left,
+      //just do scale(1, -1)
+      ctxII.scale(0.8, 0.7);
+      ctxII.rotate((Math.PI / 180) * 25);
+
+      //if there was another default state in the stack,
+      //you can also call the restore() method
+      ctxII.translate(-200, -80);
+      ctxII.fillStyle = "#4d4e53";
+      ctxII.fillRect(150, 30, 100, 100);
+    }
+  </script>
+</html>

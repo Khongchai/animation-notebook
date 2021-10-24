@@ -31,26 +31,27 @@
     https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial/Transformations
     */
 
-      //Notice how we save the state before making modifying
+      //Notice how we save the state before  modifying
       //This ensure that we can revert back when necessary
-      ctx.fillRect(0, 0, 150, 150);
+      //Think simply, everything save() is called,
+      //current moves up 1 level
+      ctx.fillRect(0, 0, 150, 150); //stack => [current]
 
-      ctx.save(); //stack => [default_state]
-      const fillStyle1 = "#09f"; //stack => [default_state, fillStyle1]
+      ctx.save(); //stack => [current(default_state)]
+      const fillStyle1 = "#09f"; //stack => [default_state , current(being styled)]
       ctx.fillStyle = fillStyle1;
       ctx.fillRect(15, 15, 120, 120);
 
-      ctx.save(); //stack => [default_state, fillStyle1]
+      ctx.save(); //stack => [default_state, fillStyle1, current]
       const fillStyle2 = "#fff";
-      ctx.fillStyle = "#fff"; //stack => [default_state, fillStyle1, fillStyle2]
+      ctx.fillStyle = "#fff"; //stack => [default_state, fillStyle1, current(being styled)]
       ctx.globalAlpha = 0.5;
       ctx.fillRect(30, 30, 90, 90);
 
-      //if you remove the save above fillStyle2, the drawn rectangle will be black, from fillStyle1
-      ctx.restore(); //stack => [default_state, fillStyle1]
+      ctx.restore(); //stack => [default_state, current(fillstyle1)]
       ctx.fillRect(45, 45, 60, 60);
 
-      ctx.restore(); //stack => [default_state]
+      ctx.restore(); //stack => [current(default_state)]
       ctx.fillRect(60, 60, 30, 30);
     };
   </script>
