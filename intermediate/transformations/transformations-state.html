@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+  </head>
+  <body onload="draw();">
+    <div>
+      <canvas
+        id="canvas"
+        style="border: 1px solid black"
+        width="500px"
+        height="500px"
+      ></canvas>
+    </div>
+  </body>
+  <script>
+    let canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const draw = () => {
+      /*
+    Before we begin, take note of the two following canvas methods:
+    save()
+    restore()
+    When either is called, a new canvas state is pused/popped onto/from the stack.
+
+    The latest canvas state will be used for any subsequent drawings.
+
+    https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial/Transformations
+    */
+
+      //Notice how we save the state before making modifying
+      //This ensure that we can revert back when necessary
+      ctx.fillRect(0, 0, 150, 150);
+
+      ctx.save(); //stack => [default_state]
+      const fillStyle1 = "#09f"; //stack => [default_state, fillStyle1]
+      ctx.fillStyle = fillStyle1;
+      ctx.fillRect(15, 15, 120, 120);
+
+      ctx.save(); //stack => [default_state, fillStyle1]
+      const fillStyle2 = "#fff";
+      ctx.fillStyle = "#fff"; //stack => [default_state, fillStyle1, fillStyle2]
+      ctx.globalAlpha = 0.5;
+      ctx.fillRect(30, 30, 90, 90);
+
+      //if you remove the save above fillStyle2, the drawn rectangle will be black, from fillStyle1
+      ctx.restore(); //stack => [default_state, fillStyle1]
+      ctx.fillRect(45, 45, 60, 60);
+
+      ctx.restore(); //stack => [default_state]
+      ctx.fillRect(60, 60, 30, 30);
+    };
+  </script>
+</html>
