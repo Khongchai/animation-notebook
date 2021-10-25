@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+  </head>
+  <body onload="draw();">
+    <div>
+      <canvas
+        id="canvas"
+        style="border: 1px solid black"
+        width="150px"
+        height="150px"
+      ></canvas>
+    </div>
+  </body>
+  <script>
+    let canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+
+      const now = new Date();
+
+      //Begin centering the matrix
+      //and prepare the stylings
+      ctx.save();
+      ctx.clearRect(0, 0, 150, 150);
+      ctx.translate(75, 75);
+      ctx.scale(0.4, 0.4);
+      ctx.rotate(-Math.PI / 2);
+      ctx.strokeStyle = "black";
+      ctx.fillStyle = "white";
+      ctx.lineWidth = 8;
+      ctx.lineCap = "round";
+
+      ctx.save();
+      for (let i = 0; i < 12; i++) {
+        ctx.beginPath();
+        ctx.rotate(Math.PI / 6);
+        ctx.moveTo(100, 0);
+        ctx.lineTo(120, 0);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      //Minute marks
+      ctx.lineWidth = 5;
+      for (let i = 0; i < 60; i++) {
+        ctx.beginPath();
+        ctx.moveTo(117, 0);
+        ctx.lineTo(120, 0);
+        ctx.stroke();
+        ctx.rotate(Math.PI / 30);
+      }
+
+      const sec = now.getSeconds();
+      const min = now.getMinutes();
+      const hr = now.getHours() % 12;
+
+      ctx.fillStyle = "black";
+
+      //When sec is 60, we have 2pi rotation
+      const secondRotation = sec * (Math.PI / 30);
+      ctx.save();
+      ctx.rotate(secondRotation);
+      ctx.strokeStyle = "#D40000";
+      ctx.fillStyle = "#D40000";
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      ctx.moveTo(-30, 0);
+      ctx.lineTo(83, 0);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(0, 0, 10, 0, Math.PI * 2, true);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(95, 0, 10, 0, Math.PI * 2, true);
+      ctx.stroke();
+      ctx.fillStyle = "rgba(0, 0, 0, 0)";
+      ctx.arc(0, 0, 3, 0, Math.PI * 2, true);
+      ctx.fill();
+      ctx.restore();
+
+      //When min is 60, we have 2 pi rotation
+      const minuteRotation = (Math.PI / 30) * min + (Math.PI / 1800) * sec;
+      ctx.save();
+      ctx.rotate(minuteRotation);
+      ctx.liineWidth = 10;
+      ctx.beginPath();
+      ctx.moveTo(-28, 0);
+      ctx.lineTo(112, 0);
+      ctx.stroke();
+      ctx.restore();
+
+      //Write hours
+      ctx.rotate(
+        hr * (Math.PI / 6) + (Math.PI / 360) * min + (Math.PI / 21600) * sec
+      );
+      ctx.lineWidth = 14;
+      ctx.beginPath();
+      ctx.moveTo(-20, 0);
+      ctx.lineTo(80, 0);
+      ctx.stroke();
+      ctx.restore();
+
+      requestAnimationFrame(draw);
+    };
+  </script>
+</html>
