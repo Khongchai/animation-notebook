@@ -1,0 +1,107 @@
+<!-- https://joshondesign.com/p/books/canvasdeepdive/chapter04.html -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+  </head>
+  <body onload="draw();">
+    <div>
+      <canvas
+        id="canvas"
+        style="border: 1px solid black"
+        width="500px"
+        height="500px"
+      ></canvas>
+    </div>
+  </body>
+  <script>
+    let canvas = document.getElementById("canvas");
+
+    console.log("lksjdfl");
+    const ctx = canvas.getContext("2d");
+
+    const particles = [];
+
+    let tick = 0;
+
+    const draw = () => {
+      /*
+            Basic particles generation algorithm:
+            - For each frame
+                1. Create particles
+                2. Update particles
+                3. Draw particles
+                4. Kill particles
+
+            loop(){
+                createParticles();
+                updateParticles();
+                drawParticles();
+                killParticles();
+            }
+        */
+      ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+      ctx.fillStyle = "black";
+      ctx.fillRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+
+      createParticles();
+      updateParticles();
+      drawParticles();
+      killParticles();
+
+      requestAnimationFrame(draw);
+    };
+
+    function createParticles() {
+      //Check every 10th tick
+      //This is vital, as it lets the screen starts of empty
+      //and slowly build up rather than having all 100 particles
+      //be generated at the same time
+      if (!(tick % 10)) {
+        //ad particle if fewer than 100
+        if (particles.length < 100) {
+          particles.push({
+            x: Math.random() * canvas.clientWidth,
+            y: 0,
+            speed: 0.5 + Math.random() * 2,
+            radius: 0.5 + Math.random() * 0.8,
+            color: "white",
+          });
+        }
+      }
+    }
+
+    function updateParticles() {
+      for (const particle of particles) {
+        particle.y += particle.speed;
+      }
+    }
+
+    /*
+        In some simulators, particles are deleted when certain criteria
+        are met, however, we will recycle them with a new x axis
+    */
+    function killParticles() {
+      for (const particle of particles) {
+        let curY = particle.y;
+        if (curY > canvas.height) {
+          particle.y = 0;
+          particle.x = Math.random() * canvas.clientWidth;
+        }
+      }
+    }
+
+    function drawParticles() {
+      for (particle of particles) {
+        ctx.beginPath();
+        const { x, y, radius, color } = particle;
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
+      }
+    }
+  </script>
+</html>
