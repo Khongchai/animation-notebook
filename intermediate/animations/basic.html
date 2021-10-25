@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+  </head>
+  <body onload="draw();">
+    <div>
+      <canvas
+        id="canvas"
+        style="border: 1px solid black"
+        width="500px"
+        height="500px"
+      ></canvas>
+    </div>
+  </body>
+  <script>
+    //Don't forget to save the canvas state before doing any styles or transformations.
+    //This is to ensure that the original state is used each time a frame is drawn.
+    //And then you of course restore() it before drawing a new frame.
+    let canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+
+    //Let's draw the sun, moon, and the
+
+    const sun = new Image();
+    const moon = new Image();
+    const earth = new Image();
+    sun.src =
+      "https://github.com/mdn/content/blob/main/files/en-us/web/api/canvas_api/tutorial/basic_animations/canvas_sun.png?raw=true";
+    moon.src =
+      "https://github.com/mdn/content/blob/main/files/en-us/web/api/canvas_api/tutorial/basic_animations/canvas_moon.png?raw=true";
+    earth.src =
+      "https://github.com/mdn/content/blob/main/files/en-us/web/api/canvas_api/tutorial/basic_animations/canvas_earth.png?raw=true";
+
+    function draw() {
+      ctx.globalCompositeOperation = "destination-over";
+      ctx.clearRect(0, 0, 300, 300); // clear canvas
+
+      ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
+      ctx.strokeStyle = "rgba(0, 153, 255, 0.4)";
+      ctx.save();
+      ctx.translate(150, 150);
+
+      // Earth
+      var time = new Date();
+      const earthRotation =
+        ((2 * Math.PI) / 60) * time.getSeconds() +
+        ((2 * Math.PI) / 60000) * time.getMilliseconds();
+      ctx.rotate(earthRotation);
+      ctx.translate(105, 0);
+      ctx.fillRect(0, -12, 40, 24); // Shadow
+      ctx.drawImage(earth, -12, -12);
+
+      //Moon
+      ctx.save();
+      ctx.rotate(
+        ((2 * Math.PI) / 6) * time.getSeconds() +
+          ((2 * Math.PI) / 6000) * time.getMilliseconds()
+      );
+      ctx.translate(0, 28.5);
+      ctx.drawImage(moon, 3.5, -3.5);
+      ctx.restore();
+
+      //Restore 2 times = pop 2 layers of saved translations from the stack
+      //After this we should now have the default matrix with (0, 0) at top left
+      ctx.restore();
+
+      ctx.beginPath();
+      //Center the circle at (150, 150)
+      ctx.arc(150, 150, 105, 0, Math.PI * 2, false);
+      ctx.stroke();
+
+      ctx.drawImage(sun, 0, 0, 300, 300);
+
+      requestAnimationFrame(draw);
+    }
+  </script>
+</html>
