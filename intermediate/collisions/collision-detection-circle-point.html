@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+  </head>
+  <body onload="draw();">
+    <canvas
+      id="canvas"
+      style="width: 1000px; height: 800px; border: 1px solid black"
+    ></canvas>
+  </body>
+  <script>
+    let canvas = document.getElementById("canvas");
+
+    canvas.setAttribute("width", canvas.clientWidth);
+    canvas.setAttribute("height", canvas.clientHeight);
+
+    const size = { w: canvas.clientWidth, h: canvas.clientHeight };
+    const ctx = canvas.getContext("2d");
+
+    const circle = {
+      x: Math.random() * size.w,
+      y: Math.random() * size.h,
+      radius: 50 + Math.random() * 100,
+    };
+
+    const point = {
+      x: Math.random() * size.w,
+      y: Math.random() * size.h,
+    };
+
+    document.addEventListener("mousemove", (e) => {
+      point.x = e.clientX;
+      point.y = e.clientY;
+    });
+
+    /*
+        We'll look at collision between 3 basic shapes, 
+        circle, rectangle, and a point.
+
+        For more complex shapes, we'll need bitmap detection
+        
+        Detection algorithm in a nutshell:
+        radius1 + radius2 >= distance?
+
+        Finding distance is a basic pythagorean theorem
+    */
+    const draw = () => {
+      ctx.fillStyle = circlePointColliding(point, circle) ? "#f66" : "#f99";
+
+      ctx.clearRect(0, 0, size.w, size.h);
+
+      ctx.beginPath();
+      ctx.arc(circle.x, circle.y, circle.radius, 0, Math.PI * 2, false);
+      ctx.fill();
+
+      requestAnimationFrame(draw);
+    };
+
+    function circlePointColliding(point, circle) {
+      return distance(point, circle) < circle.radius;
+    }
+
+    function distance(p1, p2) {
+      const dx = p2.x - p1.x;
+      const dy = p2.y - p1.y;
+
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+  </script>
+</html>

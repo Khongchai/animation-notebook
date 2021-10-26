@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+  </head>
+  <body>
+    <canvas
+      id="canvas"
+      style="width: 1000px; height: 800px; border: 1px solid black"
+    ></canvas>
+  </body>
+  <script>
+    let canvas = document.getElementById("canvas");
+
+    canvas.setAttribute("width", canvas.clientWidth);
+    canvas.setAttribute("height", canvas.clientHeight);
+
+    const size = { w: canvas.clientWidth, h: canvas.clientHeight };
+    const ctx = canvas.getContext("2d");
+
+    const rectangle = {
+      x: 200,
+      y: 200,
+      width: 300,
+      height: 300,
+    };
+
+    document.addEventListener("mousemove", (e) => {
+      ctx.fillStyle = rectanglePointColliding(
+        { x: e.clientX, y: e.clientY },
+        rectangle
+      )
+        ? "#f66"
+        : "#f99";
+      ctx.clearRect(0, 0, size.w, size.h);
+
+      ctx.beginPath();
+      ctx.fillRect(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
+      ctx.fill();
+    });
+
+    function rectanglePointColliding(point, rectangle) {
+      return (
+        inRange(point.x, rectangle.x, rectangle.x + rectangle.width) &&
+        inRange(point.y, rectangle.y, rectangle.y + rectangle.height)
+      );
+    }
+
+    function inRange(value, min, max) {
+      //To handle width and height being negative, checking for true min and max
+      //with Math.min and Math.max is vital.
+      return Math.min(min, max) <= value && value <= Math.max(min, max);
+    }
+
+    function distance(p1, p2) {
+      const dx = p2.x - p1.x;
+      const dy = p2.y - p1.y;
+
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+  </script>
+</html>
