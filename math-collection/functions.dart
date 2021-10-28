@@ -2,6 +2,14 @@ import 'dart:math';
 
 import "./classes.dart";
 
+/*
+  sources:
+  https://github.com/bit101/CodingMath
+  https://www.gamedev.net/articles/programming/general-and-gameplay-programming/inverse-lerp-a-super-useful-yet-often-overlooked-function-r5230/
+  https://en.wikipedia.org/wiki/B%C3%A9zier_curve
+
+*/
+
 
 double lerp(double x, double y, double t) {
   return x + (y - x) * t;

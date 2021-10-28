@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+  </head>
+  <body onload="draw();">
+    <div>
+      <canvas
+        id="canvas"
+        style="border: 1px solid black"
+        width="500px"
+        height="500px"
+      ></canvas>
+    </div>
+  </body>
+  <script>
+    let canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const img = new Image();
+
+    img.src =
+      "https://htmlcolorcodes.com/assets/images/html-color-codes-color-palette-generators.jpg";
+    const canvasSize = { x: 500, y: 500 };
+    const panSpeed = 2;
+    const scale = 1.05;
+    const y = -4.5;
+    const dx = 0.75;
+
+    let imgW = 0;
+    let imgH = 0;
+    let offsetX = 0;
+
+    let canvasSizeToClearX = 0;
+    let canvasSizeToClearY = 0;
+
+    img.onload = () => {
+      //Original size of the wikipedia image * scalar
+      imgW = img.width * 0.3;
+      imgH = img.height;
+
+      //These lines just decide what to clear from the canvas
+      if (imgW > canvasSize.x) {
+        /*
+        Set the initial offset value such that the image begin panning at the beginning.
+        (beginning = right side of the image visible at the start)
+          */
+        offsetX = canvasSize.x - imgW;
+
+        canvasSizeToClearX = imgW;
+      } else {
+        canvasSizeToClearX = canvasSize.x;
+      }
+
+      if (imgH > canvasSize.y) {
+        canvasSizeToClearY = imgH;
+      } else {
+        canvasSizeToClearY = canvasSize.y;
+      }
+
+      return setInterval(draw, panSpeed);
+    };
+
+    const draw = () => {
+      ctx.clearRect(0, 0, canvasSizeToClearX, canvasSizeToClearY); // clear the canvas
+      /*
+        This line, we're getting how much the lead image (see below)
+        is off-screen by.
+
+        For example, if the lead image and the screen have a width of 20, 
+        when offset is 1, lead image will be off-screen by 1.
+        The follow-up image will have to be offset such that it is right behind the lead.
+        To achieve that, we have to show that missing 1 pixel after the lead image, which is done by 
+        offsetX - imgW (beziehungsweise, find the amount of the follow-up image that has to be off-screen).
+      */
+      const xThatIsOffScreen = offsetX - imgW;
+
+      if (imgW <= canvasSize.x) {
+        //Reset the value off offsetX when more than the size of the canvas
+        if (offsetX > canvasSize.x) {
+          offsetX = xThatIsOffScreen;
+        }
+
+        // draw additional image1
+        //Might be able to remove the condition
+        if (offsetX > 0) {
+          ctx.drawImage(img, xThatIsOffScreen, y, imgW, imgH);
+        }
+        // draw additional image2
+        if (xThatIsOffScreen > 0) {
+          ctx.drawImage(img, offsetX - imgW * 2, y, imgW, imgH);
+        }
+      }
+
+      // image is > Canvas Size
+      else {
+        // reset, start from beginning
+        if (offsetX > canvasSize.x) {
+          offsetX = canvasSize.x - imgW;
+        }
+
+        // draw additional image
+        if (offsetX > canvasSize.x - imgW) {
+          ctx.drawImage(img, offsetX - imgW + 1, y, imgW, imgH);
+        }
+      }
+      // draw image
+      //lead image
+      ctx.drawImage(img, offsetX, y, imgW, imgH);
+      // amount to move
+      //   offsetX = 432;
+      offsetX += 0.75;
+    };
+  </script>
+</html>
