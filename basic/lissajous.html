@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+  </head>
+  <body>
+    <div style="display: grid; place-items: center; width: 100%">
+      <canvas
+        id="canvas"
+        style="border: 1px solid black"
+        width="500px"
+        height="500px"
+      ></canvas>
+    </div>
+  </body>
+  <script>
+    //Particles following this pattern can, together, be like flies on food
+    //https://youtu.be/SoYnZHBP-6M?t=354
+    let canvas = document.getElementById("canvas");
+    let ctx = canvas.getContext("2d");
+    let width = canvas.clientWidth;
+    let height = canvas.clientHeight;
+    let xRadius = 200;
+    let yRadius = 200;
+    let yAngle = 0;
+    let xAngle = 0;
+    let speed = 0.05;
+    let x = width / 2;
+    let y = height / 2;
+    const particleAmount = 3;
+    const randInts = [Math.random(), Math.random(), Math.random()];
+    let firstTime = true;
+
+    render();
+
+    function render() {
+      ctx.save();
+      ctx.translate(width / 2, height / 2);
+
+      const prevX = x;
+      const prevY = y;
+
+      x = Math.sin(xAngle) * xRadius;
+      y = Math.cos(yAngle) * yRadius;
+      ctx.fillStyle = "black";
+      ctx.beginPath();
+      if (firstTime) {
+        ctx.moveTo(x, y);
+        firstTime = false;
+      } else {
+        ctx.moveTo(prevX, prevY);
+      }
+      ctx.lineTo(x, y);
+      ctx.stroke();
+      yAngle += 0.1 * 0.5;
+      xAngle += 0.22 * 0.5;
+
+      ctx.restore();
+      //remove to see lines
+      ctx.fillStyle = "rgba(255,255,255,0.1)";
+      ctx.fillRect(0, 0, width, height);
+
+      requestAnimationFrame(render);
+    }
+
+    // lissajous(x, y){
+    //     return {x: sin()}
+    // }
+  </script>
+</html>

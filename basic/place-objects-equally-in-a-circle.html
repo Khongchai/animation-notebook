@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+  </head>
+  <body>
+    <div>
+      <canvas
+        id="canvas"
+        style="border: 1px solid black"
+        width="500px"
+        height="500px"
+      ></canvas>
+    </div>
+  </body>
+  <script>
+    let canvas = document.getElementById("canvas");
+    let ctx = canvas.getContext("2d");
+    let width = canvas.clientWidth;
+    let height = canvas.clientHeight;
+    let centerX = width / 2;
+    let centerY = height / 2;
+    let radius = 200;
+    let numObjects = 13;
+    let x = 0;
+    let y = 0;
+
+    for (
+      let angle = 0;
+      angle < Math.PI * 2;
+      angle += (Math.PI * 2) / numObjects
+    ) {
+      x = centerX + Math.cos(angle) * radius;
+      y = centerY + Math.sin(angle) * radius;
+      ctx.beginPath();
+      ctx.arc(x, y, 10, 0, Math.PI * 2, false);
+      ctx.fill();
+    }
+  </script>
+</html>
