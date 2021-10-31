@@ -9,6 +9,7 @@
       #cw {
         position: fixed;
         z-index: -1;
+        touch-action: none;
       }
 
       body {
@@ -35,10 +36,14 @@
       mouse.x = e.clientX;
       mouse.y = e.clientY;
     };
+    window.ontouchmove = (e) => {
+      mouse.x = e.touches[0].clientX;
+      mouse.y = e.touches[0].clientY;
+    };
 
     var particlesArray = [];
 
-    generateParticles(50);
+    generateParticles(20);
     setSize();
     anim();
 

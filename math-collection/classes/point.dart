@@ -1,3 +1,4 @@
+
 class Point {
   double x;
   double y;
@@ -15,6 +16,7 @@ class Rectangle extends Point {
   double width;
   double height;
 
-  Rectangle(this.width, this.height, double x, double y)
-      : super(x, y);
+  Rectangle(this.width, this.height, double x, double y) : super(x, y);
 }
+
+

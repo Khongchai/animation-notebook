@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      html,
+      body {
+        padding: 0;
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body onload="draw();">
+    <div>
+      <canvas id="canvas" style="border: 1px solid black"></canvas>
+    </div>
+  </body>
+  <script>
+    const canvas = document.getElementById("canvas");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const arrowX = canvas.width / 2;
+    const arrowY = canvas.height / 2;
+    let delayedX = 0;
+    let delayedY = 0;
+    let dx = 0;
+    let dy = 0;
+    let angle = 0;
+
+    const ctx = canvas.getContext("2d");
+
+    const draw = () => {
+      ctx.restore();
+      ctx.fillStyle = "rgba(255,255,255,0.4)";
+      ctx.fillRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+
+      ctx.save();
+      ctx.translate(arrowX, arrowY);
+      ctx.rotate(angle);
+
+      delayedX = delayedX + (dx - delayedX) * 0.09;
+      delayedY = delayedY + (dy - delayedY) * 0.09;
+      angle = Math.atan2(delayedY, delayedX);
+
+      drawArrow(ctx);
+
+      requestAnimationFrame(draw);
+    };
+
+    function drawArrow(ctx) {
+      //Arrow initially points at PI = 0.
+      ctx.beginPath();
+      ctx.moveTo(20, 0);
+      ctx.lineTo(-20, 0);
+      ctx.moveTo(20, 0);
+      ctx.lineTo(15, -5);
+      ctx.moveTo(20, 0);
+      ctx.lineTo(15, 5);
+      ctx.stroke();
+    }
+
+    onmousemove = (e) => {
+      //normalize mouse coordinate to cartesian
+      //literally move clientX to the right by arrowX
+      //and clientY down by arrowY
+      dx = e.clientX - arrowX;
+      dy = e.clientY - arrowY;
+    };
+  </script>
+</html>

@@ -1,6 +1,6 @@
 import 'dart:math';
 
-import "./classes.dart";
+import 'classes/point.dart';
 
 /*
   sources:

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+  </head>
+  <body onload="draw();">
+    <div>
+      <canvas
+        id="canvas"
+        style="border: 1px solid black; width: 100vw; height: 100vh"
+      ></canvas>
+    </div>
+  </body>
+  <script>
+    //Assume starting point of vector is at (0, 0).
+    class Vector {
+      _x = 0;
+      _y = 1;
+
+      constructor(x, y) {
+        this._x = x;
+        this._y = y;
+      }
+
+      setX(value) {
+        this._x = value;
+      }
+      getX() {
+        return this._x;
+      }
+
+      setY(value) {
+        this._y = value;
+      }
+      getY() {
+        return this._y;
+      }
+
+      setAngle(angle) {
+        const length = this.getLength();
+        this._x = Math.cos(angle) * length;
+        this._y = Math.sin(angle) * length;
+      }
+      getAngle() {
+        return Math.atan2(this._y, this._x);
+      }
+
+      setLength(length) {
+        const angle = this.getAngle();
+        this._x = Math.cos(angle) * length;
+        this._y = Math.sin(angle) * length;
+      }
+      getLength() {
+        return Math.sqrt(Math.pow(this._x, 2) + Math.pow(this._y, 2));
+      }
+
+      add(vectorToAdd) {
+        return new Vector(
+          this._x + vectorToAdd.getX(),
+          this._y + vectorToAdd.getY()
+        );
+      }
+
+      subtract(vectorToSubtract) {
+        return new Vector(
+          this._x - vectorToSubtract.getX(),
+          this._y - vectorToSubtract.getY()
+        );
+      }
+
+      multiply(scalar) {
+        return new Vector(this._x * scalar, this._y * scalar);
+      }
+
+      divide(scalar) {
+        return new Vector(this._x / scalar, this._y / scalar);
+      }
+
+      copy(vector) {
+        this._x = vector._x;
+        this._y = vector._y;
+      }
+    }
+  </script>
+  <script>
+    /*
+        Use Vector objects to move stuff, not just adding x and y
+      */
+    let canvas = document.getElementById("canvas");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const ctx = canvas.getContext("2d");
+    const position = new Vector(200, 100);
+
+    const velocity = new Vector(0, 0);
+    velocity.setLength(3);
+    velocity.setAngle(Math.PI / 6);
+
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+
+      const newPos = position.add(velocity);
+      position.copy(newPos);
+
+      ctx.beginPath();
+      ctx.arc(position.getX(), position.getY(), 10, 0, Math.PI * 2, false);
+      ctx.fill();
+
+      requestAnimationFrame(draw);
+    };
+  </script>
+</html>
