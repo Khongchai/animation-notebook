@@ -9,7 +9,6 @@
       #cw {
         position: fixed;
         z-index: -1;
-        touch-action: none;
       }
 
       body {
@@ -32,14 +31,20 @@
       y: innerHeight / 2,
     };
 
-    window.onmousemove = (e) => {
+    addEventListener("mousemove", (e) => {
       mouse.x = e.clientX;
       mouse.y = e.clientY;
-    };
-    window.ontouchmove = (e) => {
-      mouse.x = e.touches[0].clientX;
-      mouse.y = e.touches[0].clientY;
-    };
+    });
+    addEventListener(
+      "touchmove",
+      (e) => {
+        e.preventDefault();
+        mouse.x = e.touches[0].clientX;
+        mouse.y = e.touches[0].clientY;
+      },
+      { passive: false }
+    );
+    addEventListener("resize", () => setSize());
 
     var particlesArray = [];
 
