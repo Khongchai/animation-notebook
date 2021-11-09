@@ -20,21 +20,19 @@
   <script>
     let canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
+    ctx.lineWidth = 0.5;
 
     ctx.translate(250, 250);
     const draw = () => {
-      //draw whatever
-      //   drawParametric(
-      //     ctx,
-      //     (t) => 20 * (t - Math.sin(t)),
-      //     (t) => 20 * (1 - Math.cos(t)),
-      //     range(0, 2 * Math.PI, 100)
-      //   );
-      drawParametric(
+      drawPolar(
         ctx,
-        (t) => 20 * Math.sin(t),
-        (t) => 20 * Math.cos(t),
-        range(0, Math.PI * 2, 100000)
+        function (t) {
+          return t;
+        },
+        function (t) {
+          return 200 * Math.sin(t / 1.2);
+        },
+        range(0, 500, 800)
       );
     };
 
@@ -45,16 +43,34 @@
       ctx.stroke();
     }
 
-    function drawParametric(ctx, fx, fy, tarr) {
-      for (let i = 0; i < tarr.length - 1; i++) {
+    /*
+      This is actually not performant because we are doing a loop here and
+      a loop below in the range function. We can do better by combining the loops.
+
+      But for now, this is fine.
+    */
+    function drawParametric(ctx, functionX, functionY, pointsArray) {
+      for (let i = 0; i < pointsArray.length - 1; i++) {
         drawLine(
           ctx,
-          fx(tarr[i]),
-          fy(tarr[i]),
-          fx(tarr[i + 1]),
-          fy(tarr[i + 1])
+          functionX(pointsArray[i]),
+          functionY(pointsArray[i]),
+          functionX(pointsArray[i + 1]),
+          functionY(pointsArray[i + 1])
         );
       }
+    }
+
+    function drawPolar(ctx, functionTheta, functionRadius, pointsArray) {
+      var functionX = function (t) {
+        return functionRadius(t) * Math.cos(functionTheta(t));
+      };
+
+      var functionY = function (t) {
+        return functionRadius(t) * Math.sin(functionTheta(t));
+      };
+
+      drawParametric(ctx, functionX, functionY, pointsArray);
     }
 
     //A function that returns N+1 points between low and high
