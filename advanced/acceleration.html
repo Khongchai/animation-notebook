@@ -1,0 +1,204 @@
+//TODO, experiment with same thign but with dot product as well
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      html,
+      body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body onload="draw();">
+    <div><canvas id="canvas"></canvas></div>
+  </body>
+  <script>
+    //Assume starting point of vector is at (0, 0).
+    class Vector {
+      _x = 0;
+      _y = 1;
+
+      constructor(x, y) {
+        this._x = x;
+        this._y = y;
+      }
+
+      setX(value) {
+        this._x = value;
+      }
+      getX() {
+        return this._x;
+      }
+
+      setY(value) {
+        this._y = value;
+      }
+      getY() {
+        return this._y;
+      }
+
+      setAngle(angle) {
+        const length = this.getLength();
+        this._x = Math.cos(angle) * length;
+        this._y = Math.sin(angle) * length;
+      }
+      getAngle() {
+        return Math.atan2(this._y, this._x);
+      }
+
+      setLength(length) {
+        const angle = this.getAngle();
+        this._x = Math.cos(angle) * length;
+        this._y = Math.sin(angle) * length;
+      }
+      getLength() {
+        return Math.sqrt(Math.pow(this._x, 2) + Math.pow(this._y, 2));
+      }
+
+      add(vectorToAdd) {
+        const dy = this._x + vectorToAdd.getY();
+        const dx = this._y + vectorToAdd.getX();
+        return new Vector(dy, dx);
+      }
+
+      subtract(vectorToSubtract) {
+        return new Vector(
+          this._x - vectorToSubtract.getX(),
+          this._y - vectorToSubtract.getY()
+        );
+      }
+
+      multiply(scalar) {
+        return new Vector(this._x * scalar, this._y * scalar);
+      }
+
+      divide(scalar) {
+        return new Vector(this._x / scalar, this._y / scalar);
+      }
+
+      copy(vector) {
+        this._x = vector._x;
+        this._y = vector._y;
+      }
+    }
+
+    class Particle {
+      constructor(x, y, magnitude, polarDirection, gravity) {
+        this.position = new Vector(x, y);
+        this.velocity = new Vector(0, 0);
+        this.velocity.setLength(magnitude);
+        this.velocity.setAngle(polarDirection);
+        this.gravity = new Vector(0, gravity || 0);
+        this.rotation = 0;
+      }
+
+      accelerate(acceleration) {
+        this.velocity = this.velocity.add(acceleration);
+      }
+
+      update() {
+        this.position = this.position.add(this.velocity);
+      }
+    }
+  </script>
+  <script>
+    let canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+    const ship = new Particle(width / 2, height / 2, 0, 0);
+    const thrust = new Vector(0, 0);
+
+    document.body.addEventListener(
+      "keydown",
+      function (e) {
+        e.preventDefault();
+
+        switch (e.keyCode) {
+          case 38:
+            thrust.setY(-0.1);
+            break;
+          case 40:
+            thrust.setY(0.1);
+            break;
+          case 37:
+            thrust.setX(-0.1);
+            break;
+          case 39:
+            thrust.setX(0.1);
+            break;
+          default:
+            break;
+        }
+      },
+      { passive: false }
+    );
+
+    document.body.addEventListener(
+      "keyup",
+      function (e) {
+        e.preventDefault();
+        switch (e.keyCode) {
+          case 38:
+            thrust.setY(0);
+            break;
+          case 40:
+            thrust.setY(0);
+            break;
+          case 37:
+            thrust.setX(0);
+            break;
+          case 39:
+            thrust.setX(0);
+            break;
+          default:
+            break;
+        }
+      },
+      { passive: false }
+    );
+
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+
+      ship.accelerate(thrust);
+      ship.update();
+
+      ctx.save();
+      ctx.translate(ship.position.getX(), ship.position.getY());
+      ctx.rotate(ship.rotation);
+
+      //draw a ship as a triangle
+      ctx.beginPath();
+      ctx.moveTo(10, 0);
+      ctx.lineTo(-10, -7);
+      ctx.lineTo(-10, 7);
+      ctx.lineTo(10, 0);
+      ctx.stroke();
+
+      ctx.restore();
+
+      if (ship.position.getX() > width) {
+        ship.position.setX(0);
+      } else if (ship.position.getX() < 0) {
+        ship.position.setX(width);
+      }
+
+      if (ship.position.getY() > height) {
+        ship.position.setY(0);
+      } else if (ship.position.getY() < 0) {
+        ship.position.setY(height);
+      }
+
+      requestAnimationFrame(draw);
+    };
+  </script>
+</html>

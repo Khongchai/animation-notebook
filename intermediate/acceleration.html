@@ -99,6 +99,7 @@
         this._gravity = new Vector(0, gravity || 0);
       }
       update() {
+        //This line makes stuff accelerates
         this._velocity = this._velocity.add(this._gravity);
         this._position = this._position.add(this._velocity);
       }

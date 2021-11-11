@@ -41,10 +41,9 @@ class Vector {
   }
 
   add(vectorToAdd) {
-    return new Vector(
-      this._x + vectorToAdd.getX(),
-      this._y + vectorToAdd.getY()
-    );
+    const dy = this._x + vectorToAdd.getY();
+    const dx = this._y + vectorToAdd.getX();
+    return new Vector(dy, dx);
   }
 
   subtract(vectorToSubtract) {
@@ -63,9 +62,7 @@ class Vector {
   }
 
   copy(vector) {
-    this = vector;
+    this._x = vector._x;
+    this._y = vector._y;
   }
 }
-
-
-
