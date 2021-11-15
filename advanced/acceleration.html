@@ -62,8 +62,8 @@
       }
 
       add(vectorToAdd) {
-        const dy = this._x + vectorToAdd.getY();
-        const dx = this._y + vectorToAdd.getX();
+        const dy = this._x + vectorToAdd.getX();
+        const dx = this._y + vectorToAdd.getY();
         return new Vector(dy, dx);
       }
 
@@ -102,6 +102,10 @@
         this.velocity = this.velocity.add(acceleration);
       }
 
+      damp() {
+        this.velocity = this.velocity.multiply(0.99);
+      }
+
       update() {
         this.position = this.position.add(this.velocity);
       }
@@ -110,12 +114,17 @@
   <script>
     let canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
-    var width = window.innerWidth;
-    var height = window.innerHeight;
+    var width = window.innerWidth,
+      height = window.innerHeight;
     canvas.width = width;
     canvas.height = height;
     const ship = new Particle(width / 2, height / 2, 0, 0);
     const thrust = new Vector(0, 0);
+
+    let turningLeft = false,
+      turningRight = false,
+      thrusting = false,
+      reversing = false;
 
     document.body.addEventListener(
       "keydown",
@@ -123,17 +132,21 @@
         e.preventDefault();
 
         switch (e.keyCode) {
+          //up
           case 38:
-            thrust.setY(-0.1);
+            thrusting = true;
             break;
+          //down
           case 40:
-            thrust.setY(0.1);
+            reversing = true;
             break;
+          //left
           case 37:
-            thrust.setX(-0.1);
+            turningLeft = true;
             break;
+          //right
           case 39:
-            thrust.setX(0.1);
+            turningRight = true;
             break;
           default:
             break;
@@ -148,16 +161,15 @@
         e.preventDefault();
         switch (e.keyCode) {
           case 38:
-            thrust.setY(0);
-            break;
+            thrusting = false;
           case 40:
-            thrust.setY(0);
+            reversing = false;
             break;
           case 37:
-            thrust.setX(0);
+            turningLeft = false;
             break;
           case 39:
-            thrust.setX(0);
+            turningRight = false;
             break;
           default:
             break;
@@ -169,6 +181,22 @@
     const draw = () => {
       ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
 
+      if (turningLeft) {
+        ship.rotation -= 0.1;
+      } else if (turningRight) {
+        ship.rotation += 0.1;
+      }
+
+      thrust.setAngle(ship.rotation);
+
+      if (reversing) {
+        thrust.setLength(-0.1);
+      } else if (thrusting) {
+        thrust.setLength(0.1);
+      } else {
+        thrust.setLength(0);
+        ship.damp();
+      }
       ship.accelerate(thrust);
       ship.update();
 
@@ -182,6 +210,10 @@
       ctx.lineTo(-10, -7);
       ctx.lineTo(-10, 7);
       ctx.lineTo(10, 0);
+      if (thrusting) {
+        ctx.moveTo(-10, 0);
+        ctx.lineTo(-20, 0);
+      }
       ctx.stroke();
 
       ctx.restore();
