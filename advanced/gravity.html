@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      html,
+      body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body onload="draw();">
+    <div><canvas id="canvas"></canvas></div>
+  </body>
+  <script src="../classes/particles.js"></script>
+  <script src="../classes/vectors.js"></script>
+  <script>
+    /*
+        Gravity = inversely proportional to the distance from a body.
+      */
+    let canvas = document.getElementById("canvas"),
+      ctx = canvas.getContext("2d"),
+      width = window.innerWidth,
+      height = window.innerHeight;
+
+    canvas.width = width;
+    canvas.height = height;
+
+    const sun = new Particle(width / 2, height / 2, 0, 0),
+      planet = new Particle(width / 2 + 200, height / 2, 10, -Math.PI / 2);
+
+    sun.mass = 20000;
+
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+
+      planet.gravitateTo(sun);
+      planet.update();
+
+      ctx.beginPath();
+      ctx.fillStyle = "#ffff00";
+      ctx.arc(
+        sun.position.getX(),
+        sun.position.getY(),
+        20,
+        0,
+        Math.PI * 2,
+        false
+      );
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.fillStyle = "#0000ff";
+      ctx.arc(
+        planet.position.getX(),
+        planet.position.getY(),
+        5,
+        0,
+        Math.PI * 2,
+        false
+      );
+      ctx.fill();
+
+      requestAnimationFrame(draw);
+    };
+  </script>
+</html>
