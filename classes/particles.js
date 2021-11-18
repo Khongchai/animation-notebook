@@ -19,7 +19,6 @@ class Particle {
   }
 
   angleTo(p) {
-    console.log(p.position.getY() - this.position.getY());
     return Math.atan2(
       p.position.getY() - this.position.getY(),
       p.position.getX() - this.position.getX()
@@ -34,14 +33,13 @@ class Particle {
   }
 
   gravitateTo(p) {
-    const gravity = new Vector(0, 0);
     const angle = this.angleTo(p);
     const distance = this.distanceTo(p);
 
     //We're not using the gravitational constant here because we're not trying to simulate the real world
-    gravity.setLength(p.mass / distance ** 2);
-    gravity.setAngle(angle);
+    this.gravity.setLength(p.mass / distance ** 2);
+    this.gravity.setAngle(angle);
 
-    return gravity;
+    return this.gravity;
   }
 }
