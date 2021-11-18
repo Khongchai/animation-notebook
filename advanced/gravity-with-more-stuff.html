@@ -1,4 +1,5 @@
 <!-- TODO optimize to O(logn), right now, the running time is O(n^2) -->
+<!-- TODO Drag vector line for planet velocity's magnitude -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -22,6 +23,22 @@
   <script src="../classes/vectors.js"></script>
   <script>
     const allElements = [];
+
+    let iterations = 0;
+    let benchmarked = false;
+
+    //For setting planet's velocity
+    const vectorLine = {
+      begin: {
+        x: 0,
+        y: 0,
+      },
+      end: {
+        x: 0,
+        y: 0,
+      },
+    };
+
     /*
         Gravity = inversely proportional to the distance from a body.
       */
@@ -36,29 +53,35 @@
     //black canvas background
 
     const sun = new Particle(width / 2, height / 2, 0, 0),
-      planet = new Particle(width / 2 + 200, height / 2, 10, 0);
+      planet = new Particle(width / 2 + 200, height / 2, 10, 0),
+      planet2 = new Particle(width / 4 + 300, height / 4, 10, 0);
 
     sun.mass = 20000;
     planet.mass = 100;
+    planet2.mass = 50;
 
     allElements.push(
       { obj: sun, color: "orange" },
-      { obj: planet, color: "blue" }
+      { obj: planet, color: "blue" },
+      { obj: planet2, color: "green" }
     );
+  </script>
 
+  <script>
     const draw = () => {
       //instead of clearRect, draw a trail
 
-      ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
+      ctx.fillStyle = "rgba(0, 0, 0, 0.15)";
       ctx.fillRect(0, 0, width, height);
 
-      gravitateEverythingTowardsOneAnother();
+      gravitateEverythingTowardsOneAnother(true);
 
       requestAnimationFrame(draw);
     };
 
     //spawn new planet on click
     window.addEventListener("click", () => {
+      resetBenchmarkingVariables();
       const newCelestialBody = new Particle(event.clientX, event.clientY, 0, 0);
       newCelestialBody.mass = Math.random() * 600;
       allElements.push({
@@ -69,10 +92,11 @@
       });
     });
 
-    function gravitateEverythingTowardsOneAnother() {
+    function gravitateEverythingTowardsOneAnother(enableBenchmarking = false) {
       const length = allElements.length;
       for (let i = 0; i < length; i++) {
         for (let j = 0; j < length; j++) {
+          enableBenchmarking && iterations++;
           if (j !== i) {
             allElements[i].obj.gravitateTo(allElements[j].obj);
           }
@@ -102,8 +126,18 @@
           false
         );
         ctx.fill();
-        console.log(allElements.length);
       }
+      if (enableBenchmarking && !benchmarked) {
+        console.log(
+          `${iterations} iterations per frame for ${allElements.length} objects`
+        );
+        benchmarked = true;
+      }
+    }
+
+    function resetBenchmarkingVariables() {
+      iterations = 0;
+      benchmarked = false;
     }
   </script>
 </html>
