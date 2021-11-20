@@ -22,25 +22,66 @@
   <script src="../classes/particles.js"></script>
   <script src="../classes/vectors.js"></script>
   <script>
+    //For setting planet's velocity
+    class VelocityLine {
+      begin = {
+        x: 0,
+        y: 0,
+      };
+      end = {
+        x: 0,
+        y: 0,
+      };
+      mousedown = false;
+
+      constructor() {
+        this.begin.x = 0;
+        this.begin.y = 0;
+        this.end.x = 0;
+        this.end.y = 0;
+
+        window.addEventListener("mousedown", (e) => {
+          this.begin.x = e.clientX;
+          this.begin.y = e.clientY;
+          this.mousedown = true;
+        });
+
+        window.addEventListener("mousemove", (e) => {
+          this.end.x = e.clientX;
+          this.end.y = e.clientY;
+        });
+
+        window.addEventListener("mouseup", (e) => {
+          this.mousedown = false;
+        });
+      }
+
+      drawVelocityLine(ctx, color) {
+        if (this.mousedown) {
+          ctx.beginPath();
+          ctx.strokeStyle = color;
+          ctx.moveTo(this.begin.x, this.begin.y);
+          ctx.lineTo(this.end.x, this.end.y);
+          ctx.stroke();
+        }
+      }
+
+      getVector() {
+        //y vert is inverted because of the way the canvas is drawn
+        return new Vector(this.end.x - this.begin.x, this.begin.y - this.end.y);
+      }
+    }
+  </script>
+  <script>
     const allElements = [];
 
     let iterations = 0;
     let benchmarked = false;
 
-    //For setting planet's velocity
-    const vectorLine = {
-      begin: {
-        x: 0,
-        y: 0,
-      },
-      end: {
-        x: 0,
-        y: 0,
-      },
-    };
+    let velocityLine = new VelocityLine();
 
     /*
-        Gravity = inversely proportional to the distance from a body.
+        Gravity = Gravity = inversely proportional to the square of the distance between the two particles
       */
     let canvas = document.getElementById("canvas"),
       ctx = canvas.getContext("2d"),
@@ -66,23 +107,21 @@
       { obj: planet2, color: "green" }
     );
   </script>
-
   <script>
-    const draw = () => {
-      //instead of clearRect, draw a trail
-
-      ctx.fillStyle = "rgba(0, 0, 0, 0.15)";
-      ctx.fillRect(0, 0, width, height);
-
-      gravitateEverythingTowardsOneAnother(true);
-
-      requestAnimationFrame(draw);
-    };
-
     //spawn new planet on click
     window.addEventListener("click", () => {
       resetBenchmarkingVariables();
-      const newCelestialBody = new Particle(event.clientX, event.clientY, 0, 0);
+
+      const velocityVector = velocityLine.getVector();
+
+      console.log(velocityVector);
+
+      const newCelestialBody = new Particle(
+        velocityLine.begin.x,
+        velocityLine.begin.y,
+        velocityVector.getLength() * 0.03,
+        velocityVector.getAngle() + Math.PI / 2
+      );
       newCelestialBody.mass = Math.random() * 600;
       allElements.push({
         obj: newCelestialBody,
@@ -91,6 +130,20 @@
         })`,
       });
     });
+  </script>
+
+  <script>
+    const draw = () => {
+      //instead of clearRect, draw a trail
+      velocityLine.drawVelocityLine(ctx, "white");
+
+      ctx.fillStyle = "rgba(0, 0, 0, 0.15)";
+      ctx.fillRect(0, 0, width, height);
+
+      gravitateEverythingTowardsOneAnother(true);
+
+      requestAnimationFrame(draw);
+    };
 
     function gravitateEverythingTowardsOneAnother(enableBenchmarking = false) {
       const length = allElements.length;

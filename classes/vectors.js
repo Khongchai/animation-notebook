@@ -36,6 +36,7 @@ class Vector {
     this._x = Math.cos(angle) * length;
     this._y = Math.sin(angle) * length;
   }
+
   getLength() {
     return Math.sqrt(Math.pow(this._x, 2) + Math.pow(this._y, 2));
   }
