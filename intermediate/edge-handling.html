@@ -1,0 +1,72 @@
+<!-- Discusses the different strategies that can be employed when dealing with edges -->
+<!-- Some are already looked at in other examples. -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      html,
+      body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body onload="draw();">
+    <div><canvas id="canvas"></canvas></div>
+  </body>
+  <script src="../classes/particles.js"></script>
+  <script src="../classes/vectors.js"></script>
+  <script>
+    let canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+    const particle = new Particle(
+      width / 2,
+      height / 2,
+      3,
+      Math.random() * Math.PI * 2
+    );
+    particle.radius = 20;
+  </script>
+  <script>
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+
+      particle.update();
+
+      ctx.beginPath();
+      ctx.arc(
+        particle.position.getX(),
+        particle.position.getY(),
+        particle.radius,
+        0,
+        Math.PI * 2,
+        false
+      );
+      ctx.fill();
+
+      //screen wraps
+      if (particle.position.getX() > width) {
+        particle.position.setX(0);
+      } else if (particle.position.getX() < 0) {
+        particle.position.setX(width);
+      }
+
+      if (particle.position.getY() > height) {
+        particle.position.setY(0);
+      } else if (particle.position.getY() < 0) {
+        particle.position.setY(height);
+      }
+
+      requestAnimationFrame(draw);
+    };
+  </script>
+</html>

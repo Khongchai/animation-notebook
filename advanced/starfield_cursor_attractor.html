@@ -1,0 +1,212 @@
+<!-- TODO collide with edges and one another -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      html,
+      body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body onload="draw();">
+    <div><canvas id="canvas"></canvas></div>
+  </body>
+  <script>
+    //Assume starting point of vector is at (0, 0).
+    class Vector {
+      _x = 0;
+      _y = 1;
+
+      constructor(x, y) {
+        this._x = x;
+        this._y = y;
+      }
+
+      setX(value) {
+        this._x = value;
+      }
+      getX() {
+        return this._x;
+      }
+
+      setY(value) {
+        this._y = value;
+      }
+      getY() {
+        return this._y;
+      }
+
+      setAngle(angle) {
+        const length = this.getLength();
+        this._x = Math.cos(angle) * length;
+        this._y = Math.sin(angle) * length;
+      }
+      getAngle() {
+        return Math.atan2(this._y, this._x);
+      }
+
+      setLength(length) {
+        const angle = this.getAngle();
+        this._x = Math.cos(angle) * length;
+        this._y = Math.sin(angle) * length;
+      }
+
+      getLength() {
+        return Math.sqrt(Math.pow(this._x, 2) + Math.pow(this._y, 2));
+      }
+
+      add(vectorToAdd) {
+        const dy = this._x + vectorToAdd.getY();
+        const dx = this._y + vectorToAdd.getX();
+        return new Vector(dy, dx);
+      }
+
+      subtract(vectorToSubtract) {
+        return new Vector(
+          this._x - vectorToSubtract.getX(),
+          this._y - vectorToSubtract.getY()
+        );
+      }
+
+      multiply(scalar) {
+        return new Vector(this._x * scalar, this._y * scalar);
+      }
+
+      divide(scalar) {
+        return new Vector(this._x / scalar, this._y / scalar);
+      }
+
+      copy(vector) {
+        this._x = vector._x;
+        this._y = vector._y;
+      }
+    }
+  </script>
+  <script>
+    class Particle {
+      position = null;
+      velocity = null;
+      gravity = null;
+      mass = 1;
+      radius = 0;
+      //default
+      color = "rgba(0,0,0,1)";
+
+      constructor(x, y, magnitude, direction, gravity) {
+        this.position = new Vector(x, y);
+        this.velocity = new Vector(0, 0);
+        this.velocity.setLength(magnitude);
+        this.velocity.setAngle(direction);
+        this.gravity = new Vector(0, gravity || 0);
+        this.radius = Math.random() * 10;
+        //random shades of blue
+        this.color = `rgba(0,${Math.floor(
+          Math.random() * 255 * 0.1
+        )},${Math.floor(Math.random() * 255)},1)`;
+      }
+
+      update() {
+        //This line makes stuff accelerates
+        this.velocity = this.velocity.add(this.gravity);
+        this.position = this.position.add(this.velocity);
+      }
+
+      angleTo(p) {
+        return Math.atan2(
+          p.position.getY() - this.position.getY(),
+          p.position.getX() - this.position.getX()
+        );
+      }
+
+      distanceTo(p) {
+        return Math.sqrt(
+          Math.pow(p.position.getX() - this.position.getX(), 2) +
+            Math.pow(p.position.getY() - this.position.getY(), 2)
+        );
+      }
+
+      gravitateTo(p) {
+        const angle = this.angleTo(p);
+        const distance = this.distanceTo(p);
+
+        //We're not using the gravitational constant here because we're not trying to simulate the real world
+        this.gravity.setLength(p.mass / distance ** 2);
+        this.gravity.setAngle(angle);
+
+        return this.gravity;
+      }
+    }
+  </script>
+  <script>
+    let canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+
+    const mouse = { x: 0, y: 0 };
+    window.addEventListener("mousemove", (e) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    });
+
+    const particleAttractor = new Particle(mouse.x, mouse.y, 0, 0, 0.1);
+    particleAttractor.mass = 100;
+
+    const particles = [];
+
+    for (let i = 0; i < 100; i++) {
+      particles.push(
+        new Particle(Math.random() * width, Math.random() * height, 0, 0, 0.1)
+      );
+    }
+
+    canvas.width = width;
+    canvas.height = height;
+
+    let time = 0;
+    const draw = () => {
+      particleAttractor.position = new Vector(mouse.x, mouse.y);
+
+      ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+      //black canvas background
+      ctx.fillStyle = "rgba(0,0,0,1)";
+      ctx.fillRect(0, 0, width, height);
+
+      //draw particles
+      for (const particle of particles) {
+        ctx.beginPath();
+        ctx.arc(
+          particle.position.getX(),
+          particle.position.getY() +
+            particle.radius *
+              particle.position.getX() *
+              0.001 *
+              Math.sin(time * 0.02) *
+              0.2,
+          particle.radius,
+          0,
+          Math.PI * 2,
+          false
+        );
+
+        particle.gravitateTo(particleAttractor);
+        particle.update();
+
+        //fillstyle with random color
+        ctx.fillStyle = particle.color;
+        ctx.fill();
+        ctx.closePath();
+      }
+
+      time++;
+      requestAnimationFrame(draw);
+    };
+  </script>
+</html>

@@ -3,6 +3,7 @@ class Particle {
   velocity = null;
   gravity = null;
   mass = 1;
+  radius = 0;
 
   constructor(x, y, magnitude, direction, gravity) {
     this.position = new Vector(x, y);
