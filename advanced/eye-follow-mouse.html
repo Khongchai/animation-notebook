@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      html,
+      body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body onload="draw();">
+    <div><canvas id="canvas"></canvas></div>
+  </body>
+  <script>
+    let canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+
+    const circle1 = {
+      x: width / 2 - 200,
+      y: height / 2,
+      radius: 100,
+    };
+    const circle2 = {
+      x: width / 2 + 200,
+      y: height / 2,
+      radius: 100,
+    };
+    const eyeball1 = {
+      x: width / 2 - 200,
+      y: height / 2,
+      radius: 10,
+    };
+    const eyeball2 = {
+      x: width / 2 + 200,
+      y: height / 2,
+      radius: 10,
+    };
+
+    const mouse = {
+      x: 0,
+      y: 0,
+    };
+    const delayedMouse = {
+      x: 0,
+      y: 0,
+    };
+
+    window.addEventListener("mousemove", (e) => {
+      mouse.x = remap(e.clientX, 0, width, -1, 1);
+      mouse.y = remap(e.clientY, 0, height, -1, 1);
+    });
+
+    function lerp(a, b, t) {
+      return (1 - t) * a + t * b;
+    }
+
+    function inverseLerp(min, max, value) {
+      return (value - min) / (max - min);
+    }
+
+    function remap(value, min1, max1, min2, max2) {
+      return lerp(min2, max2, inverseLerp(min1, max1, value));
+    }
+
+    ctx.shadowColor = "magenta";
+
+    const draw = () => {
+      ctx.shadowBlur = 0;
+      delayedMouse.x = lerp(delayedMouse.x, mouse.x, 0.07);
+      delayedMouse.y = lerp(delayedMouse.y, mouse.y, 0.07);
+
+      ctx.fillStyle = "rgba(0,0,0,0.1)";
+      ctx.fillRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+      //if you see this, canvas is working
+
+      ctx.fillStyle = "magenta";
+      ctx.strokeStyle = "grey";
+      ctx.beginPath();
+      ctx.arc(circle1.x, circle1.y, circle1.radius, 0, 2 * Math.PI);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(circle2.x, circle2.y, circle2.radius, 0, 2 * Math.PI);
+      ctx.stroke();
+
+      //draw the two eyeballs
+      ctx.shadowBlur = 10;
+      ctx.beginPath();
+      ctx.arc(
+        eyeball1.x + (circle1.radius / 2) * delayedMouse.x,
+        eyeball1.y + (circle1.radius / 2) * delayedMouse.y,
+        eyeball1.radius,
+        0,
+        2 * Math.PI
+      );
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(
+        eyeball2.x + (circle1.radius / 2) * delayedMouse.x,
+        eyeball2.y + (circle1.radius / 2) * delayedMouse.y,
+        eyeball2.radius,
+        0,
+        2 * Math.PI
+      );
+      ctx.fill();
+
+      requestAnimationFrame(draw);
+    };
+  </script>
+</html>
