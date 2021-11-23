@@ -105,14 +105,13 @@
       );
       ctx.fill();
 
+      //If you want to clamp, the eyeballs within their circle, compare the distance between the two points to the radius of the circle
+      //If the distance is greater than the radius, clamp the points to the circle
+      const eyeball2X = eyeball2.x + (circle2.radius / 2) * delayedMouse.x;
+      const eyeball2Y = eyeball2.y + (circle2.radius / 2) * delayedMouse.y;
+
       ctx.beginPath();
-      ctx.arc(
-        eyeball2.x + (circle1.radius / 2) * delayedMouse.x,
-        eyeball2.y + (circle1.radius / 2) * delayedMouse.y,
-        eyeball2.radius,
-        0,
-        2 * Math.PI
-      );
+      ctx.arc(eyeball2X, eyeball2Y, eyeball2.radius, 0, 2 * Math.PI);
       ctx.fill();
 
       requestAnimationFrame(draw);
