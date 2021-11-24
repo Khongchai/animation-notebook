@@ -19,8 +19,55 @@
   <body onload="draw();">
     <div><canvas id="canvas"></canvas></div>
   </body>
-  <script src="../classes/particles.js"></script>
   <script src="../classes/vectors.js"></script>
+  <script>
+    class Particle {
+      position = null;
+      velocity = null;
+      gravity = null;
+      mass = 1;
+      radius = 0;
+
+      constructor(x, y, magnitude, direction, gravity) {
+        this.position = new Vector(x, y);
+        this.velocity = new Vector(0, 0);
+        this.velocity.setLength(magnitude);
+        this.velocity.setAngle(direction);
+        this.gravity = new Vector(0, gravity || 0);
+      }
+
+      updateGravity() {
+        this.velocity = this.velocity.add(this.gravity);
+      }
+
+      updateVelocity() {
+        this.position = this.position.add(this.velocity);
+      }
+
+      angleTo(p) {
+        return Math.atan2(
+          p.position.getY() - this.position.getY(),
+          p.position.getX() - this.position.getX()
+        );
+      }
+
+      distanceTo(p) {
+        return Math.sqrt(
+          Math.pow(p.position.getX() - this.position.getX(), 2) +
+            Math.pow(p.position.getY() - this.position.getY(), 2)
+        );
+      }
+
+      gravitateTo(p) {
+        const angle = this.angleTo(p);
+        const distance = this.distanceTo(p);
+
+        //We're not using the gravitational constant here because we're not trying to simulate the real world
+        this.gravity.setLength(p.mass / distance ** 2);
+        this.gravity.setAngle(angle);
+      }
+    }
+  </script>
   <script>
     //For setting planet's velocity
     class VelocityLine {
@@ -93,28 +140,27 @@
 
     //black canvas background
 
-    const sun = new Particle(width / 2, height / 2, 0, 0),
-      planet = new Particle(width / 2 + 200, height / 2, 10, 0),
-      planet2 = new Particle(width / 4 + 300, height / 4, 10, 0);
+    // const sun = new Particle(width / 2, height / 2, 0, 0),
+    //   planet = new Particle(width / 2 + 200, height / 2, 10, 0),
+    //   planet2 = new Particle(width / 4 + 300, height / 4, 10, 0);
 
-    sun.mass = 20000;
-    planet.mass = 100;
-    planet2.mass = 50;
+    // sun.mass = 20000;
+    // planet.mass = 100;
+    // planet2.mass = 50;
 
-    allElements.push(
-      { obj: sun, color: "orange" },
-      { obj: planet, color: "blue" },
-      { obj: planet2, color: "green" }
-    );
+    // allElements.push(
+    //   { obj: sun, color: "orange" },
+    //   { obj: planet, color: "blue" },
+    //   { obj: planet2, color: "green" }
+    // );
   </script>
+  <script></script>
   <script>
     //spawn new planet on click
     window.addEventListener("click", () => {
       resetBenchmarkingVariables();
 
       const velocityVector = velocityLine.getVector();
-
-      console.log(velocityVector);
 
       const newCelestialBody = new Particle(
         velocityLine.begin.x,
@@ -137,8 +183,8 @@
       //instead of clearRect, draw a trail
       velocityLine.drawVelocityLine(ctx, "white");
 
-      ctx.fillStyle = "rgba(0, 0, 0, 0.15)";
-      ctx.fillRect(0, 0, width, height);
+      // ctx.fillStyle = "rgba(255, 255, 255, 0.15)";
+      // ctx.fillRect(0, 0, width, height);
 
       gravitateEverythingTowardsOneAnother(true);
 
@@ -153,8 +199,7 @@
           if (j !== i) {
             allElements[i].obj.gravitateTo(allElements[j].obj);
           }
-          allElements[i].obj.update();
-
+          allElements[i].obj.updateGravity();
           //check height
           if (
             allElements[i].obj.position.getY() > height ||
@@ -167,13 +212,17 @@
           }
         }
 
+        allElements[i].obj.updateVelocity();
+
         ctx.beginPath();
         ctx.fillStyle = allElements[i].color;
         ctx.arc(
           allElements[i].obj.position.getX(),
           allElements[i].obj.position.getY(),
           //this looks kind of cool.
-          Math.random() * 10 * Math.min(allElements[i].obj.mass * 0.01, 2),
+          Math.random() *
+            10 *
+            Math.min(Math.abs(allElements[i].obj.mass) * 0.01, 2),
           0,
           Math.PI * 2,
           false

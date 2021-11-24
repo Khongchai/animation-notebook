@@ -14,7 +14,6 @@ class Particle {
   }
 
   update() {
-    //This line makes stuff accelerates
     this.velocity = this.velocity.add(this.gravity);
     this.position = this.position.add(this.velocity);
   }
@@ -40,7 +39,5 @@ class Particle {
     //We're not using the gravitational constant here because we're not trying to simulate the real world
     this.gravity.setLength(p.mass / distance ** 2);
     this.gravity.setAngle(angle);
-
-    return this.gravity;
   }
 }

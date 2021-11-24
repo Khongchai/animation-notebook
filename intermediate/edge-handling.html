@@ -19,8 +19,56 @@
   <body onload="draw();">
     <div><canvas id="canvas"></canvas></div>
   </body>
-  <script src="../classes/particles.js"></script>
   <script src="../classes/vectors.js"></script>
+  <script>
+    class Particle {
+      position = null;
+      velocity = null;
+      gravity = null;
+      influence = null;
+      mass = 1;
+      radius = 0;
+
+      constructor(x, y, magnitude, direction, gravity) {
+        this.position = new Vector(x, y);
+        this.velocity = new Vector(0, 0);
+        this.velocity.setLength(magnitude);
+        this.velocity.setAngle(direction);
+        this.gravity = new Vector(0, gravity || 0);
+        this.influence = new Vector(0, 0);
+      }
+
+      update(influence) {
+        //This line makes stuff accelerates
+        this.velocity = this.velocity.add(this.gravity);
+        this.velocity = this.velocity.add(this.influence);
+        this.position = this.position.add(this.velocity);
+      }
+
+      angleTo(p) {
+        return Math.atan2(
+          p.position.getY() - this.position.getY(),
+          p.position.getX() - this.position.getX()
+        );
+      }
+
+      distanceTo(p) {
+        return Math.sqrt(
+          Math.pow(p.position.getX() - this.position.getX(), 2) +
+            Math.pow(p.position.getY() - this.position.getY(), 2)
+        );
+      }
+
+      influencedBy(p) {
+        const angle = this.angleTo(p);
+        const distance = this.distanceTo(p);
+
+        //We're not using the gravitational constant here because we're not trying to simulate the real world
+        this.influence.setLength(p.mass / distance ** 2);
+        this.influence.setAngle(angle);
+      }
+    }
+  </script>
   <script>
     let canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
@@ -28,42 +76,84 @@
     var height = window.innerHeight;
     canvas.width = width;
     canvas.height = height;
-    const particle = new Particle(
-      width / 2,
-      height / 2,
-      3,
-      Math.random() * Math.PI * 2
-    );
-    particle.radius = 20;
+    const particles = [];
+    const mouse = { x: 0, y: 0 };
+    window.addEventListener("mousemove", (e) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    });
+    const particleAttractor = new Particle(mouse.x, mouse.y, 0, 0, 0.1);
+    particleAttractor.mass = 1000;
   </script>
   <script>
-    const draw = () => {
-      ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
-
-      particle.update();
-
-      ctx.beginPath();
-      ctx.arc(
-        particle.position.getX(),
-        particle.position.getY(),
-        particle.radius,
-        0,
-        Math.PI * 2,
-        false
+    for (let i = 0; i < 100; i += 1) {
+      const p = new Particle(
+        width / 2,
+        height * Math.random(),
+        1,
+        Math.PI + (Math.random() * 0.2 - 0.1),
+        0.1
       );
-      ctx.fill();
+      p.radius = Math.random() * 10 + 5;
+      particles.push({ beginAnim: false, p });
+    }
+  </script>
 
-      //screen wraps
-      if (particle.position.getX() > width) {
-        particle.position.setX(0);
-      } else if (particle.position.getX() < 0) {
-        particle.position.setX(width);
-      }
+  <script>
+    const draw = () => {
+      ctx.fillStyle = "rgba(255, 255, 255, 0.55)";
+      ctx.fillRect(0, 0, width, height);
+      //smooth screen wraps
+      // if (particle.position.getX() - particle.radius > width) {
+      //   particle.position.setX(-particle.radius);
+      // } else if (particle.position.getX() + particle.radius < 0) {
+      //   particle.position.setX(width + particle.radius);
+      // }
 
-      if (particle.position.getY() > height) {
-        particle.position.setY(0);
-      } else if (particle.position.getY() < 0) {
-        particle.position.setY(height);
+      // if (particle.position.getY() - particle.radius > height) {
+      //   particle.position.setY(-particle.radius);
+      // } else if (particle.position.getY() + particle.radius < 0) {
+      //   particle.position.setY(height + particle.radius);
+      // }
+
+      //remove unused particles
+      //refer to the gravity-with-more-stuff.html for the example
+
+      particleAttractor.position = new Vector(mouse.x, mouse.y);
+
+      ctx.fillStyle = "black";
+      //Regeneration
+      for (let i = 0; i < particles.length; i += 1) {
+        const { beginAnim, p } = particles[i];
+
+        if (beginAnim) {
+          ctx.beginPath();
+          ctx.arc(
+            p.position.getX(),
+            p.position.getY(),
+            p.radius,
+            0,
+            Math.PI * 2,
+            false
+          );
+
+          ctx.fill();
+
+          p.influencedBy(particleAttractor);
+        }
+
+        p.update();
+
+        if (p.position.getY() - p.radius > height) {
+          //restore to center of screen
+          p.position.setX(width / 2);
+          p.position.setY(height);
+          //reset velocity to same as before
+          p.velocity.setLength(Math.random() * 8 + 5);
+          p.velocity.setAngle(-Math.PI + (Math.random() * 0.2 - 0.1));
+
+          particles[i].beginAnim = true;
+        }
       }
 
       requestAnimationFrame(draw);
