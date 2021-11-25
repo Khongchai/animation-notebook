@@ -42,9 +42,9 @@ class Vector {
   }
 
   add(vectorToAdd) {
-    const dy = this._x + vectorToAdd.getY();
-    const dx = this._y + vectorToAdd.getX();
-    return new Vector(dy, dx);
+    const dx = this._x + vectorToAdd.getX();
+    const dy = this._y + vectorToAdd.getY();
+    return new Vector(dx, dy);
   }
 
   subtract(vectorToSubtract) {

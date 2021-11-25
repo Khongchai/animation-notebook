@@ -18,6 +18,8 @@
   <body onload="draw();">
     <div><canvas id="canvas"></canvas></div>
   </body>
+  <script src="../../classes/particles.js"></script>
+  <script src="../../classes/vectors.js"></script>
   <script>
     let canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
@@ -25,11 +27,42 @@
     var height = window.innerHeight;
     canvas.width = width;
     canvas.height = height;
+    const p = new Particle(width / 2, height / 2, 5, Math.PI * 2);
+    p.radius = 40;
+
     const draw = () => {
       ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
-      //if you see this, canvas is working
-      ctx.arc(width / 2, height / 2, 100, 0, 2 * Math.PI);
-      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(
+        p.position.getX(),
+        p.position.getY(),
+        p.radius,
+        0,
+        Math.PI * 2,
+        false
+      );
+      ctx.fill();
+
+      p.update();
+
+      if (p.position.getX() + p.radius > width) {
+        p.position.setX(width - p.radius);
+        p.velocity.setX(p.velocity.getX() * -1);
+      }
+      if (p.position.getX() - p.radius < 0) {
+        p.position.setX(p.radius);
+        p.velocity.setX(p.velocity.getX() * -1);
+      }
+      if (p.position.getY() + p.radius > height) {
+        p.position.setY(height - p.radius);
+        p.velocity.setY(p.velocity.getY() * -1);
+      }
+      if (p.position.getY() - p.radius < 0) {
+        p.position.setY(p.radius);
+        p.velocity.setY(p.velocity.getY() * -1);
+      }
+
       requestAnimationFrame(draw);
     };
   </script>
