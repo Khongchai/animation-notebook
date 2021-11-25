@@ -4,6 +4,7 @@ class Particle {
   gravity = null;
   mass = 1;
   radius = 0;
+  bounce = -1;
 
   constructor(x, y, magnitude, direction, gravity) {
     this.position = new Vector(x, y);
