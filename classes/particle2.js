@@ -1,6 +1,9 @@
 class Particle {
-  position = null;
-  velocity = null;
+  x = 0;
+  y = 0;
+  vx = 0;
+  vy = 0;
+
   gravity = null;
   mass = 1;
   radius = 0;
@@ -8,24 +11,29 @@ class Particle {
   friction = 1;
 
   constructor(x, y, magnitude, direction, gravity) {
-    this.position = new Vector(x, y);
-    this.velocity = new Vector(0, 0);
-    this.velocity.setLength(magnitude);
-    this.velocity.setAngle(direction);
-    this.gravity = new Vector(0, gravity || 0);
+    this.x = x;
+    this.y = y;
+    this.vx = Math.cos(direction) * magnitude;
+    this.vy = Math.sin(direction) * magnitude;
+    this.gravity = gravity || 0;
+  }
+
+  accelerate(ax, ay) {
+    this.vx += ax;
+    this.vy += ay;
   }
 
   update() {
-    this.velocity = this.velocity.multiply(this.friction);
-    this.velocity = this.velocity.add(this.gravity);
-    this.position = this.position.add(this.velocity);
+    this.vx = this.vx * this.friction;
+    //this optimization limits gravity to the y axis.
+    this.vy = this.vy * this.friction + this.gravity;
+    this.x += this.vx;
+    this.y += this.vy;
   }
 
+  //TODO continue optimizing from here.
   angleTo(p) {
-    return Math.atan2(
-      p.position.getY() - this.position.getY(),
-      p.position.getX() - this.position.getX()
-    );
+    return Math.atan2(p.y - this.y, p.x - this.x);
   }
 
   distanceTo(p) {
