@@ -114,8 +114,7 @@
       }
 
       getVector() {
-        //y vert is inverted because of the way the canvas is drawn
-        return new Vector(this.end.x - this.begin.x, this.begin.y - this.end.y);
+        return new Vector(this.end.x - this.begin.x, this.end.y - this.begin.y);
       }
     }
   </script>
@@ -166,7 +165,7 @@
         velocityLine.begin.x,
         velocityLine.begin.y,
         velocityVector.getLength() * 0.03,
-        velocityVector.getAngle() + Math.PI / 2
+        velocityVector.getAngle()
       );
       newCelestialBody.mass = Math.random() * 600;
       allElements.push({
