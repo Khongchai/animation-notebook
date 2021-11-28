@@ -37,18 +37,25 @@ class Particle {
   }
 
   distanceTo(p) {
-    return Math.sqrt(
-      Math.pow(p.position.getX() - this.position.getX(), 2) +
-        Math.pow(p.position.getY() - this.position.getY(), 2)
-    );
+    return Math.sqrt(p.x * p.x - this.x * this.x + p.y * p.y - this.y * this.y);
   }
 
   gravitateTo(p) {
-    const angle = this.angleTo(p);
-    const distance = this.distanceTo(p);
+    const distanceX = p.x - this.x;
+    const distanceY = p.y - this.y;
+    const distanceSquared = distanceX * distanceX + distanceY * distanceY;
+    const distance = Math.sqrt(distanceSquared);
 
-    //We're not using the gravitational constant here because we're not trying to simulate the real world
-    this.gravity.setLength(p.mass / distance ** 2);
-    this.gravity.setAngle(angle);
+    const force = p.mass / (distanceX * distanceX) + distanceY * distanceY;
+
+    //Instead of doing this, we can skip the sqrt and just do the division.
+    //This is a very small optimization, but it's a good one.
+    // const angle = this.angleTo(p);
+    // const ax = force * Math.cos(angle);
+    // const ay = force * Math.sin(angle);
+    const ax = force * (distanceX / distance);
+    const ay = force * (distanceY / distance);
+
+    this.accelerate(ax, ay);
   }
 }
