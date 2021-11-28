@@ -1,3 +1,5 @@
+<!-- TODO optimize to O(logn), right now, the running time is O(n^2) -->
+<!-- TODO apply edge-handling -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -20,49 +22,62 @@
   <script src="../classes/vectors.js"></script>
   <script>
     class Particle {
-      position = null;
-      velocity = null;
+      x = 0;
+      y = 0;
+      vx = 0;
+      vy = 0;
+
       gravity = null;
       mass = 1;
       radius = 0;
+      bounce = -1;
 
-      constructor(x, y, magnitude, direction, gravity) {
-        this.position = new Vector(x, y);
-        this.velocity = new Vector(0, 0);
-        this.velocity.setLength(magnitude);
-        this.velocity.setAngle(direction);
-        this.gravity = new Vector(0, gravity || 0);
+      constructor(x, y, magnitude, direction, gx, gy) {
+        this.x = x;
+        this.y = y;
+        this.vx = Math.cos(direction) * magnitude;
+        this.vy = Math.sin(direction) * magnitude;
+        this.gx = gx || 0;
+        this.gy = gy || 0;
       }
 
       updateGravity() {
-        this.velocity = this.velocity.add(this.gravity);
+        this.vx += this.gx;
+        this.vy += this.gy;
       }
 
       updateVelocity() {
-        this.position = this.position.add(this.velocity);
+        this.x += this.vx;
+        this.y += this.vy;
       }
 
       angleTo(p) {
-        return Math.atan2(
-          p.position.getY() - this.position.getY(),
-          p.position.getX() - this.position.getX()
-        );
+        return Math.atan2(p.y - this.y, p.x - this.x);
       }
 
       distanceTo(p) {
         return Math.sqrt(
-          Math.pow(p.position.getX() - this.position.getX(), 2) +
-            Math.pow(p.position.getY() - this.position.getY(), 2)
+          p.x * p.x - this.x * this.x + p.y * p.y - this.y * this.y
         );
       }
 
       gravitateTo(p) {
-        const angle = this.angleTo(p);
-        const distance = this.distanceTo(p);
+        const distanceX = p.x - this.x;
+        const distanceY = p.y - this.y;
+        const distanceSquared = distanceX * distanceX + distanceY * distanceY;
+        const distance = Math.sqrt(distanceSquared);
 
-        //We're not using the gravitational constant here because we're not trying to simulate the real world
-        this.gravity.setLength(p.mass / distance ** 2);
-        this.gravity.setAngle(angle);
+        const force = p.mass / distanceSquared;
+
+        //Instead of doing this, we can skip the sqrt and just do the division.
+        //This is a very small optimization, but it's a good one.
+        // const angle = this.angleTo(p);
+        // const ax = force * Math.cos(angle);
+        // const ay = force * Math.sin(angle);
+        const gx = force * (distanceX / distance);
+        const gy = force * (distanceY / distance);
+        this.gx = gx;
+        this.gy = gy;
       }
     }
   </script>
@@ -125,7 +140,7 @@
     let velocityLine = new VelocityLine();
 
     /*
-        Gravity = Gravity = inversely proportional to the square of the distance between the two particles
+        Gravity = inversely proportional to the square of the distance between the two particles
       */
     let canvas = document.getElementById("canvas"),
       ctx = canvas.getContext("2d"),
@@ -180,8 +195,8 @@
       //instead of clearRect, draw a trail
       velocityLine.drawVelocityLine(ctx, "white");
 
-      // ctx.fillStyle = "rgba(255, 255, 255, 0.15)";
-      // ctx.fillRect(0, 0, width, height);
+      ctx.fillStyle = "rgba(0, 0, 0, 0.15)";
+      ctx.fillRect(0, 0, width, height);
 
       gravitateEverythingTowardsOneAnother(true);
 
@@ -197,12 +212,13 @@
             allElements[i].obj.gravitateTo(allElements[j].obj);
           }
           allElements[i].obj.updateGravity();
-          //check height
+
+          //chekc boundaries
           if (
-            allElements[i].obj.position.getY() > height ||
-            allElements[i].obj.position.getY() < 0 ||
-            allElements[i].obj.position.getX() > width ||
-            allElements[i].obj.position.getX() < 0
+            allElements[i].obj.y > height ||
+            allElements[i].obj.y < 0 ||
+            allElements[i].obj.x > width ||
+            allElements[i].obj.x < 0
           ) {
             allElements.splice(i, 1);
             return;
@@ -214,8 +230,8 @@
         ctx.beginPath();
         ctx.fillStyle = allElements[i].color;
         ctx.arc(
-          allElements[i].obj.position.getX(),
-          allElements[i].obj.position.getY(),
+          allElements[i].obj.x,
+          allElements[i].obj.y,
           //this looks kind of cool.
           Math.random() *
             10 *

@@ -31,7 +31,6 @@ class Particle {
     this.y += this.vy;
   }
 
-  //TODO continue optimizing from here.
   angleTo(p) {
     return Math.atan2(p.y - this.y, p.x - this.x);
   }
