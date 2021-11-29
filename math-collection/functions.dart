@@ -1,4 +1,5 @@
 import 'dart:math';
+import "dart:core";
 
 import 'classes/point.dart';
 
@@ -102,4 +103,12 @@ List<double> range(double low, double high, int n) {
   */
 
   return arr;
+}
+
+int randInt(min, max) {
+  return (Random().nextDouble() + min * (max - min + 1)).floor();
+}
+
+double hookesLaw(double x, double y, double k) {
+  return (y - x) * k;
 }

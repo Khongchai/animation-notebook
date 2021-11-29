@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      html,
+      body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+      }
+    </style>
+  </head>
+  <script src="../classes/particles.js"></script>
+  <script src="../classes/vectors.js"></script>
+  <body onload="draw();">
+    <div><canvas id="canvas"></canvas></div>
+  </body>
+  <script>
+    //Hooke's Law => F = kx where k is the spring constant and x is the distance between the two points
+    //This is very similar to linear interpolation, but with a different equation
+    //The difference is that the spring constant is a constant, and the distance is a variable
+    let canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+    const springPoint = new Vector(width / 2, height / 2);
+    //weight is the thing at the end of the spring
+    const weight = new Particle(
+      Math.random() * width,
+      Math.random() * height,
+      0,
+      Math.PI * 2 * Math.random()
+    );
+    const k = 0.2;
+
+    weight.radius = 20;
+    weight.friction = 0.7;
+
+    window.onmousemove = function (e) {
+      springPoint.setX(e.x);
+      //radius is just to offset
+      springPoint.setY(e.y + weight.radius);
+    };
+
+    const draw = () => {
+      ctx.clearRect(0, 0, width, height);
+
+      const distance = springPoint.subtract(weight.position);
+      const springForce = distance.multiply(k);
+
+      weight.velocity = weight.velocity.add(springForce);
+
+      //Comment weight.update for linear interpolation and
+      //comment the two lines below for Hooke's Law
+
+      weight.update();
+      //   weight.position.setX(weight.velocity.getX());
+      //   weight.position.setY(weight.velocity.getY());
+
+      ctx.beginPath();
+      ctx.arc(
+        weight.position.getX(),
+        weight.position.getY(),
+        weight.radius,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
+
+      //   ctx.beginPath();
+      //   ctx.arc(springPoint.getX(), springPoint.getY(), 4, 0, Math.PI * 2);
+      //   ctx.fill();
+
+      //   ctx.beginPath();
+      //   ctx.moveTo(springPoint.getX(), springPoint.getY());
+      //   ctx.lineTo(weight.position.getX(), weight.position.getY());
+      //   ctx.stroke();
+
+      requestAnimationFrame(draw);
+    };
+  </script>
+</html>

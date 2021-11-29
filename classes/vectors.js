@@ -27,6 +27,7 @@ class Vector {
     this._x = Math.cos(angle) * length;
     this._y = Math.sin(angle) * length;
   }
+
   getAngle() {
     return Math.atan2(this._y, this._x);
   }
