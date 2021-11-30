@@ -1,0 +1,125 @@
+<!-- Directly compares linear interpolation and Hooke's law. -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      html,
+      body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body onload="draw();">
+    <div><canvas id="canvas"></canvas></div>
+  </body>
+  <script>
+    let canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+    const mouse = {
+      x: 0,
+      y: 0,
+    };
+    const mouseDownAt = {
+      x: 0,
+      y: 0,
+    };
+    let mouseDown = false;
+    const ballRadius = 20;
+
+    window.addEventListener("mousedown", (e) => {
+      const extraHitArea = 100;
+      if (
+        e.x > delayedMouse.x - extraHitArea &&
+        e.y < delayedMouse.x + ballRadius + extraHitArea
+      ) {
+        mouseDown = true;
+      }
+    });
+    window.addEventListener("mouseup", (e) => {
+      mouseDown = false;
+
+      mouse.x += delayedMouse.vX;
+      mouse.y += delayedMouse.vY;
+      bufferMouse.x = mouse.x * 0.3;
+      bufferMouse.y = mouse.y * 0.3;
+    });
+
+    window.onmousemove = (e) => {
+      mouse.x = e.x;
+      mouse.y = e.y;
+    };
+
+    const bufferMouse = {
+      x: 0,
+      y: 0,
+    };
+
+    const delayedMouse = {
+      x: 0,
+      y: 0,
+      vX: 0,
+      vY: 0,
+    };
+    const k = 0.2;
+
+    const draw = () => {
+      if (mouseDown) {
+        bufferMouse.x = mouse.x;
+        bufferMouse.y = mouse.y;
+      }
+      //with lerp, you cannot  swing stuff around, but you can do it with hooke's law
+
+      /*
+        Hookes law is linear interpolation with extra steps.
+      */
+      //This is just gonna keep going up and up and up until delayedMouse.x returns a negative value
+      delayedMouse.vX += hookesLaw(delayedMouse.x, bufferMouse.x, k);
+      delayedMouse.vY += hookesLaw(delayedMouse.y, bufferMouse.y, k);
+      //This gonna be like, hey there, slow down
+      delayedMouse.vY *= 0.7; // friction
+      delayedMouse.vX *= 0.7; // friction
+      //This gon be like "hey, let me use that slowed down value"
+      delayedMouse.x += delayedMouse.vX;
+      delayedMouse.y += delayedMouse.vY;
+
+      /*
+        Linear interpolation
+      */
+      //   delayedMouse.y = lerp(delayedMouse.y, mouse.y, 0.1);
+      //   delayedMouse.x = lerp(delayedMouse.x, mouse.x, 0.1);
+      ctx.fillStyle = "rgba(0, 0, 0, 1)";
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.fillStyle = "violet";
+      ctx.strokeStyle = "violet";
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(delayedMouse.x, delayedMouse.y);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(delayedMouse.x, delayedMouse.y, ballRadius, 0, Math.PI * 2);
+      ctx.fill();
+
+      requestAnimationFrame(draw);
+    };
+
+    function hookesLaw(x, y, k) {
+      return (y - x) * k;
+    }
+
+    function lerp(x, y, k) {
+      return x + hookesLaw(x, y, k);
+    }
+  </script>
+</html>
