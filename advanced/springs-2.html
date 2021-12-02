@@ -14,21 +14,115 @@
       }
     </style>
   </head>
+  <script src="../classes/particles.js"></script>
+  <script src="../classes/vectors.js"></script>
   <body onload="draw();">
     <div><canvas id="canvas"></canvas></div>
   </body>
   <script>
+    //Hooke's Law => F = kx where k is the spring constant and x is the distance between the two points
+    //This is very similar to linear interpolation, but with a different equation
+    //The difference is that the spring constant is a constant, and the distance is a variable
     let canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
     var width = window.innerWidth;
     var height = window.innerHeight;
     canvas.width = width;
     canvas.height = height;
+    const springPoint = new Vector(width / 2, height / 2);
+    //weight is the thing at the end of the spring
+    const weight = new Particle(
+      Math.random() * width,
+      Math.random() * height,
+      50,
+      Math.PI * 2 * Math.random(),
+      0.5
+    );
+    const k = 0.1;
+    const springLength = 100;
+
+    weight.radius = 20;
+    weight.friction = 0.95;
+
+    const springPointRadius = 4;
+
+    const mouse = {
+      x: 0,
+      y: 0,
+      delayedX: 0,
+      delayedY: 0,
+    };
+
+    let mouseDown = false;
+
+    window.addEventListener("mousedown", function (e) {
+      if (
+        springPoint.getX() - springPointRadius < mouse.delayedX &&
+        mouse.delayedX <= springPoint.getX() + springPointRadius
+      )
+        mouseDown = true;
+    });
+
+    window.addEventListener("mouseup", function (e) {
+      mouseDown = false;
+    });
+
+    window.onmousemove = function (e) {
+      if (mouseDown) {
+        mouse.x = e.x;
+        mouse.y = e.y;
+      }
+    };
+
     const draw = () => {
-      ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
-      //if you see this, canvas is working
-      ctx.arc(width / 2, height / 2, 100, 0, 2 * Math.PI);
+      const springPointFriction = mouseDown ? 0.3 : 0.07;
+      mouse.delayedX += (mouse.x - mouse.delayedX) * springPointFriction;
+      mouse.delayedY += (mouse.y - mouse.delayedY) * springPointFriction;
+
+      springPoint.setX(mouse.delayedX);
+      //radius is just to offset
+      springPoint.setY(mouse.delayedY + weight.radius / 2);
+
+      ctx.clearRect(0, 0, width, height);
+
+      const distance = springPoint.subtract(weight.position);
+      distance.setLength(distance.getLength() - springLength);
+      const springForce = distance.multiply(k);
+
+      weight.velocity = weight.velocity.add(springForce);
+
+      //Comment weight.update for linear interpolation and
+      //comment the two lines below for Hooke's Law
+
+      weight.update();
+      // weight.position.setX(weight.velocity.getX());
+      // weight.position.setY(weight.velocity.getY());
+
+      ctx.beginPath();
+      ctx.arc(
+        weight.position.getX(),
+        weight.position.getY(),
+        weight.radius,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(
+        springPoint.getX(),
+        springPoint.getY(),
+        springPointRadius,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.moveTo(springPoint.getX(), springPoint.getY());
+      ctx.lineTo(weight.position.getX(), weight.position.getY());
       ctx.stroke();
+
       requestAnimationFrame(draw);
     };
   </script>
