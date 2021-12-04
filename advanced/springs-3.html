@@ -1,0 +1,170 @@
+<!-- practice project idea => a net of connected spring nodes with gravity source as the cursor -->
+<!-- This algorithm is the basis for the force-directed-graph-layout algorithm -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      html,
+      body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+      }
+    </style>
+  </head>
+  <script src="../classes/particles.js"></script>
+  <script src="../classes/vectors.js"></script>
+  <body onload="draw();">
+    <div><canvas id="canvas"></canvas></div>
+  </body>
+  <script>
+    let canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+    const particleA = new Particle(
+      Math.random() * width,
+      Math.random() * height,
+      Math.random() * 50,
+      Math.random() * Math.PI * 2
+    );
+    const particleB = new Particle(
+      Math.random() * width,
+      Math.random() * height,
+      Math.random() * 50,
+      Math.random() * Math.PI * 2
+    );
+    const particleC = new Particle(
+      Math.random() * width,
+      Math.random() * height,
+      Math.random() * 50,
+      Math.random() * Math.PI * 2
+    );
+    const k = 0.01;
+    const separation = 100;
+
+    particleA.friction = 0.9;
+    particleA.radius = 20;
+
+    particleB.friction = 0.8;
+    particleB.radius = 20;
+
+    particleC.friction = 0.7;
+    particleC.radius = 20;
+
+    canvas.width = width;
+    canvas.height = height;
+
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+
+      spring(particleA, particleB, separation);
+      spring(particleA, particleC, separation);
+      spring(particleB, particleC, separation);
+
+      particleA.update();
+      particleB.update();
+      particleC.update();
+
+      ctx.beginPath();
+      ctx.moveTo(particleA.position.getX(), particleA.position.getY());
+      ctx.lineTo(particleB.position.getX(), particleB.position.getY());
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(particleA.position.getX(), particleA.position.getY());
+      ctx.lineTo(particleC.position.getX(), particleC.position.getY());
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(particleB.position.getX(), particleB.position.getY());
+      ctx.lineTo(particleC.position.getX(), particleC.position.getY());
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(
+        particleA.position.getX(),
+        particleA.position.getY(),
+        particleA.radius,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(
+        particleB.position.getX(),
+        particleB.position.getY(),
+        particleB.radius,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(
+        particleC.position.getX(),
+        particleC.position.getY(),
+        particleC.radius,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
+
+      requestAnimationFrame(draw);
+    };
+
+    const spring = (p0, p1, separation) => {
+      const distance = p0.position.subtract(p1.position);
+      distance.setLength(distance.getLength() - separation);
+
+      const springForce = distance.multiply(k);
+
+      p1.velocity = p1.velocity.add(springForce);
+      p0.velocity = p0.velocity.subtract(springForce);
+    };
+  </script>
+  <script>
+    let mouseDown = false;
+
+    document.addEventListener("mousedown", () => {
+      mouseDown = true;
+    });
+
+    document.addEventListener("mouseup", () => {
+      mouseDown = false;
+    });
+
+    document.addEventListener("mousemove", (e) => {
+      const newX = e.x;
+      const newY = e.y;
+      //Can do better with switch case or something, but this is good enough for now
+      if (mouseDown) {
+        //use if else in case of overlapping particles
+        if (withInParticleBoundary(particleA, { x: newX, y: newY })) {
+          particleA.position.setX(newX);
+          particleA.position.setY(newY);
+        } else if (withInParticleBoundary(particleB, { x: newX, y: newY })) {
+          particleB.position.setX(newX);
+          particleB.position.setY(newY);
+        } else if (withInParticleBoundary(particleC, { x: newX, y: newY })) {
+          particleC.position.setX(newX);
+          particleC.position.setY(newY);
+        }
+      }
+    });
+
+    function withInParticleBoundary(particle, e) {
+      return (
+        particle.position.getX() - particle.radius <= e.x &&
+        e.x <= particle.position.getX() + particle.radius &&
+        particle.position.getY() - particle.radius <= e.y &&
+        e.y <= particle.position.getY() + particle.radius
+      );
+    }
+  </script>
+</html>
