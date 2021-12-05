@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      html,
+      body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body onload="draw();">
+    <div>
+      <canvas id="canvas"></canvas>
+      <div
+        style="
+          position: fixed;
+          width: 30px;
+          height: 30px;
+          background: red;
+          top: 0;
+          left: 0;
+          transform: translate(-50%, -50%);
+          border-radius: 50%;
+        "
+        id="circle"
+      ></div>
+    </div>
+  </body>
+  <script>
+    window.onload = function () {
+      var canvas = document.getElementById("canvas"),
+        context = canvas.getContext("2d"),
+        width = (canvas.width = window.innerWidth),
+        height = (canvas.height = window.innerHeight),
+        gridSize = 120;
+      const circle = document.getElementById("circle");
+
+      document.addEventListener("mousemove", function (e) {
+        const x = snapToGrid(e.clientX, gridSize);
+        const y = snapToGrid(e.clientY, gridSize);
+        circle.style.left = x + "px";
+        circle.style.top = y + "px";
+      });
+
+      drawGrid();
+
+      function drawGrid() {
+        context.beginPath();
+        context.strokeStyle = "#ccc";
+        for (var x = 0; x <= width; x += gridSize) {
+          context.moveTo(x, 0);
+          context.lineTo(x, height);
+        }
+        for (var y = 0; y <= height; y += gridSize) {
+          context.moveTo(0, y);
+          context.lineTo(width, y);
+        }
+        context.stroke();
+      }
+    };
+
+    function snapToGrid(value, gridSize) {
+      return Math.round(value / gridSize) * gridSize;
+    }
+  </script>
+</html>

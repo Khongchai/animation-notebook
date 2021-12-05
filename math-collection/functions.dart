@@ -50,6 +50,28 @@ bool rectanglePointColliding(Point point, Rectangle rectangle) {
       inRangeTrueMaxMin(point.y, rectangle.y, rectangle.y + rectangle.height));
 }
 
+num roundToPlaces(num number, num pos) {
+  num newPos = pow(10, pos);
+  return (number * newPos).round() / newPos;
+}
+
+//This is very useful for snapping to grids and stuff
+//Nearest can be like the grid xy size or something
+//By dividing by the nearest value, you can get the nearest multiple of the nearest value
+/*
+  example:
+  nearest = 40
+  num = 113
+  nearestMultiple = nearest * (num / nearest).round()
+  nearestMultiple = 40 * (113 / 40).round()
+  nearestMultiple = 40 * (2.825).round()
+  nearestMultiple = 40 * 3
+  nearestMultiple = 120 (the nearest multiple of 40)
+*/
+num roundNearest(value, nearest) {
+  return (value / nearest).round() * nearest;
+}
+
 Point quadraticBezier(Point p0, Point p1, Point p2, double t, Point pFinal) {
   /**
    * You can prove the equation below by expanding the following 
