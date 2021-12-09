@@ -127,8 +127,14 @@ List<double> range(double low, double high, int n) {
   return arr;
 }
 
-int randInt(min, max) {
-  return (Random().nextDouble() + min * (max - min + 1)).floor();
+num randomRange(num min, num max) {
+  num range = max - min;
+  return min + Random().nextDouble() * range;
+}
+
+int randomInt(int min, int max) {
+  int range = max - min;
+  return (min + Random().nextDouble() * range).round();
 }
 
 double hookesLaw(double x, double y, double k) {

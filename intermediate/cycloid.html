@@ -25,6 +25,26 @@
       radius: 50,
     };
 
+    const translatePos = {
+      x: 0,
+      y: 0,
+    };
+
+    let mouseDownCoord;
+
+    canvas.addEventListener("mousedown", (e) => {
+      mouseDownCoord = { x: e.x, y: e.y };
+    });
+
+    canvas.addEventListener("mousemove", (e) => {
+      if (mouseDownCoord) {
+        translatePos.x = e.x - mouseDownCoord.x;
+        translatePos.y = e.y - mouseDownCoord.y;
+      }
+    });
+
+    canvas.addEventListener("mouseup", () => (mouseDownCoord = null));
+
     let last = {
       x: Math.sin(0) * circleProps.radius,
       y: Math.cos(0) * circleProps.radius,
@@ -35,13 +55,15 @@
     };
     const t = 10;
 
-    ctx.translate(0, canvas.height / 2);
+    ctx.translate(0, window.innerHeight / 2);
 
     const center = { x: canvas.width / 2, y: canvas.height / 2 };
 
     const draw = () => {
       //   ctx.clearRect(-center.x, -center.y, canvas.width, canvas.height);
       // if (dx > Math.PI * 2) return;
+      ctx.save();
+      ctx.translate(translatePos.x, translatePos.y);
       theta += (Math.PI / 800) * Math.PI * 2;
 
       last.x = cur.x;
@@ -60,6 +82,7 @@
       ctx.lineTo(cur.x, cur.y);
       ctx.stroke();
 
+      ctx.restore();
       requestAnimationFrame(draw);
     };
   </script>
