@@ -1,3 +1,4 @@
+//Optimized particle; not using a vector class
 class Particle {
   x = 0;
   y = 0;

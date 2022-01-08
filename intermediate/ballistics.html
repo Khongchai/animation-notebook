@@ -1,0 +1,172 @@
+<!-- todo clamp angle and control position of gun without jumping -->
+<!-- Exercise project: once all things are done, capture the shot cannon ball with your mouse -->
+<!-- Collision detection and bounce physics -->
+<!-- Collision detection against another inanimate object -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      canvas {
+        height: 100%;
+        width: 100%;
+        padding: 0;
+        margin: 0;
+        border: none;
+      }
+    </style>
+  </head>
+  <body onload="draw();">
+    <div>
+      <canvas id="canvas" style="border: 1px solid black"></canvas>
+    </div>
+  </body>
+  <script src="../classes/particle2.js"></script>
+  <script src="../classes/vectors.js"></script>
+  <script>
+    let canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    canvas.setAttribute("width", width);
+    canvas.setAttribute("height", height);
+    const gun = {
+      x: 100,
+      y: window.innerHeight,
+      angle: -Math.PI / 4,
+    };
+    const cannonball = new Particle(gun.x, gun.y, 15, gun.angle, 0.2);
+    //cannonball's circumference = 14, slightly smaller than the gun's diameter
+    cannonball.radius = 7;
+    let isShooting = true;
+
+    const dx = 0.1;
+    let x = 0;
+    let rawForce = 0;
+
+    function trackMouse(mouseX, mouseY) {
+      gun.angle = Math.atan2(mouseY - gun.y, mouseX - gun.x);
+    }
+
+    document.addEventListener("mousedown", onMouseDown);
+    document.addEventListener("keydown", onKeyDown);
+
+    function onMouseMove(e) {
+      aimGun(e);
+    }
+
+    function onMouseDown(e) {
+      document.addEventListener("mousemove", onMouseMove);
+      document.addEventListener("mouseup", onMouseUp);
+
+      aimGun(e);
+    }
+
+    function onMouseUp(e) {
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+      aimGun(e);
+    }
+
+    function onKeyDown(e) {
+      switch (e.keyCode) {
+        case 32:
+          if (!isShooting) {
+            shoot();
+          }
+          break;
+
+        default:
+          break;
+      }
+    }
+
+    function shoot() {
+      //Set cannonball at the gun's end
+      const force = remap(-1, 1, 2, 20, rawForce);
+      cannonball.x = gun.x + Math.cos(gun.angle) * 40;
+      cannonball.y = gun.y + Math.sin(gun.angle) * 40;
+      cannonball.vx = Math.cos(gun.angle) * force;
+      cannonball.vy = Math.sin(gun.angle) * force;
+
+      ballFired();
+    }
+
+    function update() {
+      if (!isShooting) {
+        x += dx;
+      }
+      rawForce = Math.sin(x);
+      if (isShooting) {
+        cannonball.update();
+      }
+
+      draw();
+
+      if (cannonball.y > height) {
+        ballStopped();
+      }
+      requestAnimationFrame(update);
+    }
+
+    function aimGun(e) {
+      trackMouse(e.clientX, e.clientY);
+    }
+
+    const draw = () => {
+      ctx.clearRect(0, 0, width, height);
+
+      ctx.fillStyle = "#ccc";
+      ctx.fillRect(10, height - 10, 20, -100);
+
+      ctx.fillStyle = "#666";
+
+      ctx.fillRect(10, height - 10, 20, remap(-1, 1, 0, -100, rawForce));
+
+      ctx.beginPath();
+      ctx.arc(gun.x, gun.y, 24, 0, Math.PI * 2, false);
+      ctx.fill();
+
+      ctx.save();
+      ctx.translate(gun.x, gun.y);
+      ctx.rotate(gun.angle);
+      ctx.fillRect(0, -8, 40, 16);
+      ctx.restore();
+
+      ctx.beginPath();
+      ctx.arc(
+        cannonball.x,
+        cannonball.y,
+        cannonball.radius,
+        0,
+        Math.PI * 2,
+        false
+      );
+      ctx.fill();
+    };
+
+    function ballFired() {
+      isShooting = true;
+    }
+
+    function ballStopped() {
+      isShooting = false;
+    }
+
+    function remap(iMin, iMax, oMin, oMax, weight) {
+      return lerp(oMin, oMax, inverseLerp(iMin, iMax, weight));
+    }
+
+    function lerp(start, end, amt) {
+      return (1 - amt) * start + amt * end;
+    }
+
+    function inverseLerp(min, max, value) {
+      return (value - min) / (max - min);
+    }
+    update();
+  </script>
+</html>
