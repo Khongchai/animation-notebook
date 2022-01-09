@@ -29,7 +29,7 @@
       <canvas id="canvas" style="border: 1px solid black"></canvas>
     </div>
   </body>
-  <script src="../classes/particle2.js"></script>
+  <script src="../classes/particle3.js"></script>
   <script src="../classes/vectors.js"></script>
   <script>
     let canvas = document.getElementById("canvas");
@@ -71,6 +71,7 @@
   <script>
     function trackMouse() {
       //Use currentMouse as the spring bounce point
+
       delayedMouse.vx += (currentMouse.x - delayedMouse.x) * 0.4;
       delayedMouse.vy += (currentMouse.y - delayedMouse.y) * 0.4;
       delayedMouse.vx *= 0.7;
@@ -118,8 +119,8 @@
       const force = remap(-1, 1, 2, 50, rawForce);
       cannonBall.x = gun.x + Math.cos(gun.angle) * 40;
       cannonBall.y = gun.y + Math.sin(gun.angle) * 40;
-      cannonBall.vx = Math.cos(gun.angle) * force;
-      cannonBall.vy = Math.sin(gun.angle) * force;
+      cannonBall.setSpeed(force);
+      cannonBall.setAngle(gun.angle);
       cannonBallArray.push(cannonBall);
     }
 

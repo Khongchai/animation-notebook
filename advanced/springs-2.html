@@ -85,18 +85,8 @@
 
       ctx.clearRect(0, 0, width, height);
 
-      const distance = springPoint.subtract(weight.position);
-      distance.setLength(distance.getLength() - springLength);
-      const springForce = distance.multiply(k);
-
-      weight.velocity = weight.velocity.add(springForce);
-
-      //Comment weight.update for linear interpolation and
-      //comment the two lines below for Hooke's Law
-
+      weight.springTo(springPoint, k, springLength);
       weight.update();
-      // weight.position.setX(weight.velocity.getX());
-      // weight.position.setY(weight.velocity.getY());
 
       ctx.beginPath();
       ctx.arc(

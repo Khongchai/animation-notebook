@@ -43,4 +43,13 @@ class Particle {
     this.gravity.setLength(p.mass / distance ** 2);
     this.gravity.setAngle(angle);
   }
+
+  springTo(p, springConstant, springLength) {
+    const distance = p.subtract(this.position);
+    distance.setLength(distance.getLength() - springLength);
+
+    const springForce = distance.multiply(springConstant);
+
+    this.velocity = this.velocity.add(springForce);
+  }
 }
