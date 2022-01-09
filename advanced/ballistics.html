@@ -1,6 +1,12 @@
 <!-- Exercise project: once all things are done, capture the shot cannon ball with your mouse -->
-<!-- Collision detection and bounce physics -->
-<!-- Collision detection against another inanimate object -->
+<!-- Balls should also be attracted by other objects -->
+<!-- Simple game idea -->
+<!-- Initial point = 50 -->
+<!-- Each ball costs 5 points to fire -->
+<!-- Each object attracts one another, except the target -->
+<!-- You get 1 point if you hit the target directly without bouncing -->
+<!-- But if you bounce before hitting the target, you get 10 points for each bounce with some extra points proportional to momental loss.-->
+<!-- Also learn about offloading heavy-computation stuff to another thread or something -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -39,10 +45,9 @@
       length: 40,
       width: 16,
     };
-    const cannonball = new Particle(gun.x, gun.y, 15, gun.angle, 0.2);
+    let cannonBallArray = [];
     //cannonball's circumference = 14, slightly smaller than the gun's diameter
-    cannonball.radius = 7;
-    let isShooting = true;
+    const cannonBallBounceFriction = -0.7;
     const target = {
       x: 0,
       y: 0,
@@ -62,7 +67,8 @@
     const dx = 0.1;
     let x = 0;
     let rawForce = 0;
-
+  </script>
+  <script>
     function trackMouse() {
       //Use currentMouse as the spring bounce point
       delayedMouse.vx += (currentMouse.x - delayedMouse.x) * 0.4;
@@ -75,9 +81,6 @@
       const angle = Math.atan2(delayedMouse.y - gun.y, delayedMouse.x - gun.x);
       gun.angle = angle;
     }
-
-    document.addEventListener("mousedown", onMouseDown);
-    document.addEventListener("keydown", onKeyDown);
 
     function onMouseMove(e) {
       aimGun(e);
@@ -99,9 +102,7 @@
     function onKeyDown(e) {
       switch (e.keyCode) {
         case 32:
-          if (!isShooting) {
-            shoot();
-          }
+          shoot();
           break;
 
         default:
@@ -111,13 +112,15 @@
 
     function shoot() {
       //Set cannonball at the gun's end
-      const force = remap(-1, 1, 2, 50, rawForce);
-      cannonball.x = gun.x + Math.cos(gun.angle) * 40;
-      cannonball.y = gun.y + Math.sin(gun.angle) * 40;
-      cannonball.vx = Math.cos(gun.angle) * force;
-      cannonball.vy = Math.sin(gun.angle) * force;
+      const cannonBall = new Particle(gun.x, gun.y, 15, gun.angle, 0.2);
+      cannonBall.radius = 7;
 
-      ballFired();
+      const force = remap(-1, 1, 2, 50, rawForce);
+      cannonBall.x = gun.x + Math.cos(gun.angle) * 40;
+      cannonBall.y = gun.y + Math.sin(gun.angle) * 40;
+      cannonBall.vx = Math.cos(gun.angle) * force;
+      cannonBall.vy = Math.sin(gun.angle) * force;
+      cannonBallArray.push(cannonBall);
     }
 
     function setTarget() {
@@ -129,29 +132,16 @@
       target.radius = radMin + Math.random() * (radMax - radMin);
     }
 
-    function update() {
-      if (!isShooting) {
-        x += dx;
-      }
-      rawForce = Math.sin(x);
-
-      if (isShooting) {
-        checkTarget();
-        cannonball.update();
-      }
-      draw();
-
-      if (cannonball.y > height) {
-        ballStopped();
-      }
-      requestAnimationFrame(update);
+    function clearBalls() {
+      cannonBallArray = [];
     }
 
     function checkTarget() {
-      if (circlesColliding(cannonball, target)) {
-        alert("You hit the target!");
-        setTarget();
-        ballStopped();
+      for (let i = 0; i < cannonBallArray.length; i++) {
+        if (circlesColliding(cannonBallArray[i], target)) {
+          setTarget();
+          clearBalls();
+        }
       }
     }
 
@@ -163,11 +153,26 @@
     function draw() {
       ctx.clearRect(0, 0, width, height);
 
-      ctx.fillStyle = "#ccc";
-      ctx.fillRect(10, height - 10, 20, -100);
+      ctx.strokeStyle = "#ccc";
+      ctx.lineWidth = 15;
+      ctx.beginPath();
+      ctx.arc(gun.x, gun.y, gun.length * 2, 0, Math.PI, false);
+      ctx.stroke();
+
+      ctx.strokeStyle = "#666";
+      ctx.lineWidth = 15;
+      ctx.beginPath();
+      ctx.arc(
+        gun.x,
+        gun.y,
+        gun.length * 2,
+        0,
+        remap(-1, 1, 0, Math.PI, rawForce),
+        false
+      );
+      ctx.stroke();
 
       ctx.fillStyle = "#666";
-      ctx.fillRect(10, height - 10, 20, remap(-1, 1, 0, -100, rawForce));
 
       ctx.beginPath();
       ctx.arc(gun.x, gun.y, 24, 0, Math.PI * 2, false);
@@ -181,31 +186,22 @@
 
       trackMouse();
 
-      ctx.beginPath();
-      ctx.arc(
-        cannonball.x,
-        cannonball.y,
-        cannonball.radius,
-        0,
-        Math.PI * 2,
-        false
-      );
-      ctx.fill();
-
+      for (let i = 0; i < cannonBallArray.length; i++) {
+        ctx.beginPath();
+        ctx.arc(
+          cannonBallArray[i].x,
+          cannonBallArray[i].y,
+          cannonBallArray[i].radius,
+          0,
+          Math.PI * 2,
+          false
+        );
+        ctx.fill();
+      }
       ctx.fillStyle = "red";
       ctx.beginPath();
       ctx.arc(target.x, target.y, target.radius, 0, Math.PI * 2, false);
       ctx.fill();
-    }
-
-    function ballFired() {
-      isShooting = true;
-    }
-
-    function ballStopped() {
-      cannonball.y = gun.y;
-      cannonball.x = gun.x;
-      isShooting = false;
     }
 
     function remap(iMin, iMax, oMin, oMax, weight) {
@@ -226,6 +222,53 @@
       const distance = Math.sqrt(dx * dx + dy * dy);
       return c1.radius + c2.radius >= distance;
     }
+
+    function checkEdgeCollision(cannonBall) {
+      const bounceX = () => (cannonBall.vx *= cannonBallBounceFriction);
+      const bounceY = () => (cannonBall.vy *= cannonBallBounceFriction);
+      const collideRight = cannonBall.x + cannonBall.radius > width;
+      const collideLeft = cannonBall.x - cannonBall.radius < 0;
+      const collideTop = cannonBall.y - cannonBall.radius < 0;
+      const collideBottom = cannonBall.y + cannonBall.radius > height;
+
+      if (collideRight) {
+        cannonBall.x = width - cannonBall.radius;
+        bounceX();
+      }
+      if (collideLeft) {
+        cannonBall.x = cannonBall.radius;
+        bounceX();
+      }
+      if (collideBottom) {
+        cannonBall.y = height - cannonBall.radius;
+        //friction when sliding against the ground
+        cannonBall.vx *= 0.99;
+        bounceY();
+      }
+      if (collideTop) {
+        cannonBall.y = cannonBall.radius;
+        bounceY();
+      }
+    }
+
+    function update() {
+      x += dx;
+      rawForce = Math.sin(x);
+
+      checkTarget();
+      for (let i = 0; i < cannonBallArray.length; i++) {
+        cannonBallArray[i].update();
+        checkEdgeCollision(cannonBallArray[i]);
+      }
+
+      draw();
+
+      requestAnimationFrame(update);
+    }
+  </script>
+  <script>
+    document.addEventListener("mousedown", onMouseDown);
+    document.addEventListener("keydown", onKeyDown);
 
     setTarget();
     update();
