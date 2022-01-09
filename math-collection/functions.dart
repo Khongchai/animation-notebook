@@ -36,6 +36,7 @@ double distance(Point p1, Point p2) {
   return sqrt(dx * dx + dy * dy);
 }
 
+///Check if the radius of the circle is smaller than the distance between the two points
 bool circlesColliding(Circle c1, Circle c2) {
   return c1.radius + c2.radius >= distance(c1, c2);
 }
@@ -133,8 +134,8 @@ num randomRange(num min, num max) {
 }
 
 int randomInt(int min, int max) {
-  int range = max - min;
-  return (min + Random().nextDouble() * range).round();
+  int range = max - min + 1;
+  return (min + Random().nextDouble() * range).floor();
 }
 
 double hookesLaw(double x, double y, double k) {

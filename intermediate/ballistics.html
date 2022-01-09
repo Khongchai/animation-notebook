@@ -19,7 +19,7 @@
       }
     </style>
   </head>
-  <body onload="draw();">
+  <body>
     <div>
       <canvas id="canvas" style="border: 1px solid black"></canvas>
     </div>
@@ -34,21 +34,39 @@
     canvas.setAttribute("width", width);
     canvas.setAttribute("height", height);
     const gun = {
-      x: 100,
-      y: window.innerHeight,
+      x: window.innerWidth / 2,
+      y: window.innerHeight / 2,
       angle: -Math.PI / 4,
+      length: 40,
+      width: 16,
     };
     const cannonball = new Particle(gun.x, gun.y, 15, gun.angle, 0.2);
     //cannonball's circumference = 14, slightly smaller than the gun's diameter
     cannonball.radius = 7;
     let isShooting = true;
+    const target = {
+      x: 0,
+      y: 0,
+      radius: 0,
+    };
+    const currentMouse = {
+      x: 0,
+      y: 0,
+    };
+    const delayedMouse = {
+      x: 0,
+      y: 0,
+    };
 
     const dx = 0.1;
     let x = 0;
     let rawForce = 0;
 
-    function trackMouse(mouseX, mouseY) {
-      gun.angle = Math.atan2(mouseY - gun.y, mouseX - gun.x);
+    function trackMouse() {
+      delayedMouse.x = lerp(delayedMouse.x, currentMouse.x, 0.1);
+      delayedMouse.y = lerp(delayedMouse.y, currentMouse.y, 0.1);
+      const angle = Math.atan2(delayedMouse.y - gun.y, delayedMouse.x - gun.x);
+      gun.angle = angle;
     }
 
     document.addEventListener("mousedown", onMouseDown);
@@ -86,7 +104,7 @@
 
     function shoot() {
       //Set cannonball at the gun's end
-      const force = remap(-1, 1, 2, 20, rawForce);
+      const force = remap(-1, 1, 2, 50, rawForce);
       cannonball.x = gun.x + Math.cos(gun.angle) * 40;
       cannonball.y = gun.y + Math.sin(gun.angle) * 40;
       cannonball.vx = Math.cos(gun.angle) * force;
@@ -95,15 +113,25 @@
       ballFired();
     }
 
+    function setTarget() {
+      const posMin = 200;
+      target.x = posMin + Math.random() * (width - posMin);
+      target.y = posMin + Math.random() * (height - posMin);
+      const radMin = 10;
+      const radMax = 40;
+      target.radius = radMin + Math.random() * (radMax - radMin);
+    }
+
     function update() {
       if (!isShooting) {
         x += dx;
       }
       rawForce = Math.sin(x);
+
       if (isShooting) {
+        checkTarget();
         cannonball.update();
       }
-
       draw();
 
       if (cannonball.y > height) {
@@ -112,18 +140,26 @@
       requestAnimationFrame(update);
     }
 
-    function aimGun(e) {
-      trackMouse(e.clientX, e.clientY);
+    function checkTarget() {
+      if (circlesColliding(cannonball, target)) {
+        alert("You hit the target!");
+        setTarget();
+        ballStopped();
+      }
     }
 
-    const draw = () => {
+    function aimGun(e) {
+      currentMouse.x = e.x;
+      currentMouse.y = e.y;
+    }
+
+    function draw() {
       ctx.clearRect(0, 0, width, height);
 
       ctx.fillStyle = "#ccc";
       ctx.fillRect(10, height - 10, 20, -100);
 
       ctx.fillStyle = "#666";
-
       ctx.fillRect(10, height - 10, 20, remap(-1, 1, 0, -100, rawForce));
 
       ctx.beginPath();
@@ -133,8 +169,10 @@
       ctx.save();
       ctx.translate(gun.x, gun.y);
       ctx.rotate(gun.angle);
-      ctx.fillRect(0, -8, 40, 16);
+      ctx.fillRect(0, -8, gun.length, gun.width);
       ctx.restore();
+
+      trackMouse();
 
       ctx.beginPath();
       ctx.arc(
@@ -146,13 +184,20 @@
         false
       );
       ctx.fill();
-    };
+
+      ctx.fillStyle = "red";
+      ctx.beginPath();
+      ctx.arc(target.x, target.y, target.radius, 0, Math.PI * 2, false);
+      ctx.fill();
+    }
 
     function ballFired() {
       isShooting = true;
     }
 
     function ballStopped() {
+      cannonball.y = gun.y;
+      cannonball.x = gun.x;
       isShooting = false;
     }
 
@@ -167,6 +212,15 @@
     function inverseLerp(min, max, value) {
       return (value - min) / (max - min);
     }
+
+    function circlesColliding(c1, c2) {
+      const dx = c1.x - c2.x;
+      const dy = c1.y - c2.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      return c1.radius + c2.radius >= distance;
+    }
+
+    setTarget();
     update();
   </script>
 </html>
