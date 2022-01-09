@@ -56,6 +56,8 @@
     const delayedMouse = {
       x: 0,
       y: 0,
+      vx: 0,
+      vy: 0,
     };
 
     const dx = 0.1;
@@ -63,8 +65,14 @@
     let rawForce = 0;
 
     function trackMouse() {
-      delayedMouse.x = lerp(delayedMouse.x, currentMouse.x, 0.1);
-      delayedMouse.y = lerp(delayedMouse.y, currentMouse.y, 0.1);
+      //Use currentMouse as the spring bounce point
+      delayedMouse.vx += (currentMouse.x - delayedMouse.x) * 0.4;
+      delayedMouse.vy += (currentMouse.y - delayedMouse.y) * 0.4;
+      delayedMouse.vx *= 0.7;
+      delayedMouse.vy *= 0.7;
+      delayedMouse.x += delayedMouse.vx;
+      delayedMouse.y += delayedMouse.vy;
+
       const angle = Math.atan2(delayedMouse.y - gun.y, delayedMouse.x - gun.x);
       gun.angle = angle;
     }
