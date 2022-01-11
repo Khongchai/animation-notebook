@@ -90,6 +90,23 @@
       o.y += o.vY;
     }
 
+    //Same as above, but more robust and can add length
+    function springTo2(o, t, k, f) {
+      const dx = t.x - o.x;
+      const dy = t.y - o.y;
+      const distance = Math.sqrt(dx * dx + dy * dy) - length;
+
+      const springForce = distance * k;
+      o.vX += (dx / distance) * springForce;
+      o.vY += (dy / distance) * springForce;
+
+      o.vX *= f;
+      o.vY *= f;
+
+      o.x += o.vX;
+      o.y += o.vY;
+    }
+
     function hookesLaw(x, y, k) {
       return (y - x) * k;
     }

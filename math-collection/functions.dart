@@ -143,16 +143,17 @@ double hookesLaw(double x, double y, double k) {
 }
 
 void springTo(Point origin, Point target, double constant, double friction) {
-  //o.x += o.vx *= o.vx += (t.x - o.x) * k;
-  //o.y += o.vy *= o.vy += (t.y - o.y) * k;
   final double dx = target.x - origin.x;
   final double dy = target.y - origin.y;
 
-  final double springForceX = dx * constant;
-  final double springForceY = dy * constant;
+  final double distance = sqrt(dx * dx + dy * dy);
 
-  origin.vx += springForceX;
-  origin.vy += springForceY;
+
+  final double springForceX = distance * constant;
+  final double springForceY = distance * constant;
+
+  origin.vx += (dx / distance ) * springForceX;
+  origin.vy += (dy / distance)  * springForceY;
 
   origin.vx *= friction;
   origin.vy *= friction;

@@ -10,6 +10,7 @@ class Particle {
   radius = 0;
   bounce = -1;
   friction = 1;
+  springs = [];
 
   constructor(x, y, magnitude, direction, gravity) {
     this.x = x;
@@ -19,12 +20,28 @@ class Particle {
     this.gravity = gravity || 0;
   }
 
+  addSpring(point, k, length = 0) {
+    this.removeSpring(point);
+    this.springs.push({ point, k, length });
+  }
+
+  removeSpring(p) {
+    this.springs = this.springs.filter((s) => s.point !== p);
+  }
+
+  handleSprings() {
+    this.springs.forEach((s) => {
+      this.springTo(s.point, s.k, s.length);
+    });
+  }
+
   accelerate(ax, ay) {
     this.vx += ax;
     this.vy += ay;
   }
 
   update() {
+    // this.handleSprings();
     this.vx = this.vx * this.friction;
     //this optimization limits gravity to the y axis.
     this.vy = this.vy * this.friction + this.gravity;
@@ -79,11 +96,11 @@ class Particle {
     this.vy = Math.sin(heading) * speed;
   }
 
-  springTo(p, springConstant, springLength = 0) {
-    const dx = p.x - this.x;
-    const dy = p.y - this.y;
-    const distance = Math.sqrt(dx * dx, dy * dy);
-    const springForce = (distance - springLength) * springConstant;
+  springTo(point, k, length) {
+    const dx = point.x - this.x;
+    const dy = point.y - this.y;
+    const distance = Math.sqrt(dx * dx + dy * dy) - length;
+    const springForce = distance * k;
     this.vx += (dx / distance) * springForce;
     this.vy += (dy / distance) * springForce;
   }
