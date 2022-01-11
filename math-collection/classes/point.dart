@@ -1,9 +1,11 @@
-
+//Simplified version of Vector
 class Point {
   double x;
   double y;
+  double vx;
+  double vy;
 
-  Point(this.x, this.y);
+  Point(this.x, this.y, {this.vx = 0, this.vy = 0});
 }
 
 class Circle extends Point {
@@ -18,5 +20,3 @@ class Rectangle extends Point {
 
   Rectangle(this.width, this.height, double x, double y) : super(x, y);
 }
-
-

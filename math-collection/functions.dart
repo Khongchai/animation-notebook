@@ -141,3 +141,22 @@ int randomInt(int min, int max) {
 double hookesLaw(double x, double y, double k) {
   return (y - x) * k;
 }
+
+void springTo(Point origin, Point target, double constant, double friction) {
+  //o.x += o.vx *= o.vx += (t.x - o.x) * k;
+  //o.y += o.vy *= o.vy += (t.y - o.y) * k;
+  final double dx = target.x - origin.x;
+  final double dy = target.y - origin.y;
+
+  final double springForceX = dx * constant;
+  final double springForceY = dy * constant;
+
+  origin.vx += springForceX;
+  origin.vy += springForceY;
+
+  origin.vx *= friction;
+  origin.vy *= friction;
+
+  origin.x += origin.vx;
+  origin.y += origin.vy;
+}

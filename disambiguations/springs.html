@@ -1,1 +1,101 @@
-<!-- Comparing two way of tacking the spring algorithm -->
+<!-- Directly compares linear interpolation and Hooke's law. -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      html,
+      body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body onload="draw();">
+    <div><canvas id="canvas"></canvas></div>
+  </body>
+  <script src="../classes/particle3.js"></script>
+  <script>
+    let canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+    const mouse = {
+      x: 0,
+      y: 0,
+    };
+    window.onmousemove = (e) => {
+      mouse.x = e.x;
+      mouse.y = e.y;
+    };
+
+    //Lerp-based formula
+    const delayedMouse1 = {
+      x: 0,
+      y: 0,
+      vX: 0,
+      vY: 0,
+    };
+    //More traditional hooke's law
+    const delayedMouse2 = new Particle(0, 0, 0, 0);
+
+    const k = 0.5;
+    const f = 0.7;
+
+    const draw = () => {
+      springTo1(delayedMouse1, mouse, k, f);
+
+      /*
+        Linear interpolation
+      */
+      //   delayedMouse.y = lerp(delayedMouse.y, mouse.y, 0.1);
+      //   delayedMouse.x = lerp(delayedMouse.x, mouse.x, 0.1);
+      ctx.fillStyle = "rgba(0, 0, 0, 1)";
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.fillStyle = "darkgreen";
+      ctx.beginPath();
+      ctx.arc(delayedMouse1.x, delayedMouse1.y, 20, 0, Math.PI * 2);
+      ctx.fill();
+
+      requestAnimationFrame(draw);
+    };
+
+    /*
+        o is the object to be moved
+        t is the target
+        k is the spring constant
+    */
+    function springTo1(o, t, k, f) {
+      //Grab distance
+      const dx = t.x - o.x;
+      const dy = t.y - o.y;
+
+      const springForceX = dx * k;
+      const springForceY = dy * k;
+
+      o.vX += springForceX;
+      o.vY += springForceY;
+
+      o.vX *= f;
+      o.vY *= f;
+
+      o.x += o.vX;
+      o.y += o.vY;
+    }
+
+    function hookesLaw(x, y, k) {
+      return (y - x) * k;
+    }
+
+    function lerp(x, y, k) {
+      return x + hookesLaw(x, y, k);
+    }
+  </script>
+</html>
