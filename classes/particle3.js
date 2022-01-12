@@ -41,7 +41,7 @@ class Particle {
   }
 
   update() {
-    // this.handleSprings();
+    this.handleSprings();
     this.vx = this.vx * this.friction;
     //this optimization limits gravity to the y axis.
     this.vy = this.vy * this.friction + this.gravity;

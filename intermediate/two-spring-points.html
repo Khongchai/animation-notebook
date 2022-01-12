@@ -45,8 +45,8 @@
     weight.radius = 20;
     weight.friction = 0.9;
     weight.gravity = 5;
-    // weight.addSpring(springPoint, springLength, k);
-    // weight.addSpring(springPoint2, springLength, k);
+    weight.addSpring(springPoint, k, springLength);
+    weight.addSpring(springPoint2, k, springLength);
 
     document.addEventListener("mousemove", (event) => {
       springPoint.x = event.clientX;
@@ -54,7 +54,6 @@
     });
 
     const draw = () => {
-      weight.springTo(springPoint, k, springLength);
       weight.update();
 
       ctx.clearRect(0, 0, width, height);
@@ -67,12 +66,12 @@
       ctx.arc(springPoint.x, springPoint.y, 4, 0, Math.PI * 2, false);
       ctx.fill();
 
-      //   ctx.beginPath();
-      //   ctx.arc(springPoint2.x, springPoint2.y, 4, 0, Math.PI * 2, false);
-      //   ctx.fill();
+      ctx.beginPath();
+      ctx.arc(springPoint2.x, springPoint2.y, 4, 0, Math.PI * 2, false);
+      ctx.fill();
 
       ctx.beginPath();
-      //   ctx.moveTo(springPoint2.x, springPoint2.y);
+      ctx.moveTo(springPoint2.x, springPoint2.y);
       ctx.lineTo(weight.x, weight.y);
       ctx.lineTo(springPoint.x, springPoint.y);
       ctx.stroke();
