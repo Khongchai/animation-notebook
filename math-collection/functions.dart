@@ -148,7 +148,6 @@ void springTo(Point origin, Point target, double constant, double friction) {
 
   final double distance = sqrt(dx * dx + dy * dy);
 
-
   final double springForceX = distance * constant;
   final double springForceY = distance * constant;
 

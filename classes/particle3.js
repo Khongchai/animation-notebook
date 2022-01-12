@@ -11,13 +11,30 @@ class Particle {
   bounce = -1;
   friction = 1;
   springs = [];
+  gravitationPoints = [];
 
-  constructor(x, y, magnitude, direction, gravity) {
+  constructor(x, y, magnitude, direction, gravity = 0) {
     this.x = x;
     this.y = y;
     this.vx = Math.cos(direction) * magnitude;
     this.vy = Math.sin(direction) * magnitude;
-    this.gravity = gravity || 0;
+    this.gravity = gravity;
+  }
+
+  addGravitationPoint(p) {
+    //We need to remove first because we don't want to add the same point twice.
+    this.removeGravitationPoint(p);
+    this.gravitationPoints.push(p);
+  }
+
+  removeGravitationPoint(p) {
+    this.gravitationPoints = this.gravitationPoints.filter((g) => g.p !== p);
+  }
+
+  handleGravitation() {
+    this.gravitationPoints.forEach((gp) => {
+      this.gravitateTo(gp);
+    });
   }
 
   addSpring(point, k, length = 0) {
@@ -35,18 +52,14 @@ class Particle {
     });
   }
 
-  accelerate(ax, ay) {
-    this.vx += ax;
-    this.vy += ay;
-  }
-
   update() {
-    this.handleSprings();
     this.vx = this.vx * this.friction;
     //this optimization limits gravity to the y axis.
     this.vy = this.vy * this.friction + this.gravity;
     this.x += this.vx;
     this.y += this.vy;
+    this.handleSprings();
+    this.handleGravitation();
   }
 
   angleTo(p) {
@@ -62,18 +75,27 @@ class Particle {
     const distanceY = p.y - this.y;
     const distanceSquared = distanceX * distanceX + distanceY * distanceY;
     const distance = Math.sqrt(distanceSquared);
-
-    const force = p.mass / (distanceX * distanceX) + distanceY * distanceY;
-
+    const force = p.mass / distanceSquared;
     //Instead of doing this, we can skip the sqrt and just do the division.
     //This is a very small optimization, but it's a good one.
     // const angle = this.angleTo(p);
     // const ax = force * Math.cos(angle);
     // const ay = force * Math.sin(angle);
-    const ax = force * (distanceX / distance);
-    const ay = force * (distanceY / distance);
 
-    this.accelerate(ax, ay);
+    const ax = distanceX / distance;
+    const ay = distanceY / distance;
+
+    const colliding = this.radius + p.radius >= distance;
+    if (!colliding) {
+      this.vx += ax * force;
+      this.vy += ay * force;
+    } else {
+      //Use the information from the hitbox to determine the direction of the bounce.
+      //In other words, divert vector in a tangent direction of the collision.
+      //This can be done by using the dot product.
+      const hitPointX = this.x + ax * this.radius;
+      const hitPointY = this.y + ay * this.radius;
+    }
   }
 
   getSpeed() {

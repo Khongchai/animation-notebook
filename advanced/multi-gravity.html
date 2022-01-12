@@ -1,0 +1,107 @@
+<!-- Suns can be moved by dragging and dropping -->
+<!-- Particles shouldn't be able to go through the suns -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      html,
+      body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div><canvas id="canvas"></canvas></div>
+  </body>
+  <script src="../classes/particle3.js"></script>
+  <script>
+    function randomRange(min, max) {
+      range = max - min;
+      return min + Math.random() * range;
+    }
+  </script>
+  <script src="../classes/vectors.js"></script>
+  <script>
+    let canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+    const sun1 = new Particle(300, 200, 0, 0);
+    const sun2 = new Particle(800, 600, 0, 0);
+    const sun3 = new Particle(-1000, -1000, 0, 0);
+    const emitter = {
+      x: 100,
+      y: 100,
+    };
+    const particles = [];
+    const particleAmount = 100;
+
+    sun1.mass = 10000;
+    sun1.radius = 10;
+    sun2.mass = 20000;
+    sun2.radius = 20;
+    sun3.mass = 200;
+    sun3.radius = 30;
+
+    document.addEventListener("mousemove", function (e) {
+      sun3.x = e.x;
+      sun3.y = e.y;
+    });
+
+    for (let i = 0; i < particleAmount; i++) {
+      const p = new Particle(
+        emitter.x,
+        emitter.y,
+        Math.random() + 8,
+        Math.PI / 2 + randomRange(-0.1, 0.1)
+      );
+      p.addGravitationPoint(sun1);
+      p.addGravitationPoint(sun2);
+      p.addGravitationPoint(sun3);
+      p.radius = 3;
+      particles.push(p);
+    }
+
+    const update = () => {
+      ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+
+      draw(sun1, "yellow");
+      draw(sun2, "yellow");
+      draw(sun3, "red");
+      for (let i = 0; i < particleAmount; i++) {
+        const p = particles[i];
+        p.update();
+        draw(p, "black");
+        if (isParticleOffset(p)) {
+          p.x = emitter.x;
+          p.y = emitter.y;
+          p.setSpeed(randomRange(7, 8));
+          p.setAngle(Math.PI / 2 + randomRange(-0.1, 0.1));
+        }
+      }
+
+      requestAnimationFrame(update);
+    };
+
+    function isParticleOffset(p) {
+      return p.x > width || p.x < 0 || p.y > height || p.y < 0;
+    }
+
+    function draw(p, color) {
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2, false);
+      ctx.fill();
+    }
+
+    update();
+  </script>
+</html>
