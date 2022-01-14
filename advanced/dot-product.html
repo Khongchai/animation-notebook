@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      html,
+      body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body onload="draw();">
+    <div><canvas id="canvas"></canvas></div>
+  </body>
+  <script>
+    let canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+
+    //For keeping track of the mouse position so that
+    //the grabbed object won't jump around on click
+    const mouseCenterAndDownDiff = {
+      x: 0,
+      y: 0,
+    };
+
+    const p0 = {
+      x: 200,
+      y: 400,
+    };
+
+    const p1 = {
+      x: 250,
+      y: 200,
+    };
+
+    const p2 = {
+      x: 250,
+      y: 200,
+    };
+
+    //To find the dot product, we need to find the vector first.
+    function vec(p0, p1) {
+      return {
+        x: p1.x - p0.x,
+        y: p1.y - p0.y,
+      };
+    }
+
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+      drawPoint(p0);
+      drawPoint(p1);
+      drawPoint(p2);
+      drawLines();
+
+      requestAnimationFrame(draw);
+    };
+
+    function drawPoint(p) {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 10, 0, 2 * Math.PI);
+      ctx.stroke();
+    }
+
+    function drawLines() {
+      ctx.beginPath();
+      ctx.moveTo(p1.x, p1.y);
+      ctx.lineTo(p0.x, p0.y);
+      ctx.lineTo(p2.x, p2.y);
+      ctx.stroke();
+    }
+
+    document.addEventListener("mousedown", onMouseDown);
+    let dragPoint;
+
+    function onMouseDown(e) {
+      dragPoint = findDragPoint(e.x, e.y);
+      if (dragPoint) {
+        mouseCenterAndDownDiff.x = e.x - dragPoint.x;
+        mouseCenterAndDownDiff.y = e.y - dragPoint.y;
+        draw();
+        document.addEventListener("mousemove", onMouseMove);
+        document.addEventListener("mouseup", onMouseUp);
+      }
+    }
+
+    function onMouseMove(e) {
+      dragPoint.x = e.x - mouseCenterAndDownDiff.x;
+      dragPoint.y = e.y - mouseCenterAndDownDiff.y;
+      draw();
+    }
+
+    function onMouseUp() {
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+    }
+
+    function findDragPoint(x, y) {
+      if (hitTest(p0, x, y)) return p0;
+      if (hitTest(p1, x, y)) return p1;
+      if (hitTest(p2, x, y)) return p2;
+      return null;
+    }
+
+    function hitTest(p, x, y) {
+      const dx = p.x - x;
+      const dy = p.y - y;
+      return Math.sqrt(dx * dx + dy * dy) <= 10;
+    }
+
+    draw();
+  </script>
+</html>
