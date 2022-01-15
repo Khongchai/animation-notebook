@@ -107,7 +107,7 @@ class Particle {
   }
 
   setSpeed(speed) {
-    const heading = this.getHeading();
+    const heading = this.getAngle();
     this.vx = Math.cos(heading) * speed;
     this.vy = Math.sin(heading) * speed;
   }

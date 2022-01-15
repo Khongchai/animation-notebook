@@ -1,0 +1,386 @@
+<!-- Exercise project: once all things are done, capture the shot cannon ball with your mouse -->
+<!-- Balls should also be attracted by other objects -->
+<!-- Simple game idea -->
+<!-- Initial point = 50 -->
+<!-- Each ball costs 5 points to fire -->
+<!-- Each object attracts one another, except the target -->
+<!-- You get 1 point if you hit the target directly without bouncing -->
+<!-- But if you bounce before hitting the target, you get 10 points for each bounce with some extra points proportional to momental loss.-->
+<!-- Also learn about offloading heavy-computation stuff to another thread or something -->
+<!-- Add obstacles once you know how to deal with angles-->
+<!-- Apply N-Body algo https://stackoverflow.com/questions/16502536/algorithm-help-hit-test-for-small-objects -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      html,
+      body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+      }
+      canvas {
+        display: block;
+        position: absolute;
+        top: 0px;
+        left: 0px;
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+      <canvas id="obstacles"></canvas>
+      <canvas id="canvas"></canvas>
+    </div>
+  </body>
+  <script src="../classes/particle3.js"></script>
+  <script src="../classes/vectors.js"></script>
+  <script>
+    const canvas = document.getElementById("canvas");
+    const obstaclesCanvas = document.getElementById("obstacles");
+    const ctx = canvas.getContext("2d");
+    const obstaclesCtx = obstaclesCanvas.getContext("2d");
+
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    canvas.setAttribute("width", width);
+    canvas.setAttribute("height", height);
+    obstaclesCanvas.setAttribute("width", width);
+    obstaclesCanvas.setAttribute("height", height);
+
+    const gun = {
+      x: window.innerWidth / 2,
+      y: window.innerHeight / 2,
+      angle: -Math.PI / 4,
+      length: 40,
+      width: 16,
+    };
+    let cannonBallArray = [];
+    //cannonball's circumference = 14, slightly smaller than the gun's diameter
+    const cannonBallBounceFriction = -0.7;
+    const target = {
+      x: 0,
+      y: 0,
+      radius: 0,
+    };
+    const currentMouse = {
+      x: 0,
+      y: 0,
+    };
+    const delayedMouse = {
+      x: 0,
+      y: 0,
+      vx: 0,
+      vy: 0,
+    };
+
+    const obstacles = [];
+
+    const dx = 0.1;
+    let x = 0;
+    let rawForce = 0;
+  </script>
+  <script>
+    function trackMouse() {
+      //Use currentMouse as the spring bounce point
+
+      delayedMouse.vx += (currentMouse.x - delayedMouse.x) * 0.4;
+      delayedMouse.vy += (currentMouse.y - delayedMouse.y) * 0.4;
+      delayedMouse.vx *= 0.7;
+      delayedMouse.vy *= 0.7;
+      delayedMouse.x += delayedMouse.vx;
+      delayedMouse.y += delayedMouse.vy;
+
+      const angle = Math.atan2(delayedMouse.y - gun.y, delayedMouse.x - gun.x);
+      gun.angle = angle;
+    }
+
+    function onMouseMove(e) {
+      aimGun(e);
+    }
+
+    function onMouseDown(e) {
+      document.addEventListener("mousemove", onMouseMove);
+      document.addEventListener("mouseup", onMouseUp);
+
+      aimGun(e);
+    }
+
+    function onMouseUp(e) {
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+      aimGun(e);
+    }
+
+    function onKeyDown(e) {
+      switch (e.keyCode) {
+        case 32:
+          shoot();
+          break;
+
+        default:
+          break;
+      }
+    }
+
+    function generateObstacles(amount) {
+      for (let i = 0; i < amount; i++) {
+        const x = Math.random() * width;
+        const y = Math.random() * height;
+        const obstacleMaxGenerationDistance = 30;
+        const beginPoint = { x, y };
+        const endPoint1 = {
+          x:
+            5 * obstacleMaxGenerationDistance * 5 * Math.random() +
+            beginPoint.x,
+          y: 5 * obstacleMaxGenerationDistance * Math.random() + beginPoint.y,
+        };
+        const endPoint2 = {
+          x:
+            Math.random() * obstacleMaxGenerationDistance * 2 * Math.random() +
+            endPoint1.x,
+          y:
+            Math.random() * obstacleMaxGenerationDistance * 5 * Math.random() +
+            endPoint1.y,
+        };
+        const endPoint3 = {
+          x: 5 * obstacleMaxGenerationDistance * Math.random() + endPoint2.x,
+          y:
+            Math.random() * obstacleMaxGenerationDistance * Math.random() +
+            endPoint2.y,
+        };
+        const obstacle = {
+          x,
+          y,
+          drawData: { beginPoint, endPoint1, endPoint2, endPoint3 },
+        };
+        obstacles.push(obstacle);
+      }
+    }
+
+    function drawObstacles(ctx, obstacles) {
+      obstaclesCtx.globalCompositeOperation = "source-over";
+
+      obstaclesCtx.fillStyle = "black";
+      for (let i = 0; i < obstacles.length; i++) {
+        const obstacle = obstacles[i];
+        const { beginPoint, endPoint1, endPoint2, endPoint3 } =
+          obstacle.drawData;
+
+        obstaclesCtx.beginPath();
+        obstaclesCtx.moveTo(beginPoint.x, beginPoint.y);
+        obstaclesCtx.lineTo(endPoint1.x, endPoint1.y);
+        obstaclesCtx.lineTo(endPoint2.x, endPoint2.y);
+        obstaclesCtx.fill();
+
+        obstacles.splice(i, 1);
+      }
+    }
+
+    function shoot() {
+      //Set cannonball at the gun's end
+      const cannonBall = new Particle(gun.x, gun.y, 15, gun.angle, 0.2);
+      cannonBall.radius = 7;
+
+      const force = remap(-1, 1, 2, 50, rawForce);
+      cannonBall.x = gun.x + Math.cos(gun.angle) * 40;
+      cannonBall.y = gun.y + Math.sin(gun.angle) * 40;
+      cannonBall.setSpeed(force);
+      cannonBall.setAngle(gun.angle);
+      cannonBallArray.push(cannonBall);
+    }
+
+    function setTarget() {
+      const posMin = 200;
+      target.x = posMin + Math.random() * (width - posMin);
+      target.y = posMin + Math.random() * (height - posMin);
+      const radMin = 10;
+      const radMax = 40;
+      target.radius = radMin + Math.random() * (radMax - radMin);
+    }
+
+    function clearBalls() {
+      cannonBallArray = [];
+    }
+
+    function checkTarget() {
+      for (let i = 0; i < cannonBallArray.length; i++) {
+        if (circlesColliding(cannonBallArray[i], target)) {
+          setTarget();
+          clearBalls();
+          generateObstacles(2);
+          drawObstacles(obstaclesCtx, obstacles);
+        }
+      }
+    }
+
+    function aimGun(e) {
+      currentMouse.x = e.x;
+      currentMouse.y = e.y;
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, width, height);
+
+      ctx.strokeStyle = "#ccc";
+      ctx.lineWidth = 15;
+      ctx.beginPath();
+      ctx.arc(gun.x, gun.y, gun.length * 2, 0, Math.PI, false);
+      ctx.stroke();
+
+      ctx.strokeStyle = "#666";
+      ctx.lineWidth = 15;
+      ctx.beginPath();
+      ctx.arc(
+        gun.x,
+        gun.y,
+        gun.length * 2,
+        0,
+        remap(-1, 1, 0, Math.PI, rawForce),
+        false
+      );
+      ctx.stroke();
+
+      ctx.fillStyle = "#666";
+
+      ctx.beginPath();
+      ctx.arc(gun.x, gun.y, 24, 0, Math.PI * 2, false);
+      ctx.fill();
+
+      ctx.save();
+      ctx.translate(gun.x, gun.y);
+      ctx.rotate(gun.angle);
+      ctx.fillRect(0, -8, gun.length, gun.width);
+      ctx.restore();
+
+      trackMouse();
+
+      for (let i = 0; i < cannonBallArray.length; i++) {
+        ctx.beginPath();
+        ctx.arc(
+          cannonBallArray[i].x,
+          cannonBallArray[i].y,
+          cannonBallArray[i].radius,
+          0,
+          Math.PI * 2,
+          false
+        );
+        ctx.fill();
+      }
+      ctx.fillStyle = "red";
+      ctx.beginPath();
+      ctx.arc(target.x, target.y, target.radius, 0, Math.PI * 2, false);
+      ctx.fill();
+    }
+
+    function remap(iMin, iMax, oMin, oMax, weight) {
+      return lerp(oMin, oMax, inverseLerp(iMin, iMax, weight));
+    }
+
+    function lerp(start, end, amt) {
+      return (1 - amt) * start + amt * end;
+    }
+
+    function inverseLerp(min, max, value) {
+      return (value - min) / (max - min);
+    }
+
+    function circlesColliding(c1, c2) {
+      const dx = c1.x - c2.x;
+      const dy = c1.y - c2.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      return c1.radius + c2.radius >= distance;
+    }
+
+    //Problem: only checks one single pixel, doesn't account for size of circle.
+    function checkCollision(particle) {
+      const center = obstaclesCtx.getImageData(particle.x, particle.y, 1, 1);
+      const bottomRight = obstaclesCtx.getImageData(
+        particle.x + particle.radius,
+        particle.y + particle.radius,
+        1,
+        1
+      );
+      const topLeft = obstaclesCtx.getImageData(
+        particle.x - particle.radius,
+        particle.y - particle.radius,
+        1,
+        1
+      );
+      //imageData.data[3] is the alpha channel. If alpha channel more than 0, collision is detected.
+      if (
+        center.data[3] > 0 ||
+        bottomRight.data[3] > 0 ||
+        topLeft.data[3] > 0
+      ) {
+        obstaclesCtx.globalCompositeOperation = "destination-out";
+        obstaclesCtx.beginPath();
+        obstaclesCtx.arc(particle.x, particle.y, 20, 0, Math.PI * 2, false);
+        obstaclesCtx.fill();
+
+        //Deflect properly
+        particle.vx *= -0.7;
+        particle.vy *= -0.7;
+      }
+    }
+
+    function checkEdgeCollision(cannonBall) {
+      const bounceX = () => (cannonBall.vx *= cannonBallBounceFriction);
+      const bounceY = () => (cannonBall.vy *= cannonBallBounceFriction);
+      const collideRight = cannonBall.x + cannonBall.radius > width;
+      const collideLeft = cannonBall.x - cannonBall.radius < 0;
+      const collideTop = cannonBall.y - cannonBall.radius < 0;
+      const collideBottom = cannonBall.y + cannonBall.radius > height;
+
+      if (collideRight) {
+        cannonBall.x = width - cannonBall.radius;
+        bounceX();
+      }
+      if (collideLeft) {
+        cannonBall.x = cannonBall.radius;
+        bounceX();
+      }
+      if (collideBottom) {
+        cannonBall.y = height - cannonBall.radius;
+        //friction when sliding against the ground
+        cannonBall.vx *= 0.99;
+        bounceY();
+      }
+      if (collideTop) {
+        cannonBall.y = cannonBall.radius;
+        bounceY();
+      }
+    }
+
+    function update() {
+      x += dx;
+      rawForce = Math.sin(x);
+
+      checkTarget();
+      for (let i = 0; i < cannonBallArray.length; i++) {
+        const cannonBall = cannonBallArray[i];
+        cannonBall.update();
+        checkEdgeCollision(cannonBall);
+        checkCollision(cannonBall);
+      }
+
+      draw();
+
+      requestAnimationFrame(update);
+    }
+  </script>
+  <script>
+    document.addEventListener("mousedown", onMouseDown);
+    document.addEventListener("keydown", onKeyDown);
+  </script>
+  <script>
+    generateObstacles(20);
+    drawObstacles(obstaclesCtx, obstacles);
+    setTarget();
+    update();
+  </script>
+</html>
