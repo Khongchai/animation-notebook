@@ -102,7 +102,7 @@ class Particle {
     return Math.sqrt(this.vx * this.vx + this.vy * this.vy);
   }
 
-  getHeading() {
+  getAngle() {
     return Math.atan2(this.vy, this.vx);
   }
 

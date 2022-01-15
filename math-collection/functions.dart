@@ -2,6 +2,7 @@ import 'dart:math';
 import "dart:core";
 
 import 'classes/point.dart';
+import 'classes/vector.dart';
 
 /*
   sources:
@@ -151,12 +152,20 @@ void springTo(Point origin, Point target, double constant, double friction) {
   final double springForceX = distance * constant;
   final double springForceY = distance * constant;
 
-  origin.vx += (dx / distance ) * springForceX;
-  origin.vy += (dy / distance)  * springForceY;
+  origin.vx += (dx / distance) * springForceX;
+  origin.vy += (dy / distance) * springForceY;
 
   origin.vx *= friction;
   origin.vy *= friction;
 
   origin.x += origin.vx;
   origin.y += origin.vy;
+}
+
+double dotProduct(Vector v1, Vector v2) {
+  return v1.x * v2.x + v1.y * v2.y;
+}
+
+double angleBetween(Vector v1, Vector v2) {
+  return acos(dotProduct(v1, v2) / (v1.length * v2.length));
 }

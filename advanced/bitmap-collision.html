@@ -1,3 +1,4 @@
+<!-- Used for detecting collision with complex shapes -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -12,24 +13,70 @@
         padding: 0;
         margin: 0;
       }
+      canvas {
+        display: block;
+        position: absolute;
+        top: 0px;
+        left: 0px;
+      }
     </style>
   </head>
-  <body onload="draw();">
-    <div><canvas id="canvas"></canvas></div>
+  <body>
+    <div>
+      <canvas id="canvas"></canvas>
+      <canvas id="target"></canvas>
+    </div>
   </body>
+  <script src="../classes/particle3.js"></script>
   <script>
-    let canvas = document.getElementById("canvas");
+    const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
-    var width = window.innerWidth;
-    var height = window.innerHeight;
+    const targetCanvas = document.getElementById("target");
+    const targetCtx = targetCanvas.getContext("2d");
+
+    const width = window.innerWidth;
+    const height = window.innerHeight;
     canvas.width = width;
     canvas.height = height;
-    const draw = () => {
-      ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
-      //if you see this, canvas is working
-      ctx.arc(width / 2, height / 2, 100, 0, 2 * Math.PI);
-      ctx.stroke();
-      requestAnimationFrame(draw);
-    };
+    targetCanvas.width = width;
+    targetCanvas.height = height;
+
+    const particle = new Particle(0, height / 2, 10, 0);
+
+    targetCtx.beginPath();
+    targetCtx.arc(width / 2, height / 2, 200, 0, Math.PI * 2);
+    targetCtx.fill();
+
+    function resetParticle() {
+      particle.x = 0;
+      particle.y = height / 2;
+      particle.setAngle(Math.random() * 0.2 - 0.1);
+    }
+
+    function update() {
+      ctx.clearRect(0, 0, width, height);
+      particle.update();
+
+      ctx.beginPath();
+      ctx.arc(particle.x, particle.y, 4, 0, Math.PI * 2, false);
+      ctx.fill();
+
+      const imageData = targetCtx.getImageData(particle.x, particle.y, 1, 1);
+      //imageData.data[3] is the alpha channel. If alpha channel more than 0, collision is detected.
+      if (imageData.data[3] > 0) {
+        targetCtx.globalCompositeOperation = "destination-out";
+        targetCtx.beginPath();
+        targetCtx.arc(particle.x, particle.y, 20, 0, Math.PI * 2, false);
+        targetCtx.fill();
+
+        resetParticle();
+      } else if (particle.x > width) {
+        resetParticle();
+      }
+
+      requestAnimationFrame(update);
+    }
+
+    update();
   </script>
 </html>
