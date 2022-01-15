@@ -71,12 +71,55 @@
       ctx.stroke();
     }
 
+    function dotProduct(v0, v1) {
+      return v0.x * v1.x + v0.y * v1.y;
+      j;
+    }
+
+    function mag(v) {
+      return Math.sqrt(v.x * v.x + v.y * v.y);
+    }
+
+    function normalize(v) {
+      const m = mag(v);
+      const n = {
+        x: v.x / m,
+        y: v.y / m,
+      };
+      return n;
+    }
+
+    //We got this formula from re-arranging the dot product formula
+    // |a| * |b| * cos(theta) = dot
+    // cos(theta) = dot / (|a| * |b|)
+    // theta = acos(dot / (|a| * |b|))
+    function angleBetween(v0, v1, _dotProduct = null) {
+      if (_dotProduct === null) {
+        _dotProduct = dotProduct(v0, v1);
+      }
+      const m0 = mag(v0);
+      const m1 = mag(v1);
+      const cosTheta = _dotProduct / (m0 * m1);
+      return Math.acos(cosTheta);
+    }
+
     function drawLines() {
       ctx.beginPath();
       ctx.moveTo(p1.x, p1.y);
       ctx.lineTo(p0.x, p0.y);
       ctx.lineTo(p2.x, p2.y);
       ctx.stroke();
+
+      const v0 = normalize(vec(p0, p1));
+      const v1 = normalize(vec(p0, p2));
+      const dp = dotProduct(v0, v1);
+      const dpRounded = Math.round(dp * 1000) / 1000;
+      const angle = angleBetween(v0, v1, dp) * (180 / Math.PI);
+      const roundedAngle = Math.round(angle * 100) / 100;
+
+      ctx.font = "30px Arial";
+      ctx.fillText("Dot product: " + dpRounded, 30, 50);
+      ctx.fillText("Angle: " + roundedAngle, 30, 100);
     }
 
     document.addEventListener("mousedown", onMouseDown);
