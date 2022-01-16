@@ -1,42 +1,75 @@
 //from https://gamedevelopment.tutsplus.com/tutorials/quick-tip-use-quadtrees-to-detect-likely-collisions-in-2d-space--gamedev-374
+const topRight = Symbol(0);
+const topLeft = Symbol(1);
+const bottomLeft = Symbol(2);
+const bottomRight = Symbol(3);
+
 class Quadtree {
-  constructor(currentNodeLevel, rectangularBounds) {
-    this.MAX_OBJECTS = 10;
+  //Better one would be to just pass a callback that draws something based on the provided
+  //RectangularBound.
+  constructor(currentNodeLevel, rectangularBound, drawingContext) {
+    this.MAX_OBJECTS = 5;
     this.MAX_LEVELS = 5;
 
     this.currentNodeLevel = currentNodeLevel;
-    this.rectangularBounds = rectangularBounds;
+    this.rectangularBound = rectangularBound;
     this.objects = [];
     this.nodes = []; // array of 4 sub-nodes
+    this.drawingContext = drawingContext;
+
+    drawingContext.strokeStyle = "green";
+    drawingContext.beginPath();
+    drawingContext.rect(
+      rectangularBound.x,
+      rectangularBound.y,
+      rectangularBound.width,
+      rectangularBound.height
+    );
+    drawingContext.stroke();
   }
 
   clear() {
+    for (var i = 0; i < this.nodes.length; i++) {
+      if (this.nodes.length) {
+        this.nodes[i].clear();
+      }
+    }
     this.nodes = [];
     this.objects = [];
   }
 
   // split the node into 4 sub-nodes
   split() {
-    const subWidth = this.rectangularBounds.width / 2;
-    const subHeight = this.rectangularBounds.height / 2;
-    const x = this.rectangularBounds.x;
-    const y = this.rectangularBounds.y;
+    const halfWidth = this.rectangularBound.width / 2;
+    const halfHeight = this.rectangularBound.height / 2;
+    const x = this.rectangularBound.x;
+    const y = this.rectangularBound.y;
 
+    //Position of quadrants = standard cartesian coordinates
     this.nodes[0] = new Quadtree(
-      level + 1,
-      new Rectangle(x + subWidth, y, subWidth, subHeight)
+      this.currentNodeLevel + 1,
+      new RectangularBound(x + halfWidth, y, halfWidth, halfHeight),
+      this.drawingContext
     );
     this.nodes[1] = new Quadtree(
-      level + 1,
-      new Rectangle(x, y, subWidth, subHeight)
+      this.currentNodeLevel + 1,
+      new RectangularBound(x, y, halfWidth, halfHeight),
+      this.drawingContext
     );
     this.nodes[2] = new Quadtree(
-      level + 1,
-      new Rectangle(x, y + subHeight, subWidth, subHeight)
+      this.currentNodeLevel + 1,
+      new RectangularBound(x, y + halfHeight, halfWidth, halfHeight),
+      this.drawingContext
     );
     this.nodes[3] = new Quadtree(
-      level + 1,
-      new Rectangle(x + subWidth, y + subHeight, subWidth, subHeight)
+      this.currentNodeLevel + 1,
+      new RectangularBound(
+        x + halfWidth,
+        y + halfHeight,
+        halfWidth,
+        halfHeight
+      ),
+      this.drawingContext
     );
   }
 
@@ -48,7 +81,7 @@ class Quadtree {
   insert(newObject) {
     //If the node is not empty, then get the index and insert the object into the node
     if (this.nodes.length > 0) {
-      const index = _getIndex(newObject);
+      const index = this._getIndex(newObject);
       if (index != -1) {
         this.nodes[index].insert(newObject);
 
@@ -57,7 +90,7 @@ class Quadtree {
     }
 
     //If this point is reached, then the node is empty and we can insert the object into this (the parent) node;
-    this.objects.add(newObject);
+    this.objects.push(newObject);
 
     const canSplit =
       this.objects.length > this.MAX_OBJECTS &&
@@ -65,10 +98,11 @@ class Quadtree {
     if (canSplit) {
       this.nodes.length == 0 && this.split();
 
-      const objectsLength = this.objects.length;
-      for (let i = 0; i < objectsLength; i++) {
+      for (let i = 0; i < this.objects.length; i++) {
         const index = this._getIndex(this.objects[i]);
-        index != -1 && this.nodes[index].insert(this.objects.splice(i, 1)[0]);
+        if (index != -1) {
+          this.nodes[index].insert(this.objects.splice(i, 1)[0]);
+        }
       }
     }
   }
@@ -92,10 +126,10 @@ class Quadtree {
    * Return -1 if cannot be placed in any node and put in the root node(parent node) instead.
    */
   _getIndex(newObject) {
-    verticalMidpoint =
-      this.rectangularBounds.x + this.rectangularBounds.width / 2;
-    horizontalMidPoint =
-      this.rectangularBounds.y + this.rectangularBounds.height / 2;
+    const verticalMidpoint =
+      this.rectangularBound.x + this.rectangularBound.width / 2;
+    const horizontalMidPoint =
+      this.rectangularBound.y + this.rectangularBound.height / 2;
 
     const objY = newObject.y;
     const objX = newObject.x;
@@ -106,20 +140,20 @@ class Quadtree {
     const canfitRight = objX > verticalMidpoint;
 
     if (canfitTop && canfitLeft) {
-      return 1;
+      return 0;
     } else if (canfitTop && canfitRight) {
-      return 2;
+      return 1;
     } else if (canfitBottom && canfitLeft) {
-      return 3;
+      return 2;
     } else if (canfitBottom && canfitRight) {
-      return 4;
+      return 3;
     } else {
       return -1;
     }
   }
 }
 
-class Rectangle {
+class RectangularBound {
   constructor(x, y, width, height) {
     this.x = x;
     this.y = y;
