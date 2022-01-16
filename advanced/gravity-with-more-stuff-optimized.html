@@ -1,4 +1,3 @@
-<!-- TODO optimize to O(logn), right now, the running time is O(n^2) -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -30,7 +29,7 @@
         font-size: 20px;
         background-color: antiquewhite;
         border-bottom: 5px solid rgb(92, 92, 92);
-        transition: all 0.05s ease-in;
+        transition: all 0.02s ease-in;
       }
       button:active {
         border-bottom: 0px solid rgb(92, 92, 92);
@@ -277,12 +276,12 @@
         );
         ctx.fill();
       }
-      if (enableBenchmarking && !benchmarked) {
-        console.log(
-          `${iterations} iterations per frame for ${allElements.length} objects`
-        );
-        benchmarked = true;
-      }
+      // if (enableBenchmarking && !benchmarked) {
+      //   console.log(
+      //     `${iterations} iterations per frame for ${allElements.length} objects`
+      //   );
+      //   benchmarked = true;
+      // }
     }
 
     function resetBenchmarkingVariables() {
