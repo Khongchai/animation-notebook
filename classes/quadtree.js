@@ -1,5 +1,13 @@
 //from https://gamedevelopment.tutsplus.com/tutorials/quick-tip-use-quadtrees-to-detect-likely-collisions-in-2d-space--gamedev-374
 
+//Max objects still not very accurate....for some reason.
+//TODO => modify this for circles first and see if that fixes the problem.
+//To ensure that it really is a problem with this, first make one static circle and one moveable circle and test all the edges.
+
+//POssible bug, you are not checking if the object extends beyond the bounding square, when the object does, it should be included
+// as a child of both bounding area.
+
+//TODO => to use with gravity, you also need to take into account other objects's center of mass.
 class Quadtree {
   //Better one would be to just pass a callback that draws something based on the provided
   //RectangularBound.

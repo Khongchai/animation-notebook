@@ -81,7 +81,7 @@
           Math.random() * 5,
           Math.random() * Math.PI * 2
         );
-        particle.radius = 5;
+        particle.radius = 10;
         particles.push(particle);
       }
     }
@@ -140,7 +140,7 @@
           const otherParticle = particlesInQuadrant[j];
           const isColliding = checkCollision(particle, otherParticle);
           if (isColliding) {
-            const innertialLoss = -0.5;
+            const innertialLoss = 0;
             particle.vx *= innertialLoss;
             particle.vy *= innertialLoss;
             otherParticle.vx *= innertialLoss;
