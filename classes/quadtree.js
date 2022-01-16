@@ -8,8 +8,8 @@ class Quadtree {
   //Better one would be to just pass a callback that draws something based on the provided
   //RectangularBound.
   constructor(currentNodeLevel, rectangularBound, drawingContext) {
-    this.MAX_OBJECTS = 5;
-    this.MAX_LEVELS = 5;
+    this.MAX_OBJECTS = 1;
+    this.MAX_LEVELS = 6;
 
     this.currentNodeLevel = currentNodeLevel;
     this.rectangularBound = rectangularBound;
@@ -139,9 +139,9 @@ class Quadtree {
     const canfitLeft = objX < verticalMidpoint;
     const canfitRight = objX > verticalMidpoint;
 
-    if (canfitTop && canfitLeft) {
+    if (canfitTop && canfitRight) {
       return 0;
-    } else if (canfitTop && canfitRight) {
+    } else if (canfitTop && canfitLeft) {
       return 1;
     } else if (canfitBottom && canfitLeft) {
       return 2;

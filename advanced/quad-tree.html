@@ -57,7 +57,7 @@
     canvas.width = width;
     canvas.height = height;
 
-    const particleAmount = 100;
+    const particleAmount = 10;
     const particles = [];
 
     const metrics = new Metrics();
@@ -66,9 +66,6 @@
 
     const rectangularBound = new RectangularBound(0, 0, width, height);
     const quadtree = new Quadtree(0, rectangularBound, ctx);
-
-    //TODO => create vectors that moves randomly and changes color when collides with another vector
-    //TODO => use quadTree to optimize it.
   </script>
   <script>
     function drawBackground(ctx) {
@@ -81,10 +78,10 @@
         const particle = new Particle(
           Math.random() * width,
           Math.random() * height,
-          Math.random() * 2,
+          Math.random() * 5,
           Math.random() * Math.PI * 2
         );
-        particle.radius = 30;
+        particle.radius = 5;
         particles.push(particle);
       }
     }
