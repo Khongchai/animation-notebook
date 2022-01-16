@@ -1,5 +1,4 @@
 <!-- TODO optimize to O(logn), right now, the running time is O(n^2) -->
-<!-- TODO apply edge-handling -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -14,10 +13,35 @@
         padding: 0;
         margin: 0;
       }
+      canvas {
+        position: absolute;
+      }
+      #button-container {
+        position: absolute;
+        bottom: 40px;
+        right: 40px;
+      }
+      button {
+        border: 0;
+        padding: 0;
+        margin: 0;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-size: 20px;
+        background-color: antiquewhite;
+        border-bottom: 5px solid rgb(92, 92, 92);
+        transition: all 0.05s ease-in;
+      }
+      button:active {
+        border-bottom: 0px solid rgb(92, 92, 92);
+      }
     </style>
   </head>
   <body onload="draw();">
     <div><canvas id="canvas"></canvas></div>
+    <div id="button-container">
+      <button>Toggle Gravity</button>
+    </div>
   </body>
   <script src="../classes/vectors.js"></script>
   <script>
@@ -93,25 +117,27 @@
         y: 0,
       };
       mousedown = false;
+      canvas = null;
 
-      constructor() {
+      constructor(canvas) {
         this.begin.x = 0;
         this.begin.y = 0;
         this.end.x = 0;
         this.end.y = 0;
+        this.canvas = canvas;
 
-        window.addEventListener("mousedown", (e) => {
+        canvas.addEventListener("mousedown", (e) => {
           this.begin.x = e.clientX;
           this.begin.y = e.clientY;
           this.mousedown = true;
         });
 
-        window.addEventListener("mousemove", (e) => {
+        canvas.addEventListener("mousemove", (e) => {
           this.end.x = e.clientX;
           this.end.y = e.clientY;
         });
 
-        window.addEventListener("mouseup", (e) => {
+        canvas.addEventListener("mouseup", (e) => {
           this.mousedown = false;
         });
       }
@@ -137,7 +163,7 @@
     let iterations = 0;
     let benchmarked = false;
 
-    let velocityLine = new VelocityLine();
+    let canGravitate = false;
 
     /*
         Gravity = inversely proportional to the square of the distance between the two particles
@@ -150,6 +176,7 @@
     canvas.width = width;
     canvas.height = height;
 
+    let velocityLine = new VelocityLine(canvas);
     //black canvas background
 
     // const sun = new Particle(width / 2, height / 2, 0, 0),
@@ -166,10 +193,16 @@
     //   { obj: planet2, color: "green" }
     // );
   </script>
-  <script></script>
+  <script>
+    document
+      .getElementById("button-container")
+      .addEventListener("click", () => {
+        canGravitate = !canGravitate;
+      });
+  </script>
   <script>
     //spawn new planet on click
-    window.addEventListener("click", () => {
+    canvas.addEventListener("click", () => {
       resetBenchmarkingVariables();
 
       const velocityVector = velocityLine.getVector();
@@ -225,7 +258,9 @@
           }
         }
 
-        allElements[i].obj.updateVelocity();
+        if (canGravitate) {
+          allElements[i].obj.updateVelocity();
+        }
 
         ctx.beginPath();
         ctx.fillStyle = allElements[i].color;
