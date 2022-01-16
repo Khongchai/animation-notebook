@@ -1,14 +1,10 @@
 //from https://gamedevelopment.tutsplus.com/tutorials/quick-tip-use-quadtrees-to-detect-likely-collisions-in-2d-space--gamedev-374
-const topRight = Symbol(0);
-const topLeft = Symbol(1);
-const bottomLeft = Symbol(2);
-const bottomRight = Symbol(3);
 
 class Quadtree {
   //Better one would be to just pass a callback that draws something based on the provided
   //RectangularBound.
   constructor(currentNodeLevel, rectangularBound, drawingContext) {
-    this.MAX_OBJECTS = 1;
+    this.MAX_OBJECTS = 4;
     this.MAX_LEVELS = 6;
 
     this.currentNodeLevel = currentNodeLevel;

@@ -57,7 +57,7 @@
     canvas.width = width;
     canvas.height = height;
 
-    const particleAmount = 10;
+    const particleAmount = 200;
     const particles = [];
 
     const metrics = new Metrics();
@@ -125,28 +125,29 @@
       quadtree.clear();
       for (let i = 0; i < particles.length; i++) {
         quadtree.insert(particles[i]);
-        // particles[i].color = "aquamarine";
+        calculationsCounter++;
+        particles[i].color = "aquamarine";
       }
 
       for (let i = 0; i < particles.length; i++) {
         const particle = particles[i];
         const particlesInQuadrant = quadtree.retrieve(particle);
         for (let j = 0; j < particlesInQuadrant.length; j++) {
+          if (particle === particlesInQuadrant[j]) {
+            continue;
+          }
           calculationsCounter++;
           const otherParticle = particlesInQuadrant[j];
-          if (i === j) continue;
-          const isColliding = checkCollision(
-            particles[i],
-            particlesInQuadrant[j]
-          );
+          const isColliding = checkCollision(particle, otherParticle);
           if (isColliding) {
-            particles[i].vx *= -1;
-            particles[i].vy *= -1;
-            particlesInQuadrant[j].vx *= -1;
-            particlesInQuadrant[j].vy *= -1;
+            const innertialLoss = -0.5;
+            particle.vx *= innertialLoss;
+            particle.vy *= innertialLoss;
+            otherParticle.vx *= innertialLoss;
+            otherParticle.vy *= innertialLoss;
 
-            // particles[i].color = "red";
-            // particlesInQuadrant[j].color = "red";
+            particle.color = "red";
+            otherParticle.color = "red";
           }
         }
       }
