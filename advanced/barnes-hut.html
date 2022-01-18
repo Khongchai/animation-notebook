@@ -1,0 +1,235 @@
+<!-- Barnes-hut and collision detection are the direct opposite in terms of performance -->
+<!-- More cells = better performance for collision detection, but worse for Barnes-hut -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      html,
+      body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+        font-family: "Selawik";
+      }
+      canvas {
+        position: absolute;
+        left: 0;
+        top: 0;
+      }
+      #metrics-container {
+        position: absolute;
+        bottom: 40px;
+        right: 40px;
+      }
+      .metric {
+        border: 0;
+        padding: 0;
+        margin: 0;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-size: 20px;
+        background-color: antiquewhite;
+        transition: all 0.02s ease-in;
+      }
+    </style>
+  </head>
+  <body>
+    <div><canvas id="canvas"></canvas></div>
+    <div id="metrics-container">
+      <h3 class="metric" id="fps-counter">FPS: 0</h3>
+      <div style="margin-top: 20px" />
+      <h3 class="metric" id="running-time-counter">
+        Calculations Per Second: 0
+      </h3>
+    </div>
+  </body>
+  <script src="../classes/quadtreeBarnes-Hut.js"></script>
+  <script src="../classes/particle3.js"></script>
+  <script src="../classes/metrics.js"></script>
+  <script>
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+
+    canvas.width = width;
+    canvas.height = height;
+
+    const particleAmount = 0;
+    const particles = [];
+
+    const metrics = new Metrics();
+    const fpsCounter = document.getElementById("fps-counter");
+    const runningTimeCounter = document.getElementById("running-time-counter");
+
+    const rectangularBound = new RectangularBound(0, 0, width, height);
+    const quadtree = new Quadtree(0, rectangularBound, ctx);
+  </script>
+  <script>
+    document.addEventListener("click", (e) => {
+      const newParticle = new Particle(e.clientX, e.clientY, 0, 0);
+      newParticle.radius = 5;
+      particles.push(newParticle);
+      animate();
+    });
+  </script>
+  <script>
+    function drawBackground(ctx) {
+      ctx.fillStyle = "rgba(0, 0, 0, 0.15)";
+      ctx.fillRect(0, 0, width, height);
+    }
+    function clearBackground(ctx) {
+      ctx.clearRect(0, 0, width, height);
+    }
+
+    function createParticles(amount, particles) {
+      for (let i = 0; i < amount; i++) {
+        const particle = new Particle(100, 100, 0, Math.random() * Math.PI * 2);
+        particle.radius = 5;
+        particles.push(particle);
+      }
+    }
+
+    function updateParticles(particles) {
+      for (let i = 0; i < particles.length; i++) {
+        particles[i].update();
+      }
+    }
+
+    function drawParticles(ctx, particles) {
+      for (let i = 0; i < particles.length; i++) {
+        const particleColor = particles[i].color ?? "white";
+        ctx.fillStyle = particleColor;
+        ctx.beginPath();
+        ctx.arc(
+          particles[i].x,
+          particles[i].y,
+          particles[i].radius,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+      }
+    }
+
+    function checkParticleEdgeCollision(particles) {
+      for (let i = 0; i < particles.length; i++) {
+        if (particles[i].x > width || particles[i].x < 0) {
+          particles[i].vx *= -1;
+        }
+        if (particles[i].y > height || particles[i].y < 0) {
+          particles[i].vy *= -1;
+        }
+      }
+    }
+
+    function checkParticleParticleCollisionQuadtree(particles) {
+      let calculationsCounter = 0;
+
+      quadtree.clear();
+      for (let i = 0; i < particles.length; i++) {
+        quadtree.insert(particles[i]);
+        calculationsCounter++;
+        particles[i].color = "aquamarine";
+      }
+
+      for (let i = 0; i < particles.length; i++) {
+        const particle = particles[i];
+        const particlesInQuadrant = quadtree.retrieve(particle);
+        for (let j = 0; j < particlesInQuadrant.length; j++) {
+          if (particle === particlesInQuadrant[j]) {
+            continue;
+          }
+          calculationsCounter++;
+          const otherParticle = particlesInQuadrant[j];
+          const isColliding = checkCollision(particle, otherParticle);
+          if (isColliding) {
+            const innertialLoss = 0;
+            particle.vx *= innertialLoss;
+            particle.vy *= innertialLoss;
+            otherParticle.vx *= innertialLoss;
+            otherParticle.vy *= innertialLoss;
+
+            particle.color = "red";
+            otherParticle.color = "red";
+          }
+        }
+      }
+
+      runningTimeCounter.innerHTML =
+        calculationsCounter +
+        " calculations per " +
+        particles.length +
+        " objects";
+    }
+
+    function checkParticleParticleCollisionBruteForce(particles) {
+      let calculationsCounter = 0;
+
+      for (let i = 0; i < particles.length; i++) {
+        particles[i].color = "aquamarine";
+        for (let j = 0; j < particles.length; j++) {
+          calculationsCounter++;
+          if (i == j) continue;
+          const isColliding = checkCollision(particles[i], particles[j]);
+          if (isColliding) {
+            particles[i].color = "red";
+            particles[j].color = "red";
+          }
+        }
+      }
+      runningTimeCounter.innerHTML =
+        calculationsCounter +
+        " calculations per " +
+        particles.length +
+        " objects";
+    }
+
+    function checkCollision(particle1, particle2) {
+      const isColliding =
+        particle1.radius + particle2.radius >=
+        Math.sqrt(
+          Math.pow(particle2.x - particle1.x, 2) +
+            Math.pow(particle2.y - particle1.y, 2)
+        );
+      return isColliding;
+    }
+
+    function reportFps(metrics) {
+      const fps = metrics.getFps();
+      fpsCounter.innerHTML = "FPS: " + fps;
+    }
+  </script>
+  <script>
+    createParticles(particleAmount, particles);
+    function animate() {
+      reportFps(metrics);
+      // drawBackground(ctx);
+      clearBackground(ctx);
+      ctx.fillStyle = "black";
+      ctx.fillRect(0, 0, width, height);
+      checkParticleEdgeCollision(particles);
+      // checkParticleParticleCollisionBruteForce(particles);
+      checkParticleParticleCollisionQuadtree(particles);
+      updateParticles(particles);
+      drawParticles(ctx, particles);
+    }
+    animate();
+
+    // (function animate() {
+    //   reportFps(metrics);
+    //   drawBackground(ctx);
+    //   checkParticleEdgeCollision(particles);
+    //   // checkParticleParticleCollisionBruteForce(particles);
+    //   checkParticleParticleCollisionQuadtree(particles);
+    //   updateParticles(particles);
+    //   drawParticles(ctx, particles);
+
+    // requestAnimationFrame(animate);
+    // })();
+  </script>
+</html>

@@ -1,19 +1,8 @@
-//from https://gamedevelopment.tutsplus.com/tutorials/quick-tip-use-quadtrees-to-detect-likely-collisions-in-2d-space--gamedev-374
-
-//Max objects still not very accurate....for some reason.
-//TODO => modify this for circles first and see if that fixes the problem.
-//To ensure that it really is a problem with this, first make one static circle and one moveable circle and test all the edges.
-
-//POssible bug, you are not checking if the object extends beyond the bounding square, when the object does, it should be included
-// as a child of both bounding area.
-
-//TODO => to use with gravity, you also need to take into account other objects's center of mass.
+//Bug: most likely wrong quadrant assignment
 class Quadtree {
-  //Better one would be to just pass a callback that draws something based on the provided
-  //RectangularBound.
-  constructor(currentNodeLevel, rectangularBound, drawingContext) {
-    this.MAX_OBJECTS = 4;
-    this.MAX_LEVELS = 5;
+  constructor(currentNodeLevel, rectangularBound, drawingContext = null) {
+    this.MAX_OBJECTS = 2;
+    this.MAX_LEVELS = 8;
 
     this.currentNodeLevel = currentNodeLevel;
     this.rectangularBound = rectangularBound;
@@ -21,15 +10,17 @@ class Quadtree {
     this.nodes = []; // array of 4 sub-nodes
     this.drawingContext = drawingContext;
 
-    drawingContext.strokeStyle = "green";
-    drawingContext.beginPath();
-    drawingContext.rect(
-      rectangularBound.x,
-      rectangularBound.y,
-      rectangularBound.width,
-      rectangularBound.height
-    );
-    drawingContext.stroke();
+    if (drawingContext) {
+      drawingContext.strokeStyle = "darkgreen";
+      drawingContext.beginPath();
+      drawingContext.rect(
+        rectangularBound.x,
+        rectangularBound.y,
+        rectangularBound.width,
+        rectangularBound.height
+      );
+      drawingContext.stroke();
+    }
   }
 
   clear() {
@@ -42,14 +33,12 @@ class Quadtree {
     this.objects = [];
   }
 
-  // split the node into 4 sub-nodes
   split() {
     const halfWidth = this.rectangularBound.width / 2;
     const halfHeight = this.rectangularBound.height / 2;
     const x = this.rectangularBound.x;
     const y = this.rectangularBound.y;
 
-    //Position of quadrants = standard cartesian coordinates
     this.nodes[0] = new Quadtree(
       this.currentNodeLevel + 1,
       new RectangularBound(x + halfWidth, y, halfWidth, halfHeight),
@@ -77,13 +66,7 @@ class Quadtree {
     );
   }
 
-  /*
-   * Insert the object into the quadtree. If the node
-   * exceeds the capacity, it will split and add all
-   * objects to their corresponding nodes.
-   */
   insert(newObject) {
-    //If the node is not empty, then get the index and insert the object into the node
     if (this.nodes.length > 0) {
       const index = this._getIndex(newObject);
       if (index != -1) {
@@ -93,9 +76,7 @@ class Quadtree {
       }
     }
 
-    //If this point is reached, then the node is empty and we can insert the object into this (the parent) node;
     this.objects.push(newObject);
-
     const canSplit =
       this.objects.length > this.MAX_OBJECTS &&
       this.currentNodeLevel < this.MAX_LEVELS;
@@ -113,9 +94,6 @@ class Quadtree {
     }
   }
 
-  /*
-   * Return all objects that could collide with the given object
-   */
   retrieve(objectToCheck) {
     const index = this._getIndex(objectToCheck);
     if (index != -1 && this.nodes.length > 0) {
@@ -125,25 +103,19 @@ class Quadtree {
     return this.objects;
   }
 
-  //TODO => Use enum flags when refactoring to TypeScript.
-  /*
-   * Util func
-   * Get the index of the node that the object belongs to.
-   * Return -1 if cannot be placed in any node and put in the root node(parent node) instead.
-   */
   _getIndex(newObject) {
-    const verticalMidpoint =
+    const verticalMidPoint =
       this.rectangularBound.x + this.rectangularBound.width / 2;
-    const horizontalMidpoint =
+    const horizontalMidPoint =
       this.rectangularBound.y + this.rectangularBound.height / 2;
 
     const objY = newObject.y;
     const objX = newObject.x;
     const objRadius = newObject.radius;
 
-    const canfitTop = objY + objRadius < horizontalMidpoint;
+    const canfitTop = objY + objRadius < horizontalMidPoint;
     const canfitBottom = !canfitTop;
-    const canfitLeft = objX + objRadius < verticalMidpoint;
+    const canfitLeft = objX + objRadius < verticalMidPoint;
     const canfitRight = !canfitLeft;
 
     if (canfitTop && canfitRight) {
