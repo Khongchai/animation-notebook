@@ -31,6 +31,7 @@ class Particle {
     this.gravitationPoints = this.gravitationPoints.filter((g) => g.p !== p);
   }
 
+  //Instead of calling this, call use quadtree
   handleGravitation() {
     this.gravitationPoints.forEach((gp) => {
       this.gravitateTo(gp);
@@ -89,12 +90,6 @@ class Particle {
     if (!colliding) {
       this.vx += ax * force;
       this.vy += ay * force;
-    } else {
-      //Use the information from the hitbox to determine the direction of the bounce.
-      //In other words, divert vector in a tangent direction of the collision.
-      //This can be done by using the dot product.
-      const hitPointX = this.x + ax * this.radius;
-      const hitPointY = this.y + ay * this.radius;
     }
   }
 

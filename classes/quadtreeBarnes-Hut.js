@@ -1,4 +1,3 @@
-//Bug: most likely wrong quadrant assignment
 class Quadtree {
   constructor(currentNodeLevel, rectangularBound, drawingContext = null) {
     this.MAX_OBJECTS = 2;
@@ -9,6 +8,13 @@ class Quadtree {
     this.objects = [];
     this.nodes = []; // array of 4 sub-nodes
     this.drawingContext = drawingContext;
+    this.centerOfMass = {
+      x: 0,
+      y: 0,
+      totalMass: 0,
+      //The radius is not really needed, but just in case.
+      radius: 1,
+    };
 
     if (drawingContext) {
       drawingContext.strokeStyle = "darkgreen";
@@ -72,11 +78,14 @@ class Quadtree {
       if (index != -1) {
         this.nodes[index].insert(newObject);
 
+        this.updateCenterOfMass(newObject);
+
         return;
       }
     }
 
     this.objects.push(newObject);
+
     const canSplit =
       this.objects.length > this.MAX_OBJECTS &&
       this.currentNodeLevel < this.MAX_LEVELS;
@@ -94,7 +103,8 @@ class Quadtree {
     }
   }
 
-  retrieve(objectToCheck) {
+  //For collision detection
+  retrieveParticlesToCollideWith(objectToCheck) {
     const index = this._getIndex(objectToCheck);
     if (index != -1 && this.nodes.length > 0) {
       return this.nodes[index].retrieve(objectToCheck);
@@ -102,6 +112,9 @@ class Quadtree {
 
     return this.objects;
   }
+
+  //For gravity simulation
+  retrieveCenterOfMassesToGravitateTo() {}
 
   _getIndex(newObject) {
     const verticalMidPoint =
@@ -129,6 +142,24 @@ class Quadtree {
     } else {
       return -1;
     }
+  }
+
+  updateCenterOfMass(p) {
+    const newCenterOfMass = {
+      x: 0,
+      y: 0,
+      mass: 0,
+      radius: 1,
+    };
+    newCenterOfMass.mass = this.centerOfMass.mass + p.mass;
+    newCenterOfMass.x =
+      (this.centerOfMass.x * this.centerOfMass.mass + p.x * p.mass) /
+      newCenterOfMass.mass;
+    newCenterOfMass.y =
+      (this.centerOfMass.y * this.centerOfMass.mass + p.y * p.mass) /
+      newCenterOfMass.mass;
+
+    this.centerOfMass = newCenterOfMass;
   }
 }
 
