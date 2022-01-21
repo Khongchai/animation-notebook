@@ -1,3 +1,4 @@
+const COLORS = ["crimson", "purple", "navy", "darkgreen", "burlywood"];
 class Quadtree {
   constructor(currentNodeLevel, rectangularBound, drawingContext = null) {
     this.MAX_OBJECTS = 2;
@@ -13,18 +14,9 @@ class Quadtree {
       x: 0,
       y: 0,
     };
+    //random color from rgb
 
-    if (drawingContext) {
-      drawingContext.strokeStyle = "darkgreen";
-      drawingContext.beginPath();
-      drawingContext.rect(
-        rectangularBound.x,
-        rectangularBound.y,
-        rectangularBound.width,
-        rectangularBound.height
-      );
-      drawingContext.stroke();
-    }
+    this._drawRectangularBound();
   }
 
   clear() {
@@ -156,7 +148,7 @@ class Quadtree {
 
   _drawMassData() {
     if (this.drawingContext != null) {
-      this.strokeStyle = "red";
+      this.drawingContext.strokeStyle = COLORS[this.currentNodeLevel];
       this.drawingContext.beginPath();
       this.drawingContext.arc(
         this.centerOfMass.x,
@@ -164,6 +156,20 @@ class Quadtree {
         20,
         0,
         2 * Math.PI
+      );
+      this.drawingContext.stroke();
+    }
+  }
+
+  _drawRectangularBound() {
+    if (this.drawingContext) {
+      this.drawingContext.strokeStyle = COLORS[this.currentNodeLevel];
+      this.drawingContext.beginPath();
+      this.drawingContext.rect(
+        this.rectangularBound.x,
+        this.rectangularBound.y,
+        this.rectangularBound.width,
+        this.rectangularBound.height
       );
       this.drawingContext.stroke();
     }
