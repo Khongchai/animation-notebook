@@ -59,7 +59,7 @@
     canvas.width = width;
     canvas.height = height;
 
-    const particleAmount = 1;
+    const particleAmount = 0;
     const particles = [];
 
     const metrics = new Metrics();
@@ -140,6 +140,7 @@
         calculationsCounter++;
         particles[i].color = "aquamarine";
       }
+      quadtree.retrieveMassDataFromChildrenNodes();
 
       for (let i = 0; i < particles.length; i++) {
         const particle = particles[i];

@@ -1,19 +1,17 @@
 class Quadtree {
   constructor(currentNodeLevel, rectangularBound, drawingContext = null) {
-    this.MAX_OBJECTS = 1;
-    this.MAX_LEVELS = 1;
+    this.MAX_OBJECTS = 2;
+    this.MAX_LEVELS = 6;
 
     this.currentNodeLevel = currentNodeLevel;
     this.rectangularBound = rectangularBound;
     this.objects = [];
     this.nodes = []; // array of 4 sub-nodes
     this.drawingContext = drawingContext;
+    this.mass = 0;
     this.centerOfMass = {
       x: 0,
       y: 0,
-      mass: 0,
-      //The radius is not really needed, but just in case.
-      radius: 1,
     };
 
     if (drawingContext) {
@@ -37,11 +35,10 @@ class Quadtree {
     }
     this.nodes = [];
     this.objects = [];
+    this.mass = 0;
     this.centerOfMass = {
       x: 0,
       y: 0,
-      mass: 0,
-      radius: 1,
     };
   }
 
@@ -79,11 +76,11 @@ class Quadtree {
   }
 
   insert(newObject) {
-    if (this.nodes.length > 0) {
+    const isInternalNode = this.nodes.length > 0;
+    if (isInternalNode) {
       const index = this._getIndex(newObject);
       if (index != -1) {
         this.nodes[index].insert(newObject);
-
         return;
       }
     }
@@ -104,29 +101,73 @@ class Quadtree {
           this.nodes[index].insert(removedObject);
         }
       }
+    }
+  }
 
-      for (let i = 0, length = this.nodes.length; i < length; i++) {
-        this.updateCenterOfMass(this.nodes[i].centerOfMass);
+  retrieveCenterOfMassesToGravitateTo(objectToCheck, theta = 0.5) {
+    const objectWidth = objectToCheck.radius * 2;
+  }
+
+  retrieveMassDataFromChildrenNodes() {
+    if (this.nodes.length == 0) {
+      this.mass = 0;
+      this.centerOfMass = { x: 0, y: 0 };
+      for (let i = 0; i < this.objects.length; i++) {
+        this.updateLeafNodesCenterOfMass(this.objects[i]);
       }
+      this._drawMassData();
+      return;
     }
-    //Is a leaf node
-    else {
-      this.updateCenterOfMass(newObject);
+
+    let massData = {
+      mass: 0,
+      x: 0,
+      y: 0,
+    };
+    for (let i = 0, length = this.nodes.length; i < length; i++) {
+      this.nodes[i].retrieveMassDataFromChildrenNodes();
+      massData.mass += this.nodes[i].mass;
+      massData.x += this.nodes[i].centerOfMass.x * this.nodes[i].mass;
+      massData.y += this.nodes[i].centerOfMass.y * this.nodes[i].mass;
     }
+    massData.x /= massData.mass;
+    massData.y /= massData.mass;
+    this.centerOfMass = { x: massData.x, y: massData.y };
+    this.mass = massData.mass;
+    this._drawMassData();
   }
 
-  //For collision detection
-  retrieveParticlesToCollideWith(objectToCheck) {
-    const index = this._getIndex(objectToCheck);
-    if (index != -1 && this.nodes.length > 0) {
-      return this.nodes[index].retrieve(objectToCheck);
-    }
+  updateLeafNodesCenterOfMass(p) {
+    const newMassData = {
+      x: 0,
+      y: 0,
+      mass: 0,
+    };
+    newMassData.mass = this.mass + p.mass;
 
-    return this.objects;
+    newMassData.x =
+      (this.centerOfMass.x * this.mass + p.x * p.mass) / newMassData.mass;
+    newMassData.y =
+      (this.centerOfMass.y * this.mass + p.y * p.mass) / newMassData.mass;
+
+    this.centerOfMass = { x: newMassData.x, y: newMassData.y };
+    this.mass = newMassData.mass;
   }
 
-  //For gravity simulation
-  retrieveCenterOfMassesToGravitateTo() {}
+  _drawMassData() {
+    if (this.drawingContext != null) {
+      this.strokeStyle = "red";
+      this.drawingContext.beginPath();
+      this.drawingContext.arc(
+        this.centerOfMass.x,
+        this.centerOfMass.y,
+        20,
+        0,
+        2 * Math.PI
+      );
+      this.drawingContext.stroke();
+    }
+  }
 
   _getIndex(newObject) {
     const verticalMidPoint =
@@ -154,25 +195,6 @@ class Quadtree {
     } else {
       return -1;
     }
-  }
-
-  updateCenterOfMass(p) {
-    const newCenterOfMass = {
-      x: 0,
-      y: 0,
-      mass: 0,
-      radius: 1,
-    };
-    newCenterOfMass.mass = this.centerOfMass.mass + p.mass;
-
-    newCenterOfMass.x =
-      (this.centerOfMass.x * this.centerOfMass.mass + p.x * p.mass) /
-      newCenterOfMass.mass;
-    newCenterOfMass.y =
-      (this.centerOfMass.y * this.centerOfMass.mass + p.y * p.mass) /
-      newCenterOfMass.mass;
-
-    this.centerOfMass = newCenterOfMass;
   }
 }
 
