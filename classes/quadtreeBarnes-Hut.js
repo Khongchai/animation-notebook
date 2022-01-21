@@ -1,7 +1,7 @@
 class Quadtree {
   constructor(currentNodeLevel, rectangularBound, drawingContext = null) {
-    this.MAX_OBJECTS = 2;
-    this.MAX_LEVELS = 8;
+    this.MAX_OBJECTS = 1;
+    this.MAX_LEVELS = 1;
 
     this.currentNodeLevel = currentNodeLevel;
     this.rectangularBound = rectangularBound;
@@ -11,7 +11,7 @@ class Quadtree {
     this.centerOfMass = {
       x: 0,
       y: 0,
-      totalMass: 0,
+      mass: 0,
       //The radius is not really needed, but just in case.
       radius: 1,
     };
@@ -37,6 +37,12 @@ class Quadtree {
     }
     this.nodes = [];
     this.objects = [];
+    this.centerOfMass = {
+      x: 0,
+      y: 0,
+      mass: 0,
+      radius: 1,
+    };
   }
 
   split() {
@@ -78,8 +84,6 @@ class Quadtree {
       if (index != -1) {
         this.nodes[index].insert(newObject);
 
-        this.updateCenterOfMass(newObject);
-
         return;
       }
     }
@@ -100,6 +104,14 @@ class Quadtree {
           this.nodes[index].insert(removedObject);
         }
       }
+
+      for (let i = 0, length = this.nodes.length; i < length; i++) {
+        this.updateCenterOfMass(this.nodes[i].centerOfMass);
+      }
+    }
+    //Is a leaf node
+    else {
+      this.updateCenterOfMass(newObject);
     }
   }
 
@@ -152,6 +164,7 @@ class Quadtree {
       radius: 1,
     };
     newCenterOfMass.mass = this.centerOfMass.mass + p.mass;
+
     newCenterOfMass.x =
       (this.centerOfMass.x * this.centerOfMass.mass + p.x * p.mass) /
       newCenterOfMass.mass;

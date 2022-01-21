@@ -59,7 +59,7 @@
     canvas.width = width;
     canvas.height = height;
 
-    const particleAmount = 200;
+    const particleAmount = 1;
     const particles = [];
 
     const metrics = new Metrics();
@@ -74,7 +74,6 @@
       const newParticle = new Particle(e.clientX, e.clientY, 0, 0);
       newParticle.radius = 5;
       particles.push(newParticle);
-      animate();
     });
   </script>
   <script>
@@ -142,16 +141,16 @@
         particles[i].color = "aquamarine";
       }
 
-      // for (let i = 0; i < particles.length; i++) {
-      //   const particle = particles[i];
-      //   for (let j = 0; j < particles.length; j++) {
-      //     if (i === j) {
-      //       continue;
-      //     }
-      //     calculationsCounter++;
-      //     particles[i].gravitateTo(particles[j]);
-      //   }
-      // }
+      for (let i = 0; i < particles.length; i++) {
+        const particle = particles[i];
+        for (let j = 0; j < particles.length; j++) {
+          if (i === j) {
+            continue;
+          }
+          calculationsCounter++;
+          particles[i].gravitateTo(particles[j]);
+        }
+      }
 
       runningTimeCounter.innerHTML =
         calculationsCounter +
@@ -194,6 +193,7 @@
       drawBackground(ctx);
       checkParticleEdgeCollision(particles);
       calculateGravityBarnesHut(particles);
+      // calculateGravityBruteForce(particles);
       updateParticles(particles);
       drawParticles(ctx, particles);
 
