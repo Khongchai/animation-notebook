@@ -143,13 +143,16 @@
       quadtree.retrieveMassDataFromChildrenNodes();
 
       for (let i = 0; i < particles.length; i++) {
-        const particle = particles[i];
-        for (let j = 0; j < particles.length; j++) {
-          if (i === j) {
+        const pointsToGravitateTo =
+          quadtree.retrieveCenterOfMassesToGravitateTo(particles[i], 1);
+        // const pointsToGravitateTo = particles;
+
+        for (let j = 0, len = pointsToGravitateTo.length; j < len; j++) {
+          if (particles[i] == pointsToGravitateTo[j]) {
             continue;
           }
           calculationsCounter++;
-          particles[i].gravitateTo(particles[j]);
+          particles[i].gravitateTo(pointsToGravitateTo[j]);
         }
       }
 

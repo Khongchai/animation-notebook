@@ -1,8 +1,8 @@
 const COLORS = ["crimson", "purple", "navy", "darkgreen", "burlywood"];
 class Quadtree {
   constructor(currentNodeLevel, rectangularBound, drawingContext = null) {
-    this.MAX_OBJECTS = 2;
-    this.MAX_LEVELS = 6;
+    this.MAX_OBJECTS = 3;
+    this.MAX_LEVELS = 4;
 
     this.currentNodeLevel = currentNodeLevel;
     this.rectangularBound = rectangularBound;
@@ -96,8 +96,46 @@ class Quadtree {
     }
   }
 
-  retrieveCenterOfMassesToGravitateTo(objectToCheck, theta = 0.5) {
-    const objectWidth = objectToCheck.radius * 2;
+  /*
+    Draw lines between each object and the thing it's gravitating towards.
+
+    TODO: refactor duplicate logic.
+  */
+  retrieveCenterOfMassesToGravitateTo(objectToCheck, theta) {
+    const objToReturn = [];
+
+    if (this.nodes.length == 0) {
+      const distance = objectToCheck.distanceTo(this.centerOfMass);
+      if (this.rectangularBound.width / distance < theta) {
+        return objToReturn.push({
+          x: this.centerOfMass.x,
+          y: this.centerOfMass.y,
+          mass: this.mass,
+        });
+      } else {
+        return this.objects;
+      }
+    }
+
+    for (let i = 0, len = this.nodes.length; i < len; i++) {
+      //Assume that the each node doesn't really have a radius.
+      const distance = objectToCheck.distanceTo(this.nodes[i].centerOfMass);
+      if (this.nodes[i].rectangularBound.width / distance < theta) {
+        objToReturn.push({
+          x: this.nodes[i].centerOfMass.x,
+          y: this.nodes[i].centerOfMass.y,
+          mass: this.nodes[i].mass,
+        });
+      } else {
+        objToReturn.push(
+          ...this.nodes[i].retrieveCenterOfMassesToGravitateTo(
+            objectToCheck,
+            theta
+          )
+        );
+      }
+    }
+    return objToReturn;
   }
 
   retrieveMassDataFromChildrenNodes() {
@@ -147,7 +185,7 @@ class Quadtree {
   }
 
   _drawMassData() {
-    if (this.drawingContext != null) {
+    if (this.drawingContext) {
       this.drawingContext.strokeStyle = COLORS[this.currentNodeLevel];
       this.drawingContext.beginPath();
       this.drawingContext.arc(
@@ -157,6 +195,16 @@ class Quadtree {
         0,
         2 * Math.PI
       );
+      this.drawingContext.stroke();
+    }
+  }
+
+  _drawLine(p1, p2) {
+    if (this.drawingContext) {
+      this.drawingContext.strokeStyle = "orange";
+      this.drawingContext.beginPath();
+      this.drawingContext.moveTo(p1.x, p1.y);
+      this.drawingContext.lineTo(p2.x, p2.y);
       this.drawingContext.stroke();
     }
   }
