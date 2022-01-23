@@ -68,11 +68,11 @@ class Particle {
   }
 
   distanceTo(p) {
-    const floorRes = Math.abs(
-      p.x * p.x - this.x * this.x + p.y * p.y - this.y * this.y
-    );
-    const dis = Math.sqrt(floorRes);
-    return dis;
+    const distanceX = p.x - this.x;
+    const distanceY = p.y - this.y;
+    const distanceSquared = distanceX * distanceX + distanceY * distanceY;
+    const distance = Math.sqrt(distanceSquared);
+    return distance;
   }
 
   gravitateTo(p) {

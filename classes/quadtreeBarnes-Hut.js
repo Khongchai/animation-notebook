@@ -96,26 +96,37 @@ class Quadtree {
     }
   }
 
-  /*
-    Draw lines between each object and the thing it's gravitating towards.
-
-    TODO: refactor duplicate logic.
-  */
   retrieveCenterOfMassesToGravitateTo(objectToCheck, theta) {
     const objToReturn = [];
+    const pushToObjIfMassNotZero = (obj) => obj.mass && objToReturn.push(obj);
 
     if (this.nodes.length == 0) {
       const distance = objectToCheck.distanceTo(this.centerOfMass);
 
       if (this.rectangularBound.width / distance < theta) {
-        return objToReturn.push({
+        this._drawLine(
+          objectToCheck,
+          this.centerOfMass,
+          objectToCheck,
+          this.mass
+        );
+
+        pushToObjIfMassNotZero({
+          mass: this.mass,
           x: this.centerOfMass.x,
           y: this.centerOfMass.y,
-          mass: this.mass,
         });
+
+        return objToReturn;
       } else {
         for (let i = 0; i < this.objects.length; i++) {
-          objToReturn.push(this.objects[i]);
+          this._drawLine(
+            objectToCheck,
+            this.objects[i],
+            objectToCheck.mass,
+            this.objects[i].mass
+          ); // debug
+          pushToObjIfMassNotZero(this.objects[i]);
         }
 
         return objToReturn;
@@ -123,19 +134,16 @@ class Quadtree {
     }
 
     for (let i = 0, len = this.nodes.length; i < len; i++) {
-      //Assume that the each node doesn't really have a radius.
-      //Problem is here
       const distance = objectToCheck.distanceTo(this.nodes[i].centerOfMass);
 
-      // if (this.nodes[i].objects.length > 0) {
-      //   console.log(
-      //     distance + " " + "node objects length:",
-      //     this.nodes[i].objects.length
-      //   );
-      // }
       if (this.nodes[i].rectangularBound.width / distance < theta) {
-        this._drawLine(objectToCheck, this.nodes[i].centerOfMass); // debug
-        objToReturn.push({
+        this._drawLine(
+          objectToCheck,
+          this.nodes[i].centerOfMass,
+          objectToCheck.mass,
+          this.nodes[i].mass
+        ); // debug
+        pushToObjIfMassNotZero({
           x: this.nodes[i].centerOfMass.x,
           y: this.nodes[i].centerOfMass.y,
           mass: this.nodes[i].mass,
@@ -149,10 +157,11 @@ class Quadtree {
 
         for (let i = 0; i < massesToGravitateTo.length; i++) {
           this._drawLine(objectToCheck, massesToGravitateTo[i]); // debug
-          objToReturn.push(massesToGravitateTo[i]);
+          pushToObjIfMassNotZero(massesToGravitateTo[i]);
         }
       }
     }
+
     return objToReturn;
   }
 
@@ -203,13 +212,13 @@ class Quadtree {
   }
 
   _drawMassData() {
-    if (this.drawingContext) {
+    if (this.drawingContext && this.mass) {
       this.drawingContext.strokeStyle = COLORS[this.currentNodeLevel];
       this.drawingContext.beginPath();
       this.drawingContext.arc(
         this.centerOfMass.x,
         this.centerOfMass.y,
-        20,
+        this.mass * 2 + 5,
         0,
         2 * Math.PI
       );
@@ -217,8 +226,8 @@ class Quadtree {
     }
   }
 
-  _drawLine(p1, p2) {
-    if (this.drawingContext) {
+  _drawLine(p1, p2, p1Mass, p2Mass) {
+    if (this.drawingContext && p1Mass && p2Mass) {
       this.drawingContext.strokeStyle = "orange";
       this.drawingContext.beginPath();
       this.drawingContext.moveTo(p1.x, p1.y);
