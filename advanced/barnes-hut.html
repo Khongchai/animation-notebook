@@ -59,7 +59,7 @@
     canvas.width = width;
     canvas.height = height;
 
-    const particleAmount = 0;
+    const particleAmount = 2000;
     const particles = [];
 
     const metrics = new Metrics();
@@ -67,7 +67,7 @@
     const runningTimeCounter = document.getElementById("running-time-counter");
 
     const rectangularBound = new RectangularBound(0, 0, width, height);
-    const quadtree = new Quadtree(0, rectangularBound, ctx);
+    const quadtree = new Quadtree(0, rectangularBound);
   </script>
   <script>
     document.addEventListener("click", (e) => {
@@ -95,7 +95,7 @@
           0,
           Math.random() * Math.PI * 2
         );
-        particle.radius = 5;
+        particle.radius = 2;
         particles.push(particle);
       }
     }
@@ -145,18 +145,15 @@
       quadtree.retrieveMassDataFromChildrenNodes();
 
       for (let i = 0; i < particles.length; i++) {
-        if (i == 0) {
-          const pointsToGravitateTo =
-            quadtree.retrieveCenterOfMassesToGravitateTo(particles[i], 1);
-          // const pointsToGravitateTo = particles;
+        const pointsToGravitateTo =
+          quadtree.retrieveCenterOfMassesToGravitateTo(particles[i], 1);
 
-          for (let j = 0, len = pointsToGravitateTo.length; j < len; j++) {
-            if (particles[i] == pointsToGravitateTo[j]) {
-              continue;
-            }
-            calculationsCounter++;
-            particles[i].gravitateTo(pointsToGravitateTo[j]);
+        for (let j = 0, len = pointsToGravitateTo.length; j < len; j++) {
+          if (particles[i] == pointsToGravitateTo[j]) {
+            continue;
           }
+          calculationsCounter++;
+          particles[i].gravitateTo(pointsToGravitateTo[j]);
         }
       }
 
@@ -172,6 +169,7 @@
 
       for (let i = 0; i < particles.length; i++) {
         const particle = particles[i];
+        particles[i].color = "aquamarine";
         for (let j = 0; j < particles.length; j++) {
           if (i === j) {
             continue;

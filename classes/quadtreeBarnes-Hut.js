@@ -1,8 +1,8 @@
 const COLORS = ["crimson", "purple", "navy", "darkgreen", "burlywood"];
 class Quadtree {
   constructor(currentNodeLevel, rectangularBound, drawingContext = null) {
-    this.MAX_OBJECTS = 3;
-    this.MAX_LEVELS = 3;
+    this.MAX_OBJECTS = 2;
+    this.MAX_LEVELS = 5;
 
     this.currentNodeLevel = currentNodeLevel;
     this.rectangularBound = rectangularBound;

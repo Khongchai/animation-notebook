@@ -6,7 +6,7 @@ class Particle {
   vy = 0;
 
   gravity = null;
-  mass = 1;
+  mass = 3;
   radius = 0;
   bounce = -1;
   friction = 1;
