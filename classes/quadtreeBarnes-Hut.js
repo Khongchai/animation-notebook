@@ -2,7 +2,7 @@ const COLORS = ["crimson", "purple", "navy", "darkgreen", "burlywood"];
 class Quadtree {
   constructor(currentNodeLevel, rectangularBound, drawingContext = null) {
     this.MAX_OBJECTS = 3;
-    this.MAX_LEVELS = 4;
+    this.MAX_LEVELS = 3;
 
     this.currentNodeLevel = currentNodeLevel;
     this.rectangularBound = rectangularBound;
@@ -106,6 +106,7 @@ class Quadtree {
 
     if (this.nodes.length == 0) {
       const distance = objectToCheck.distanceTo(this.centerOfMass);
+
       if (this.rectangularBound.width / distance < theta) {
         return objToReturn.push({
           x: this.centerOfMass.x,
@@ -113,26 +114,43 @@ class Quadtree {
           mass: this.mass,
         });
       } else {
-        return this.objects;
+        for (let i = 0; i < this.objects.length; i++) {
+          objToReturn.push(this.objects[i]);
+        }
+
+        return objToReturn;
       }
     }
 
     for (let i = 0, len = this.nodes.length; i < len; i++) {
       //Assume that the each node doesn't really have a radius.
+      //Problem is here
       const distance = objectToCheck.distanceTo(this.nodes[i].centerOfMass);
+
+      // if (this.nodes[i].objects.length > 0) {
+      //   console.log(
+      //     distance + " " + "node objects length:",
+      //     this.nodes[i].objects.length
+      //   );
+      // }
       if (this.nodes[i].rectangularBound.width / distance < theta) {
+        this._drawLine(objectToCheck, this.nodes[i].centerOfMass); // debug
         objToReturn.push({
           x: this.nodes[i].centerOfMass.x,
           y: this.nodes[i].centerOfMass.y,
           mass: this.nodes[i].mass,
         });
-      } else {
-        objToReturn.push(
-          ...this.nodes[i].retrieveCenterOfMassesToGravitateTo(
-            objectToCheck,
-            theta
-          )
-        );
+      }
+      //calculate separate bodies.
+      else {
+        const massesToGravitateTo = this.nodes[
+          i
+        ].retrieveCenterOfMassesToGravitateTo(objectToCheck, theta);
+
+        for (let i = 0; i < massesToGravitateTo.length; i++) {
+          this._drawLine(objectToCheck, massesToGravitateTo[i]); // debug
+          objToReturn.push(massesToGravitateTo[i]);
+        }
       }
     }
     return objToReturn;

@@ -6,7 +6,7 @@ class Particle {
   vy = 0;
 
   gravity = null;
-  mass = 5;
+  mass = 1;
   radius = 0;
   bounce = -1;
   friction = 1;
@@ -68,7 +68,11 @@ class Particle {
   }
 
   distanceTo(p) {
-    return Math.sqrt(p.x * p.x - this.x * this.x + p.y * p.y - this.y * this.y);
+    const floorRes = Math.abs(
+      p.x * p.x - this.x * this.x + p.y * p.y - this.y * this.y
+    );
+    const dis = Math.sqrt(floorRes);
+    return dis;
   }
 
   gravitateTo(p) {
@@ -86,7 +90,9 @@ class Particle {
     const ax = distanceX / distance;
     const ay = distanceY / distance;
 
-    const colliding = this.radius + p.radius >= distance;
+    //For center of gravities, radius can be null
+    const targetRadius = p.radius ? p.radius : this.radius;
+    const colliding = this.radius + targetRadius >= distance;
     if (!colliding) {
       this.vx += ax * force;
       this.vy += ay * force;

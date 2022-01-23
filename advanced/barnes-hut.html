@@ -59,7 +59,7 @@
     canvas.width = width;
     canvas.height = height;
 
-    const particleAmount = 0;
+    const particleAmount = 1000;
     const particles = [];
 
     const metrics = new Metrics();
@@ -67,7 +67,7 @@
     const runningTimeCounter = document.getElementById("running-time-counter");
 
     const rectangularBound = new RectangularBound(0, 0, width, height);
-    const quadtree = new Quadtree(0, rectangularBound, ctx);
+    const quadtree = new Quadtree(0, rectangularBound);
   </script>
   <script>
     document.addEventListener("click", (e) => {
@@ -83,6 +83,8 @@
     }
     function clearBackground(ctx) {
       ctx.clearRect(0, 0, width, height);
+      ctx.fillStyle = "black";
+      ctx.fillRect(0, 0, width, height);
     }
 
     function createParticles(amount, particles) {
@@ -123,10 +125,10 @@
     function checkParticleEdgeCollision(particles) {
       for (let i = 0; i < particles.length; i++) {
         if (particles[i].x > width || particles[i].x < 0) {
-          particles[i].vx *= -1;
+          particles[i].vx *= -0.6;
         }
         if (particles[i].y > height || particles[i].y < 0) {
-          particles[i].vy *= -1;
+          particles[i].vy *= -0.6;
         }
       }
     }
@@ -144,7 +146,7 @@
 
       for (let i = 0; i < particles.length; i++) {
         const pointsToGravitateTo =
-          quadtree.retrieveCenterOfMassesToGravitateTo(particles[i], 1);
+          quadtree.retrieveCenterOfMassesToGravitateTo(particles[i], 0.5);
         // const pointsToGravitateTo = particles;
 
         for (let j = 0, len = pointsToGravitateTo.length; j < len; j++) {
@@ -194,7 +196,8 @@
 
     (function animate() {
       reportFps(metrics);
-      drawBackground(ctx);
+      // drawBackground(ctx);
+      clearBackground(ctx);
       checkParticleEdgeCollision(particles);
       calculateGravityBarnesHut(particles);
       // calculateGravityBruteForce(particles);
