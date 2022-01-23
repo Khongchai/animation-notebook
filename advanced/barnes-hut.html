@@ -1,5 +1,3 @@
-<!-- Barnes-hut and collision detection are the direct opposite in terms of performance -->
-<!-- More cells = better performance for collision detection, but worse for Barnes-hut -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -59,7 +57,7 @@
     canvas.width = width;
     canvas.height = height;
 
-    const particleAmount = 2000;
+    const particleAmount = 0;
     const particles = [];
 
     const metrics = new Metrics();
@@ -67,7 +65,7 @@
     const runningTimeCounter = document.getElementById("running-time-counter");
 
     const rectangularBound = new RectangularBound(0, 0, width, height);
-    const quadtree = new Quadtree(0, rectangularBound);
+    const quadtree = new Quadtree(0, rectangularBound, ctx);
   </script>
   <script>
     document.addEventListener("click", (e) => {
@@ -146,7 +144,7 @@
 
       for (let i = 0; i < particles.length; i++) {
         const pointsToGravitateTo =
-          quadtree.retrieveCenterOfMassesToGravitateTo(particles[i], 1);
+          quadtree.retrieveCenterOfMassesToGravitateTo(particles[i], 2);
 
         for (let j = 0, len = pointsToGravitateTo.length; j < len; j++) {
           if (particles[i] == pointsToGravitateTo[j]) {

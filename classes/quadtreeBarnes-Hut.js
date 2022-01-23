@@ -1,7 +1,7 @@
 const COLORS = ["crimson", "purple", "navy", "darkgreen", "burlywood"];
 class Quadtree {
   constructor(currentNodeLevel, rectangularBound, drawingContext = null) {
-    this.MAX_OBJECTS = 2;
+    this.MAX_OBJECTS = 1;
     this.MAX_LEVELS = 5;
 
     this.currentNodeLevel = currentNodeLevel;
@@ -155,8 +155,8 @@ class Quadtree {
           i
         ].retrieveCenterOfMassesToGravitateTo(objectToCheck, theta);
 
-        for (let i = 0; i < massesToGravitateTo.length; i++) {
-          this._drawLine(objectToCheck, massesToGravitateTo[i]); // debug
+        for (let i = 0, length = massesToGravitateTo.length; i < length; i++) {
+          // this._drawLine(objectToCheck, massesToGravitateTo[i]); // debug
           pushToObjIfMassNotZero(massesToGravitateTo[i]);
         }
       }
@@ -227,13 +227,13 @@ class Quadtree {
   }
 
   _drawLine(p1, p2, p1Mass, p2Mass) {
-    if (this.drawingContext && p1Mass && p2Mass) {
-      this.drawingContext.strokeStyle = "orange";
-      this.drawingContext.beginPath();
-      this.drawingContext.moveTo(p1.x, p1.y);
-      this.drawingContext.lineTo(p2.x, p2.y);
-      this.drawingContext.stroke();
-    }
+    // if (this.drawingContext && p1Mass && p2Mass) {
+    //   this.drawingContext.strokeStyle = "orange";
+    //   this.drawingContext.beginPath();
+    //   this.drawingContext.moveTo(p1.x, p1.y);
+    //   this.drawingContext.lineTo(p2.x, p2.y);
+    //   this.drawingContext.stroke();
+    // }
   }
 
   _drawRectangularBound() {
