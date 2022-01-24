@@ -1,3 +1,4 @@
+//TODO => build again for your proj but with wasm
 const COLORS = ["crimson", "purple", "navy", "darkgreen", "burlywood"];
 class Quadtree {
   constructor(currentNodeLevel, rectangularBound, drawingContext = null) {

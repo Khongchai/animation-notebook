@@ -66,11 +66,23 @@
 
     const rectangularBound = new RectangularBound(0, 0, width, height);
     const quadtree = new Quadtree(0, rectangularBound, ctx);
+
+    let massString = "";
+    let particleMass = 1;
   </script>
   <script>
+    document.addEventListener("keydown", (e) => {
+      const isNumber = /^[0-9]$/i.test(e.key);
+      isNumber && (massString += e.key);
+      if (e.key === "Enter") {
+        particleMass = parseInt(massString);
+        massString = "";
+      }
+    });
     document.addEventListener("click", (e) => {
       const newParticle = new Particle(e.clientX, e.clientY, 0, 0);
-      newParticle.radius = 5;
+      newParticle.mass = particleMass;
+      newParticle.radius = 5 + particleMass;
       particles.push(newParticle);
     });
   </script>
