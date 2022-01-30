@@ -12,7 +12,8 @@
     <title></title>
     <style>
       html,
-      body {
+      body,
+      canvas {
         border: 0;
         padding: 0;
         margin: 0;
@@ -20,22 +21,57 @@
       }
     </style>
   </head>
-  <body onload="draw();">
+  <body>
     <div><canvas id="canvas"></canvas></div>
   </body>
   <script>
-    let canvas = document.getElementById("canvas");
+    const randomRange = (x, y) => {
+      return Math.floor(Math.random() * (y - x + 1) + x);
+    };
+  </script>
+  <script>
+    const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
-    var width = window.innerWidth;
-    var height = window.innerHeight;
+    const width = window.innerWidth;
+    const height = window.innerHeight;
     canvas.width = width;
     canvas.height = height;
-    const draw = () => {
-      ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
-      //if you see this, canvas is working
-      ctx.arc(width / 2, height / 2, 100, 0, 2 * Math.PI);
-      ctx.stroke();
-      requestAnimationFrame(draw);
+    const fl = 1000;
+    const formen = [];
+    const formenMenge = 100;
+
+    for (let i = 0; i < formenMenge; i++) {
+      formen.push({
+        x: randomRange(-1000, 1000),
+        y: randomRange(-1000, 1000),
+        z: randomRange(0, 10000),
+      });
+    }
+
+    ctx.translate(width / 2, height / 2);
+
+    const update = () => {
+      //Wir machen -width weil wir schon ein translate gemacht haben.
+      ctx.clearRect(-width / 2, -height / 2, width, height);
+      for (let i = 0; i < formenMenge; i += 1) {
+        const forme = formen[i];
+        const blickwinkel = fl / (fl + forme.z);
+
+        ctx.save();
+        ctx.translate(forme.x * blickwinkel, forme.y * blickwinkel);
+        ctx.scale(blickwinkel, blickwinkel);
+        ctx.fillRect(-100, -100, 200, 200);
+        ctx.restore();
+
+        forme.z += 5;
+        if (forme.z > 10000) {
+          forme.z = 0;
+        }
+      }
+      requestAnimationFrame(update);
     };
+  </script>
+  <script>
+    update();
   </script>
 </html>
