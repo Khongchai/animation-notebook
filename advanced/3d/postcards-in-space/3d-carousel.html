@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      html,
+      body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div><canvas id="canvas"></canvas></div>
+  </body>
+  <script>
+    function randomRange(x, y) {
+      return Math.floor(Math.random() * (y - x + 1) + x);
+    }
+  </script>
+  <script>
+    let canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+    const fl = 300;
+    const cards = [];
+    const cardsAmount = 7;
+    const centerZ = 1000;
+    const radius = 1000;
+
+    for (let i = 0; i < cardsAmount; i++) {
+      const card = {
+        x: 0,
+        y: 0,
+        z: 0,
+        angle: ((Math.PI * 2) / cardsAmount) * i,
+        img: document.createElement("img"),
+      };
+      card.img.src = "postcard" + (i % 7) + ".jpg";
+      card.x = Math.cos(card.angle) * radius;
+      card.z = centerZ + Math.sin(card.angle) * radius;
+      cards.push(card);
+    }
+
+    ctx.translate(width / 2, height / 2);
+
+    const update = () => {
+      cards.sort((a, b) => {
+        return b.z - a.z;
+      });
+      ctx.clearRect(-width / 2, -height / 2, width, height);
+      for (let i = 0; i < cardsAmount; i += 1) {
+        const card = cards[i];
+        const perspective = fl / (fl + card.z);
+
+        ctx.save();
+        ctx.scale(perspective, perspective);
+        ctx.translate(card.x, card.y);
+
+        ctx.translate(-card.img.width / 2, -card.img.height / 2);
+        ctx.drawImage(card.img, 0, 0);
+
+        ctx.restore();
+      }
+      requestAnimationFrame(update);
+    };
+
+    update();
+  </script>
+</html>

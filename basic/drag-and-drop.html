@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      html,
+      body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body onload="draw();">
+    <div><canvas id="canvas"></canvas></div>
+  </body>
+  <script>
+    let canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+    const handle = {
+      x: width / 2,
+      y: height / 2,
+      radius: 20,
+    };
+    let offset = {
+      x: 0,
+      y: 0,
+    };
+    const draw = () => {
+      ctx.clearRect(0, 0, width, height);
+
+      ctx.fillStyle = "gray";
+      ctx.beginPath();
+      ctx.arc(handle.x, handle.y, handle.radius, 0, Math.PI * 2, false);
+      ctx.fill();
+    };
+
+    document.addEventListener("mousedown", (e) => {
+      if (
+        circlePointCollision(
+          e.clientX,
+          e.clientY,
+          handle.x,
+          handle.y,
+          handle.radius
+        )
+      ) {
+        offset = {
+          x: e.clientX - handle.x,
+          y: e.clientY - handle.y,
+        };
+        document.body.addEventListener("mousemove", onMouseMove);
+        document.body.addEventListener("mouseup", onMouseUp);
+      }
+    });
+  </script>
+  <script>
+    function circlePointCollision(x, y, cx, cy, radius) {
+      var dx = x - cx;
+      var dy = y - cy;
+      return dx * dx + dy * dy <= radius * radius;
+    }
+
+    function onMouseMove(e) {
+      handle.x = e.clientX - offset.x;
+      handle.y = e.clientY - offset.y;
+      draw();
+    }
+
+    function onMouseUp(e) {
+      document.body.removeEventListener("mousemove", onMouseMove);
+      document.body.removeEventListener("mouseup", onMouseUp);
+    }
+  </script>
+</html>
