@@ -1,3 +1,5 @@
+<!-- Self-assignment -->
+<!-- Make a spinning scene based on mouse position with a bunch of fire particles -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -34,28 +36,38 @@
     const cardsAmount = 7;
     const centerZ = 1000;
     const radius = 1000;
+    const rotationSpeed = 0.01;
+    let baseAngle = 0;
 
     for (let i = 0; i < cardsAmount; i++) {
       const card = {
         x: 0,
         y: 0,
         z: 0,
-        angle: ((Math.PI * 2) / cardsAmount) * i,
+        angleZ: ((Math.PI * 2) / cardsAmount) * i,
         img: document.createElement("img"),
       };
       card.img.src = "postcard" + (i % 7) + ".jpg";
-      card.x = Math.cos(card.angle) * radius;
-      card.z = centerZ + Math.sin(card.angle) * radius;
+
+      // These two lines are essentially the same as distributing the thing in a 2d circle with
+      // x and y.
+      card.x = Math.cos(card.angleZ + baseAngle) * radius;
+      card.z = centerZ + Math.sin(card.angleZ + baseAngle) * radius;
+
       cards.push(card);
     }
 
     ctx.translate(width / 2, height / 2);
 
     const update = () => {
+      baseAngle += rotationSpeed;
+
       cards.sort((a, b) => {
         return b.z - a.z;
       });
+
       ctx.clearRect(-width / 2, -height / 2, width, height);
+
       for (let i = 0; i < cardsAmount; i += 1) {
         const card = cards[i];
         const perspective = fl / (fl + card.z);
@@ -66,6 +78,9 @@
 
         ctx.translate(-card.img.width / 2, -card.img.height / 2);
         ctx.drawImage(card.img, 0, 0);
+
+        card.x = Math.cos(card.angleZ + baseAngle) * radius;
+        card.z = centerZ + Math.sin(card.angleZ + baseAngle) * radius;
 
         ctx.restore();
       }
