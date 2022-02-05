@@ -1,3 +1,9 @@
+<!-- Steps -->
+<!-- Make everything floats up -->
+<!-- Add random lissajous curve movement -->
+<!-- Then rotate the whole thing with perspective -->
+<!-- Also adds zoom fucntionality and reset each particle when z reaches some value -->
+<!-- Fade each particle before resetting the y pos for smooth transition -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -27,7 +33,7 @@
       ctx.translate(width / 2, height / 2);
     }
     function drawBlackBackground(ctx) {
-      ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+      ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
       ctx.fillRect(
         -canvas.width / 2,
         -canvas.height / 2,
@@ -41,8 +47,9 @@
           x: Math.random() * canvas.width - canvas.width / 2,
           y: Math.random() * canvas.height - canvas.height / 2,
           z: Math.random() * maxZ,
-          radius: Math.random() * 3 + 10,
+          radius: Math.random() * 3 + 2,
           color: "rgba(240, 94, 27, 0.7)",
+          shadowColor: "rgba(300, 94, 27, 0.9)",
         });
       }
     }
@@ -56,6 +63,8 @@
         ctx.translate(p.x, p.y);
 
         ctx.beginPath();
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = p.shadowColor;
         ctx.fillStyle = p.color;
         ctx.arc(0, 0, p.radius, 0, Math.PI * 2);
         ctx.fill();
@@ -63,8 +72,23 @@
         ctx.restore();
       });
     }
+    function moveParticlesUp(particlesArray) {
+      particlesArray.forEach((p) => {
+        p.y -= 1;
+        if (p.y < -canvas.height / 2) {
+          p.y = canvas.height / 2;
+        }
+      });
+    }
+    function sway(particlesArray, theta) {
+      particlesArray.forEach((p) => {
+        p.x += Math.sin(theta * 0.0001 * p.z) * 0.2;
+        p.y += Math.cos(theta * 0.00001 * p.z) * 0.3;
+      });
+    }
   </script>
   <script>
+    let tick = 0;
     let canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
     var width = window.innerWidth;
@@ -73,7 +97,7 @@
     canvas.height = height;
     const maxZ = 5000;
     const particles = [];
-    const focalLength = 300;
+    const focalLength = 700;
 
     centerVaishingPoint(ctx);
 
@@ -82,7 +106,10 @@
     const draw = () => {
       drawBlackBackground(ctx);
       drawParticles(particles, focalLength, ctx);
+      moveParticlesUp(particles);
+      sway(particles, tick);
 
+      tick++;
       requestAnimationFrame(draw);
     };
 
