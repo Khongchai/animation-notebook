@@ -56,7 +56,10 @@
         const perspective = fl / (fl + card.z);
 
         ctx.save();
+        // Scale and move the card to the right spot
         ctx.scale(perspective, perspective);
+        // Move the center of the matrix to that spot so that
+        // we can draw the card.
         ctx.translate(card.x, card.y);
 
         ctx.translate(-card.img.width / 2, -card.img.height / 2);

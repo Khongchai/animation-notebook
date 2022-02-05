@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      html,
+      body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+      }
+      canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div><canvas id="canvas"></canvas></div>
+  </body>
+  <script>
+    function centerVaishingPoint(ctx) {
+      ctx.translate(width / 2, height / 2);
+    }
+    function drawBlackBackground(ctx) {
+      ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+      ctx.fillRect(
+        -canvas.width / 2,
+        -canvas.height / 2,
+        canvas.width,
+        canvas.height
+      );
+    }
+    function generateParticles(particlesArray) {
+      for (let i = 0; i < 200; i++) {
+        particlesArray.push({
+          x: Math.random() * canvas.width - canvas.width / 2,
+          y: Math.random() * canvas.height - canvas.height / 2,
+          z: Math.random() * maxZ,
+          radius: Math.random() * 3 + 10,
+          color: "rgba(240, 94, 27, 0.7)",
+        });
+      }
+    }
+    function drawParticles(particlesArray, fl, ctx) {
+      particlesArray.forEach((p) => {
+        const perspective = fl / (fl + p.z);
+
+        ctx.save();
+
+        ctx.scale(perspective, perspective);
+        ctx.translate(p.x, p.y);
+
+        ctx.beginPath();
+        ctx.fillStyle = p.color;
+        ctx.arc(0, 0, p.radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+      });
+    }
+  </script>
+  <script>
+    let canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+    const maxZ = 5000;
+    const particles = [];
+    const focalLength = 300;
+
+    centerVaishingPoint(ctx);
+
+    generateParticles(particles);
+
+    const draw = () => {
+      drawBlackBackground(ctx);
+      drawParticles(particles, focalLength, ctx);
+
+      requestAnimationFrame(draw);
+    };
+
+    draw();
+  </script>
+</html>
