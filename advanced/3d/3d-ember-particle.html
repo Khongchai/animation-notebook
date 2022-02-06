@@ -1,9 +1,6 @@
-<!-- Steps -->
-<!-- Make everything floats up -->
-<!-- Add random lissajous curve movement -->
-<!-- Then rotate the whole thing with perspective -->
 <!-- Also adds zoom fucntionality and reset each particle when z reaches some value -->
 <!-- Fade each particle before resetting the y pos for smooth transition -->
+<!-- Fix mouse down rotation bug -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -29,6 +26,41 @@
     <div><canvas id="canvas"></canvas></div>
   </body>
   <script>
+    let tick = 0;
+    let canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+    const maxZ = 5000;
+    const particles = [];
+    const focalLength = 700;
+
+    const rotationAngles = {
+      base: 0,
+      initial: 0,
+    };
+
+    const mouseDownPos = {
+      x: 0,
+      y: 0,
+    };
+    const lerpedMousePos = {
+      x: 0,
+      y: 0,
+    };
+    const mousePos = {
+      x: 0,
+      y: 0,
+    };
+    const mouseDelta = {
+      x: 0,
+      y: 0,
+    };
+    let mouseDown = false;
+  </script>
+  <script>
     function centerVaishingPoint(ctx) {
       ctx.translate(width / 2, height / 2);
     }
@@ -43,14 +75,19 @@
     }
     function generateParticles(particlesArray) {
       for (let i = 0; i < 200; i++) {
-        particlesArray.push({
+        const newParticle = {
           x: Math.random() * canvas.width - canvas.width / 2,
-          y: Math.random() * canvas.height - canvas.height / 2,
-          z: Math.random() * maxZ,
+          y: Math.random() * -canvas.height * 2,
+          z: Math.random() * 4000,
           radius: Math.random() * 3 + 2,
           color: "rgba(240, 94, 27, 0.7)",
           shadowColor: "rgba(300, 94, 27, 0.9)",
-        });
+        };
+        newParticle.initialZ = newParticle.z;
+        newParticle.initialX = newParticle.x;
+        newParticle.initialY = newParticle.y;
+
+        particlesArray.push(newParticle);
       }
     }
     function drawParticles(particlesArray, fl, ctx) {
@@ -75,7 +112,8 @@
     function moveParticlesUp(particlesArray) {
       particlesArray.forEach((p) => {
         p.y -= 1;
-        if (p.y < -canvas.height / 2) {
+        //Using -canvas.height instead of -canvas.height / 2 gives everything a bit of time to spread
+        if (p.y < -canvas.height) {
           p.y = canvas.height / 2;
         }
       });
@@ -86,28 +124,52 @@
         p.y += Math.cos(theta * 0.00001 * p.z) * 0.3;
       });
     }
+    function rotate(particlesArray, rotationAngles, radius, centerZ) {
+      lerpedMousePos.x = lerp(lerpedMousePos.x, mouseDelta.x, 0.1);
+      rotationAngles.base = rotationAngles.initial + lerpedMousePos.x * 0.001;
+      particlesArray.forEach((p) => {
+        p.x = p.initialX + Math.cos(p.initialZ + rotationAngles.base) * radius;
+        p.z =
+          p.initialZ +
+          centerZ +
+          Math.sin(p.initialZ + rotationAngles.base) * radius;
+      });
+    }
+    function listenToRotation() {
+      window.addEventListener("mousedown", (e) => {
+        mouseDownPos.x = e.clientX;
+        mouseDownPos.y = e.clientY;
+        mouseDown = true;
+      });
+      window.addEventListener("mouseup", (e) => {
+        mouseDown = false;
+      });
+      window.addEventListener("mousemove", (e) => {
+        if (mouseDown) {
+          mousePos.x = e.clientX;
+          mousePos.y = e.clientY;
+
+          mouseDelta.x = mousePos.x - mouseDownPos.x;
+        }
+      });
+    }
+    function lerp(x, y, z) {
+      return (1 - z) * x + z * y;
+    }
   </script>
   <script>
-    let tick = 0;
-    let canvas = document.getElementById("canvas");
-    const ctx = canvas.getContext("2d");
-    var width = window.innerWidth;
-    var height = window.innerHeight;
-    canvas.width = width;
-    canvas.height = height;
-    const maxZ = 5000;
-    const particles = [];
-    const focalLength = 700;
-
     centerVaishingPoint(ctx);
 
     generateParticles(particles);
+
+    listenToRotation(listenToRotation);
 
     const draw = () => {
       drawBlackBackground(ctx);
       drawParticles(particles, focalLength, ctx);
       moveParticlesUp(particles);
       sway(particles, tick);
+      rotate(particles, rotationAngles, maxZ / 2, maxZ / 4);
 
       tick++;
       requestAnimationFrame(draw);
