@@ -1,0 +1,122 @@
+<!-- Same as verlet.html but with more stuff. -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      html,
+      body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+      }
+      canvas {
+        display: block;
+        margin: 0 auto;
+      }
+    </style>
+  </head>
+  <body onload="draw();">
+    <div><canvas id="canvas"></canvas></div>
+  </body>
+  <script>
+    let canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+
+    const bounce = 0.9;
+    const grav = 0.2;
+    const friction = 0.999;
+
+    const points = [];
+    const sticks = [];
+
+    points.push({
+      x: 100,
+      y: 100,
+      prevX: 95,
+      prevY: 95,
+    });
+    points.push({
+      x: 200,
+      y: 100,
+      prevX: 200,
+      prevY: 100,
+    });
+
+    sticks.push({
+      p1: points[0],
+      p2: points[1],
+      length: distance(points[0], points[1]),
+    });
+  </script>
+  <script>
+    function distance(p1, p2) {
+      const dx = p1.x - p2.x;
+      const dy = p1.y - p2.y;
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    function updatePoints(points, bounce, grav) {
+      points.forEach((p) => {
+        const vx = (p.x - p.prevX) * friction;
+        const vy = (p.y - p.prevY) * friction;
+
+        p.prevX = p.x;
+        p.prevY = p.y;
+
+        p.x += vx;
+        p.y += vy;
+        p.y += grav;
+
+        if (p.x > width) {
+          // With this technique, when we bounce, we are essentially setting
+          //  the position of prev to be the future value of the position.
+          p.x = width;
+          p.prevX = p.x + vx * bounce;
+        } else if (p.x < 0) {
+          p.x = 0;
+          p.prevX = p.x + vx * bounce;
+        }
+
+        if (p.y > height) {
+          p.y = height;
+          p.prevY = p.y + vy * bounce;
+        } else if (p.y < 0) {
+          p.y = 0;
+          p.prevY = p.y + vy * bounce;
+        }
+      });
+    }
+
+    function drawPoints(points, ctx, radius) {
+      ctx.clearRect(0, 0, width, height);
+      ctx.beginPath();
+      points.forEach((p) => {
+        ctx.arc(p.x, p.y, radius, 0, 2 * Math.PI);
+      });
+      ctx.fill();
+    }
+
+    function updateSticks() {
+      sticks.forEach((s) => {
+        dx = s.p1.x - s.p2.x;
+        dx = s.p1.y - s.p2.y;
+      });
+    }
+  </script>
+  <script>
+    const draw = () => {
+      updatePoints(points, bounce, grav);
+      updateSticks();
+      drawPoints(points, ctx, 5);
+      requestAnimationFrame(draw);
+    };
+  </script>
+</html>
