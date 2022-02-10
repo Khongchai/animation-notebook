@@ -15,7 +15,6 @@
       }
       canvas {
         display: block;
-        margin: 0 auto;
       }
     </style>
   </head>
@@ -41,28 +40,43 @@
       x: 100,
       y: 100,
       prevX: 95,
-      prevY: 95,
+      prevY: 75,
     });
     points.push({
       x: 200,
       y: 100,
       prevX: 200,
-      prevY: 100,
+      prevY: 102,
+    });
+    points.push({
+      x: 200,
+      y: 200,
+      prevX: 180,
+      prevY: 190,
+    });
+    points.push({
+      x: 100,
+      y: 200,
+      prevX: 100,
+      prevY: 200,
     });
 
-    sticks.push({
-      p1: points[0],
-      p2: points[1],
-      length: distance(points[0], points[1]),
-    });
+    function getStick(p0, p1) {
+      return {
+        p0: p0,
+        p1: p1,
+        length: Math.sqrt(Math.pow(p0.x - p1.x, 2) + Math.pow(p0.y - p1.y, 2)),
+      };
+    }
+    sticks.push(getStick(points[0], points[1]));
+    sticks.push(getStick(points[1], points[2]));
+    sticks.push(getStick(points[2], points[3]));
+    sticks.push(getStick(points[3], points[0]));
+    // Cross sticks
+    sticks.push(getStick(points[0], points[2]));
+    sticks.push(getStick(points[1], points[3]));
   </script>
   <script>
-    function distance(p1, p2) {
-      const dx = p1.x - p2.x;
-      const dy = p1.y - p2.y;
-      return Math.sqrt(dx * dx + dy * dy);
-    }
-
     function updatePoints(points, bounce, grav) {
       points.forEach((p) => {
         const vx = (p.x - p.prevX) * friction;
@@ -74,6 +88,13 @@
         p.x += vx;
         p.y += vy;
         p.y += grav;
+      });
+    }
+
+    function constraintPoints() {
+      points.forEach((p) => {
+        const vx = (p.x - p.prevX) * friction;
+        const vy = (p.y - p.prevY) * friction;
 
         if (p.x > width) {
           // With this technique, when we bounce, we are essentially setting
@@ -85,8 +106,9 @@
           p.prevX = p.x + vx * bounce;
         }
 
-        if (p.y > height) {
-          p.y = height;
+        // -5 = radius of circle
+        if (p.y > height - 5) {
+          p.y = height - 5;
           p.prevY = p.y + vy * bounce;
         } else if (p.y < 0) {
           p.y = 0;
@@ -97,25 +119,54 @@
 
     function drawPoints(points, ctx, radius) {
       ctx.clearRect(0, 0, width, height);
-      ctx.beginPath();
       points.forEach((p) => {
+        ctx.beginPath();
         ctx.arc(p.x, p.y, radius, 0, 2 * Math.PI);
+        ctx.fill();
       });
-      ctx.fill();
     }
 
     function updateSticks() {
       sticks.forEach((s) => {
-        dx = s.p1.x - s.p2.x;
-        dx = s.p1.y - s.p2.y;
+        const dx = s.p1.x - s.p0.x;
+        const dy = s.p1.y - s.p0.y;
+
+        // dist is essentially the length of the stick
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        // difference is the difference between the length of the stick and
+        // the actual length of the distance between the two points.
+        const difference = s.length - dist;
+        const halfDifference = difference / 2;
+        const percent = halfDifference / dist;
+        // halfPercent for each side
+        const halfPercent = percent;
+
+        const offsetX = dx * halfPercent;
+        const offsetY = dy * halfPercent;
+
+        s.p0.x -= offsetX;
+        s.p0.y -= offsetY;
+        s.p1.x += offsetX;
+        s.p1.y += offsetY;
       });
+    }
+
+    function drawSticks() {
+      ctx.beginPath();
+      sticks.forEach((s) => {
+        ctx.moveTo(s.p0.x, s.p0.y);
+        ctx.lineTo(s.p1.x, s.p1.y);
+      });
+      ctx.stroke();
     }
   </script>
   <script>
     const draw = () => {
       updatePoints(points, bounce, grav);
       updateSticks();
+      constraintPoints();
       drawPoints(points, ctx, 5);
+      drawSticks(sticks, ctx);
       requestAnimationFrame(draw);
     };
   </script>
