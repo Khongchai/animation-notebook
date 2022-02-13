@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Offscreen test</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        background-color: #f0f0f0;
+      }
+    </style>
+  </head>
+
+  <body>
+    <canvas id="canvas"></canvas>
+    <script>
+      const canvas = document.getElementById("canvas");
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    </script>
+    <!-- Interrupter script, run a long process periodically on the main thread. -->
+    <script>
+      setInterval(() => {
+        for (let i = 0; i < 20000; i++) {
+          console.log("Running some long tasks...");
+        }
+      }, 1000);
+    </script>
+    <!-- On-screen canvas, gets interrupted everytime long tasks happen on the main thread. -->
+    <script>
+      // const context = canvas.getContext("2d");
+
+      // let tick = 0;
+      // function draw() {
+      //   tick += 0.1;
+
+      //   context.clearRect(0, 0, canvas.width, canvas.height);
+      //   context.beginPath();
+      //   context.arc(
+      //     canvas.width / 2,
+      //     canvas.height / 2,
+      //     100,
+      //     0 + tick,
+      //     Math.PI + tick,
+      //     true
+      //   );
+      //   context.stroke();
+      //   requestAnimationFrame(draw);
+      // }
+      // draw();
+    </script>
+    <!-- Off-screen canvas, doesn't really care what happens on the main thread. -->
+    <script>
+      const offscreenCanvas = canvas.transferControlToOffscreen();
+      const worker = new Worker("worker.js");
+      worker.postMessage({ drawingSurface: offscreenCanvas }, [
+        offscreenCanvas,
+      ]);
+    </script>
+  </body>
+</html>
