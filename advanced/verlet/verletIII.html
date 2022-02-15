@@ -35,37 +35,50 @@
 
     const points = [];
     const sticks = [];
+    const images = [];
 
     points.push({
       x: 100,
       y: 100,
-      prevX: 95,
-      prevY: 75,
+      prevX: 100 + Math.random() * 100 - 50,
+      prevY: 100 + Math.random() * 100 - 50,
     });
     points.push({
-      x: 200,
+      x: 420,
       y: 100,
-      prevX: 200,
+      prevX: 420,
       prevY: 102,
     });
     points.push({
-      x: 200,
-      y: 200,
-      prevX: 180,
-      prevY: 190,
+      x: 420,
+      y: 340,
+      prevX: 420,
+      prevY: 340,
     });
     points.push({
       x: 100,
-      y: 200,
+      y: 340,
       prevX: 100,
-      prevY: 200,
+      prevY: 340,
     });
 
-    function getStick(p0, p1) {
+    function loadImage(url) {
+      const img = document.createElement("img");
+      img.src = url;
+      return img;
+    }
+
+    images.push({
+      path: [points[0], points[1], points[2], points[3]],
+      img: loadImage("cat.jpg"),
+    });
+
+    function getStick(p0, p1, hidden = false) {
       return {
         p0: p0,
         p1: p1,
         length: Math.sqrt(Math.pow(p0.x - p1.x, 2) + Math.pow(p0.y - p1.y, 2)),
+        hidden: hidden,
       };
     }
     sticks.push(getStick(points[0], points[1]));
@@ -74,8 +87,8 @@
     sticks.push(getStick(points[3], points[0]));
 
     // Cross sticks
-    sticks.push(getStick(points[0], points[2]));
-    // sticks.push(getStick(points[1], points[3]));
+    sticks.push(getStick(points[0], points[2], true));
+    sticks.push(getStick(points[1], points[3], true));
   </script>
   <script>
     function updatePoints(points, bounce, grav) {
@@ -119,7 +132,6 @@
     }
 
     function drawPoints(points, ctx, radius) {
-      ctx.clearRect(0, 0, width, height);
       points.forEach((p) => {
         ctx.beginPath();
         ctx.arc(p.x, p.y, radius, 0, 2 * Math.PI);
@@ -155,10 +167,37 @@
     function drawSticks() {
       ctx.beginPath();
       sticks.forEach((s) => {
+        if (s.hidden) {
+          return;
+        }
+
         ctx.moveTo(s.p0.x, s.p0.y);
         ctx.lineTo(s.p1.x, s.p1.y);
       });
       ctx.stroke();
+    }
+
+    function distance(p0, p1) {
+      const dx = p0.x - p1.x;
+      const dy = p0.y - p1.y;
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    function drawImages() {
+      for (let i = 0; i < images.length; i++) {
+        const image = images[i];
+        const width = distance(image.path[0], image.path[1]);
+        const height = distance(image.path[0], image.path[3]);
+        const dx = image.path[1].x - image.path[0].x;
+        const dy = image.path[1].y - image.path[0].y;
+        const angle = Math.atan2(dy, dx);
+
+        ctx.save();
+        ctx.translate(image.path[0].x, image.path[0].y);
+        ctx.rotate(angle);
+        ctx.drawImage(image.img, 0, 0, width, height);
+        ctx.restore();
+      }
     }
   </script>
   <script>
@@ -166,8 +205,11 @@
       updatePoints(points, bounce, grav);
       updateSticks();
       constraintPoints();
-      drawPoints(points, ctx, 5);
-      drawSticks(sticks, ctx);
+
+      ctx.clearRect(0, 0, width, height);
+      //   drawPoints(points, ctx, 5);
+      //   drawSticks(sticks, ctx);
+      drawImages();
       requestAnimationFrame(draw);
     };
   </script>
