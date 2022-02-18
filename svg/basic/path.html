@@ -1,0 +1,23 @@
+<!-- <path> is the most general and the most powerful shape -->
+<!-- It can be used to create lines, curves, arcs, and more. -->
+<!-- A good understanding of this section is important when working with and debugging svg elements. -->
+<!-- Using a text editor for really complex shapes isn't really a good idea, but as mentioned earlier, the knowlege will come in handy when you debug. -->
+<svg width="1000" height="1000">
+  <!-- These are the same -->
+  <!-- <path d="M10 10 L90 10 L90 90 H10 L10 10" /> -->
+
+  <!-- <path d="M10 10 H90 V90 H10 V10" /> -->
+
+  <!-- Z is the close path command -->
+  <!-- <path d="M10 10 H90 V90 H10 Z" /> -->
+
+  <!-- We can also achieve the same thing with the relative command (lower case) -->
+  <path d="M10 10 h80 v80 h-80 Z" />
+
+  <!-- Other than drawing straight lines, you can also draw curves with the path element -->
+  <path
+    d="M70 110 C 70 140, 110 140, 110 110"
+    stroke="black"
+    fill="transparent"
+  />
+</svg>
