@@ -1,23 +1,63 @@
-<!-- <path> is the most general and the most powerful shape -->
-<!-- It can be used to create lines, curves, arcs, and more. -->
-<!-- A good understanding of this section is important when working with and debugging svg elements. -->
-<!-- Using a text editor for really complex shapes isn't really a good idea, but as mentioned earlier, the knowlege will come in handy when you debug. -->
-<svg width="1000" height="1000">
-  <!-- These are the same -->
-  <!-- <path d="M10 10 L90 10 L90 90 H10 L10 10" /> -->
+TYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <!-- Notes for https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Paths -->
+    <!-- <path> is the most general and the most powerful shape -->
+    <!-- It can be used to create lines, curves, arcs, and more. -->
+    <!-- A good understanding of this section is important when working with and debugging svg elements. -->
+    <!-- Using a text editor for really complex shapes isn't really a good idea, but as mentioned earlier, the knowlege will come in handy when you debug. -->
+    <svg width="1000" height="1000">
+      <!-- These are the same -->
+      <!-- <path d="M10 10 L90 10 L90 90 H10 L10 10" /> -->
 
-  <!-- <path d="M10 10 H90 V90 H10 V10" /> -->
+      <!-- <path d="M10 10 H90 V90 H10 V10" /> -->
 
-  <!-- Z is the close path command -->
-  <!-- <path d="M10 10 H90 V90 H10 Z" /> -->
+      <!-- Z is the close path command -->
+      <!-- <path d="M10 10 H90 V90 H10 Z" /> -->
 
-  <!-- We can also achieve the same thing with the relative command (lower case) -->
-  <path d="M10 10 h80 v80 h-80 Z" />
+      <!-- We can also achieve the same thing with the relative command (lower case) -->
+      <!-- <path d="M10 10 h80 v80 h-80 Z" /> -->
 
-  <!-- Other than drawing straight lines, you can also draw curves with the path element -->
-  <path
-    d="M70 110 C 70 140, 110 140, 110 110"
-    stroke="black"
-    fill="transparent"
-  />
-</svg>
+      <!-- Other than drawing straight lines, you can also draw curves with the path element -->
+      <!-- <path
+        d="M70 110 C 70 140, 110 140, 110 110"
+        stroke="black"
+        fill="transparent"
+      /> -->
+
+      <!-- You can also use the S command, which is a reflection of the previous point and by putting in S, the coordinate is inferred automatically. -->
+      <!-- <path
+        d="M 10 80 C 40 10, 65 10, 95 80 S 150 150, 180 80"
+        stroke="black"
+        fill="transparent"
+      /> -->
+
+      <!-- This is also curve, but with a quadratic bezier -->
+      <!-- <path
+        d="M 10 80 Q 52.5 10, 95 80 T 180 80"
+        stroke="black"
+        fill="transparent"
+      /> -->
+
+      <!-- For arcs,  -->
+      <path
+        d="M 10 315
+    L 110 215
+    A 30 50 0 0 1 162.55 160.45
+    L 172.55 152.45
+    A 30 50 -45 0 1 215.1 109.9
+    L 315 10"
+        stroke="black"
+        fill="green"
+        stroke-width="2"
+        fill-opacity="0.5"
+      />
+    </svg>
+  </body>
+</html>

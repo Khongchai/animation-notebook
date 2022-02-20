@@ -1,0 +1,30 @@
+<!-- Short for "definition", it is used to define elements that can be reused later. -->
+
+<svg viewBox="0 0 1000 1000" xmlns="http://www.w3.org/2000/svg">
+  <!-- Some graphical objects to use -->
+  <defs>
+    <circle id="myCircle" cx="200" cy="200" r="20" />
+
+    <linearGradient id="myGradient" gradientTransform="rotate(90)">
+      <stop offset="20%" stop-color="gold" />
+      <stop offset="90%" stop-color="red" />
+    </linearGradient>
+
+    <!-- Can also be used to specify css properties -->
+    <style>
+      #circle {
+        fill: red;
+        stroke: black;
+      }
+      #circle:hover {
+        stroke: purple;
+        fill:aquamarine;
+      }
+    </style>
+  </defs>
+
+  <!-- using my graphical objects -->
+  <use x="5" y="5" href="#myCircle" fill="url('#myGradient')" />
+  <circle  id="circle" cx="500" cy="500" r="20">
+</svg>
+
