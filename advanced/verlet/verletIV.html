@@ -1,0 +1,251 @@
+<!-- Same as verlet.html but with more stuff. -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      html,
+      body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body onload="draw();">
+    <div><canvas id="canvas"></canvas></div>
+  </body>
+  <script>
+    let canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+
+    const bounce = 0.9;
+    const grav = 0.2;
+    const friction = 0.999;
+
+    const points = [];
+    const sticks = [];
+
+    points.push({
+      x: 100,
+      y: 100,
+      prevX: 95,
+      prevY: 75,
+    });
+    points.push({
+      x: 200,
+      y: 100,
+      prevX: 200,
+      prevY: 102,
+    });
+    points.push({
+      x: 200,
+      y: 200,
+      prevX: 180,
+      prevY: 190,
+    });
+    points.push({
+      x: 100,
+      y: 200,
+      prevX: 100,
+      prevY: 200,
+    });
+    // points.push({
+    //   x: 550,
+    //   y: 100,
+    //   prevX: 550,
+    //   prevY: 75,
+    //   pinned: true,
+    // });
+    // points.push({
+    //   x: 400,
+    //   y: 100,
+    //   prevX: 400,
+    //   prevY: 100,
+    // });
+    // points.push({
+    //   x: 250,
+    //   y: 100,
+    //   prevX: 250,
+    //   prevY: 75,
+    // });
+
+    // Assume that  steps are even.
+    // beginPoint is an already drawn point on the box,
+    // endPoint is the pinned point of the rope, not yet drawn.
+    function generateRopePoints(beginPoint, endPoint, steps) {
+      let ropeLength = Math.sqrt(
+        Math.pow(beginPoint.x - endPoint.x, 2) +
+          Math.pow(beginPoint.y - endPoint.y, 2)
+      );
+      let ropeStep = ropeLength / steps;
+
+      let firstNewPointIndex = points.length;
+
+      for (let i = 0; i < steps; i++) {
+        const curX = endPoint.x + ropeStep * i;
+        const curY = endPoint.y + ropeStep * i;
+        points.push({
+          x: curX,
+          y: curY,
+          prevX: curX,
+          prevY: curY,
+          pinned: i === steps - 1,
+        });
+      }
+
+      for (let i = firstNewPointIndex; i < points.length; i++) {
+        sticks.push(getStick(points[i], points[i - 1]));
+      }
+    }
+
+    function getStick(p0, p1) {
+      return {
+        p0: p0,
+        p1: p1,
+        length: Math.sqrt(Math.pow(p0.x - p1.x, 2) + Math.pow(p0.y - p1.y, 2)),
+      };
+    }
+    sticks.push(getStick(points[0], points[1]));
+    sticks.push(getStick(points[1], points[2]));
+    sticks.push(getStick(points[2], points[3]));
+    sticks.push(getStick(points[3], points[0]));
+
+    // Cross sticks
+    sticks.push(getStick(points[0], points[2]));
+    sticks.push(getStick(points[1], points[3]));
+
+    // Rope sticks
+    // sticks.push(getStick(points[4], points[5]));
+    // sticks.push(getStick(points[5], points[6]));
+    // sticks.push(getStick(points[6], points[0]));
+    generateRopePoints(
+      points[points.length - 1],
+      {
+        x: 550,
+        y: 100,
+      },
+      3
+    );
+  </script>
+  <script>
+    function updatePoints(points, bounce, grav) {
+      points.forEach((p) => {
+        if (p.pinned) return;
+
+        const vx = (p.x - p.prevX) * friction;
+        const vy = (p.y - p.prevY) * friction;
+
+        p.prevX = p.x;
+        p.prevY = p.y;
+
+        p.x += vx;
+        p.y += vy;
+        p.y += grav;
+      });
+    }
+
+    // Bounce off walls
+    function constraintPoints() {
+      points.forEach((p) => {
+        if (p.pinned) return;
+
+        const vx = (p.x - p.prevX) * friction;
+        const vy = (p.y - p.prevY) * friction;
+
+        if (p.x > width) {
+          // With this technique, when we bounce, we are essentially setting
+          //  the position of prev to be the future value of the position.
+          p.x = width;
+          p.prevX = p.x + vx * bounce;
+        } else if (p.x < 0) {
+          p.x = 0;
+          p.prevX = p.x + vx * bounce;
+        }
+
+        // -5 = radius of circle
+        if (p.y > height - 5) {
+          p.y = height - 5;
+          p.prevY = p.y + vy * bounce;
+        } else if (p.y < 0) {
+          p.y = 0;
+          p.prevY = p.y + vy * bounce;
+        }
+      });
+    }
+
+    function drawPoints(points, ctx, radius) {
+      points.forEach((p) => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, radius, 0, 2 * Math.PI);
+        ctx.fill();
+      });
+    }
+
+    function updateSticks() {
+      sticks.forEach((s) => {
+        const dx = s.p1.x - s.p0.x;
+        const dy = s.p1.y - s.p0.y;
+
+        // dist is essentially the length of the stick
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        // difference is the difference between the length of the stick and
+        // the actual length of the distance between the two points.
+        const difference = s.length - dist;
+        const halfDifference = difference / 2;
+        const percent = halfDifference / dist;
+        // halfPercent for each side
+        const halfPercent = percent;
+
+        const offsetX = dx * halfPercent;
+        const offsetY = dy * halfPercent;
+
+        if (!s.p0.pinned) {
+          s.p0.x -= offsetX;
+          s.p0.y -= offsetY;
+        }
+
+        if (!s.p1.pinned) {
+          s.p1.x += offsetX;
+          s.p1.y += offsetY;
+        }
+      });
+    }
+
+    function drawSticks() {
+      ctx.beginPath();
+      sticks.forEach((s) => {
+        ctx.moveTo(s.p0.x, s.p0.y);
+        ctx.lineTo(s.p1.x, s.p1.y);
+      });
+      ctx.stroke();
+    }
+  </script>
+  <script>
+    const draw = () => {
+      ctx.clearRect(0, 0, width, height);
+
+      updatePoints(points, bounce, grav);
+      updateSticks();
+      constraintPoints();
+      drawPoints(points, ctx, 5);
+      drawSticks(sticks, ctx);
+      requestAnimationFrame(draw);
+    };
+  </script>
+  <script>
+    document.addEventListener("click", (e) => {
+      points[4].pinned = !points[4].pinned;
+    });
+  </script>
+</html>
