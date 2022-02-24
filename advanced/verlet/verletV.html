@@ -79,6 +79,13 @@
         this.vy *= this.friction;
         this.x += this.vx;
         this.y += this.vy;
+
+        if (!(0 <= this.x - this.radius) || !(this.x + this.radius <= width)) {
+          this.vx *= -1;
+        }
+        if (!(0 < this.y - this.radius) || !(this.y + this.radius < height)) {
+          this.vy *= -1;
+        }
       },
     };
 
