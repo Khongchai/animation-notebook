@@ -1,0 +1,240 @@
+<!-- A chain using verlet integration -->
+<!-- We have 1 main move point and a bunch of other tiny follow points  -->
+<!-- Those string of follow points together make 1 long chain -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      html,
+      body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body onload="draw();">
+    <div><canvas id="canvas"></canvas></div>
+  </body>
+  <script>
+    let canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+
+    const globalGravity = 0.2;
+    const globalBounce = 0.7;
+    const globalFriction = 0.9;
+
+    const mouse = {
+      x: 0,
+      y: 0,
+      // For offsetting the starting point of the drag
+      offsetX: 0,
+      offsetY: 0,
+    };
+
+    // The control point for all verlet points
+    const dragPoint = {
+      x: width / 2,
+      y: height / 2,
+      prevX: 0,
+      prevY: 0,
+      radius: 20,
+      dragging: false,
+      vx: 0,
+      vy: 0,
+      friction: globalFriction,
+      updateOnRelease: function () {
+        this.vx *= this.friction;
+        this.vy *= this.friction;
+        this.x += this.vx;
+        this.y += this.vy;
+      },
+    };
+
+    //TODO: generate with getChainPoints
+    const verletPoints = [
+      {
+        x: dragPoint.x,
+        y: dragPoint.y + dragPoint.radius + 30,
+        prevX: dragPoint.x,
+        prevY: dragPoint.y + dragPoint.radius + 30,
+        // Only for drawing
+        radius: 5,
+      },
+      {
+        x: dragPoint.x,
+        y: dragPoint.y + dragPoint.radius + 30 + 30,
+        prevX: dragPoint.x,
+        prevY: dragPoint.y + dragPoint.radius + 30 + 30,
+        radius: 5,
+      },
+    ];
+
+    const getStick = (p1, p2) => {
+      return {
+        p1,
+        p2,
+        length: Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2)),
+      };
+    };
+    const sticks = [
+      getStick(dragPoint, verletPoints[0]),
+      getStick(verletPoints[0], verletPoints[1]),
+    ];
+  </script>
+  <script>
+    function drawPoints(ctx, points) {
+      points.forEach((p) => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, 2 * Math.PI);
+        ctx.fill();
+      });
+    }
+
+    function hitTest(p, x, y) {
+      const dx = p.x - x;
+      const dy = p.y - y;
+      return Math.sqrt(dx * dx + dy * dy) <= p.radius;
+    }
+
+    function moveDragPoint(dragPoint, mouse) {
+      if (dragPoint.dragging) {
+        dragPoint.prevX = dragPoint.x;
+        dragPoint.prevY = dragPoint.y;
+        dragPoint.x = mouse.x - mouse.offsetX;
+        dragPoint.y = mouse.y - mouse.offsetY;
+      }
+      if (!dragPoint.dragging) {
+        dragPoint.updateOnRelease();
+      }
+    }
+
+    function updatePoints(points, gravity, bounce, friction) {
+      points.forEach((p) => {
+        const vx = (p.x - p.prevX) * friction;
+        const vy = (p.y - p.prevY) * friction;
+
+        p.prevX = p.x;
+        p.prevY = p.y;
+
+        p.x += vx;
+        p.y += vy;
+        p.y += gravity;
+      });
+    }
+
+    function drawSticks(ctx, sticks) {
+      ctx.beginPath();
+      sticks.forEach((s) => {
+        ctx.moveTo(s.p1.x, s.p1.y);
+        ctx.lineTo(s.p2.x, s.p2.y);
+      });
+      ctx.stroke();
+    }
+
+    function updateSticks(sticks) {
+      sticks.forEach((s) => {
+        const dx = s.p2.x - s.p1.x;
+        const dy = s.p2.y - s.p1.y;
+
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        const difference = s.length - dist;
+        const halfDifference = difference / 2;
+        const percent = halfDifference / dist;
+        // halfPercent for each side
+        const halfPercent = percent;
+
+        const offsetX = dx * halfPercent;
+        const offsetY = dy * halfPercent;
+
+        s.p1.x -= offsetX;
+        s.p1.y -= offsetY;
+        s.p2.x += offsetX;
+        s.p2.y += offsetY;
+      });
+    }
+
+    function detectEdge(points) {
+      points.forEach((p) => {
+        if (p.x - p.radius < 0) {
+          p.vx *= -globalBounce;
+          p.x = p.radius;
+        } else if (p.x + p.radius > width) {
+          p.vx *= -globalBounce;
+          p.x = width - p.radius;
+        }
+
+        if (p.y - p.radius < 0) {
+          p.vy *= -globalBounce;
+          p.y = p.radius;
+        } else if (p.y + p.radius > height) {
+          p.vy *= -globalBounce;
+          p.y = height - p.radius;
+        }
+      });
+    }
+
+    /**
+     * Generate an array of points and sticks between the given start and end points.
+     */
+    function getChainPoints(desiredLength, beginPoint, endPoint) {
+      const points = [];
+      const sticks = [];
+      // TODO
+
+      return {
+        points: null,
+        sticks: null,
+      };
+    }
+  </script>
+
+  <script>
+    window.addEventListener("mousedown", (e) => {
+      const x = e.x;
+      const y = e.y;
+      if (hitTest(dragPoint, x, y)) {
+        dragPoint.dragging = true;
+        mouse.offsetX = x - dragPoint.x;
+        mouse.offsetY = y - dragPoint.y;
+      }
+    });
+    window.addEventListener("mousemove", (e) => {
+      mouse.x = e.x;
+      mouse.y = e.y;
+    });
+    window.addEventListener("mouseup", (e) => {
+      if (dragPoint.dragging) {
+        dragPoint.vx = (dragPoint.x - dragPoint.prevX) * 2;
+        dragPoint.vy = (dragPoint.y - dragPoint.prevY) * 2;
+      }
+      dragPoint.dragging = false;
+    });
+  </script>
+  <script>
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+
+      updatePoints(verletPoints, globalGravity, globalBounce, globalFriction);
+      updateSticks(sticks);
+      drawPoints(ctx, [dragPoint, ...verletPoints]);
+      drawSticks(ctx, sticks);
+      moveDragPoint(dragPoint, mouse);
+      detectEdge([dragPoint, ...verletPoints]);
+
+      requestAnimationFrame(draw);
+    };
+  </script>
+</html>
