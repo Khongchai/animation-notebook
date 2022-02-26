@@ -62,36 +62,21 @@
       },
     };
 
-    //TODO: generate with getChainPoints
-    const verletPoints = [
-      {
-        x: dragPoint.x,
-        y: dragPoint.y + dragPoint.radius + 30,
-        prevX: dragPoint.x,
-        prevY: dragPoint.y + dragPoint.radius + 30,
-        // Only for drawing
-        radius: 5,
-      },
-      {
-        x: dragPoint.x,
-        y: dragPoint.y + dragPoint.radius + 30 + 30,
-        prevX: dragPoint.x,
-        prevY: dragPoint.y + dragPoint.radius + 30 + 30,
-        radius: 5,
-      },
-    ];
-
-    const getStick = (p1, p2) => {
-      return {
-        p1,
-        p2,
-        length: Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2)),
-      };
+    const chainBegin = {
+      x: dragPoint.x,
+      y: dragPoint.y + dragPoint.radius + 10,
+      prevX: dragPoint.x,
+      prevY: dragPoint.y + dragPoint.radius + 10,
+      // Only for drawing
+      radius: 5,
     };
-    const sticks = [
-      getStick(dragPoint, verletPoints[0]),
-      getStick(verletPoints[0], verletPoints[1]),
-    ];
+    const chainEnd = {
+      x: dragPoint.x,
+      y: dragPoint.y + dragPoint.radius + 300,
+      prevX: dragPoint.x,
+      prevY: dragPoint.y + dragPoint.radius + 300,
+      radius: 5,
+    };
   </script>
   <script>
     function drawPoints(ctx, points) {
@@ -107,6 +92,14 @@
       const dy = p.y - y;
       return Math.sqrt(dx * dx + dy * dy) <= p.radius;
     }
+
+    const getStick = (p1, p2) => {
+      return {
+        p1,
+        p2,
+        length: Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2)),
+      };
+    };
 
     function moveDragPoint(dragPoint, mouse) {
       if (dragPoint.dragging) {
@@ -130,7 +123,7 @@
 
         p.x += vx;
         p.y += vy;
-        p.y += gravity;
+        // p.y += gravity;
       });
     }
 
@@ -186,17 +179,42 @@
       });
     }
 
+    function remap(value, start1, stop1, start2, stop2) {
+      return ((value - start1) / (stop1 - start1)) * (stop2 - start2) + start2;
+    }
+
     /**
      * Generate an array of points and sticks between the given start and end points.
      */
-    function getChainPoints(desiredLength, beginPoint, endPoint) {
+    function getChainPoints(desiredAmount, beginPoint, endPoint) {
       const points = [];
       const sticks = [];
-      // TODO
+
+      for (let i = 0; i < desiredAmount; i++) {
+        const x = remap(i, 0, desiredAmount, beginPoint.x, endPoint.x);
+        const y = remap(i, 0, desiredAmount, beginPoint.y, endPoint.y);
+        const p = {
+          x,
+          y,
+          prevX: x,
+          prevY: y,
+          radius: 5,
+        };
+
+        points.push(p);
+      }
+
+      for (let i = 0; i < desiredAmount - 1; i++) {
+        const s = getStick(points[i], points[i + 1]);
+        sticks.push(s);
+      }
+
+      // Attach the beginning point to the drag point
+      sticks.push(getStick(dragPoint, points[0]));
 
       return {
-        points: null,
-        sticks: null,
+        points: points,
+        sticks: sticks,
       };
     }
   </script>
@@ -224,15 +242,17 @@
     });
   </script>
   <script>
+    const { points, sticks } = getChainPoints(50, chainBegin, chainEnd);
+
     const draw = () => {
       ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
 
-      updatePoints(verletPoints, globalGravity, globalBounce, globalFriction);
+      updatePoints(points, globalGravity, globalBounce, globalFriction);
       updateSticks(sticks);
-      drawPoints(ctx, [dragPoint, ...verletPoints]);
+      drawPoints(ctx, [dragPoint, ...points]);
       drawSticks(ctx, sticks);
       moveDragPoint(dragPoint, mouse);
-      detectEdge([dragPoint, ...verletPoints]);
+      detectEdge([dragPoint, ...points]);
 
       requestAnimationFrame(draw);
     };
