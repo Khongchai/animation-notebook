@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      html,
+      body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body onload="draw();">
+    <div><canvas id="canvas"></canvas></div>
+  </body>
+  <script>
+    let canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+
+    const handle1 = {
+      x: width / 2,
+      y: height / 2,
+      radius: 20,
+    };
+    let handle2 = {
+      x: width / 4,
+      y: height / 4,
+      radius: 20,
+    };
+    let offset = {
+      x: 0,
+      y: 0,
+    };
+    const draw = () => {
+      ctx.clearRect(0, 0, width, height);
+
+      drawHandle(handle1);
+      drawHandle(handle2);
+      drawLineBetweenHandle(handle1, handle2);
+    };
+
+    document.addEventListener("mousedown", (e) => {
+      if (
+        circlePointCollision(
+          e.clientX,
+          e.clientY,
+          handle1.x,
+          handle1.y,
+          handle1.radius
+        )
+      ) {
+        offset = {
+          x: e.clientX - handle1.x,
+          y: e.clientY - handle1.y,
+        };
+        document.body.addEventListener("mousemove", onMouseMove);
+        document.body.addEventListener("mouseup", onMouseUp);
+      }
+    });
+  </script>
+  <script>
+    function circlePointCollision(x, y, cx, cy, radius) {
+      var dx = x - cx;
+      var dy = y - cy;
+      return dx * dx + dy * dy <= radius * radius;
+    }
+
+    function onMouseMove(e) {
+      handle1.x = e.clientX - offset.x;
+      handle1.y = e.clientY - offset.y;
+      draw();
+    }
+
+    function onMouseUp(e) {
+      document.body.removeEventListener("mousemove", onMouseMove);
+      document.body.removeEventListener("mouseup", onMouseUp);
+    }
+
+    function drawHandle(handle) {
+      ctx.fillStyle = "gray";
+      ctx.beginPath();
+      ctx.arc(handle.x, handle.y, handle.radius, 0, Math.PI * 2, false);
+      ctx.stroke();
+    }
+
+    function drawLineBetweenHandle(handle1, handle2) {
+      const angle = Math.atan2(handle1.y - handle2.y, handle1.x - handle2.x);
+      const dx = Math.cos(angle) * handle1.radius;
+      const dy = Math.sin(angle) * handle1.radius;
+
+      ctx.restore();
+      ctx.beginPath();
+      ctx.moveTo(handle1.x - dx, handle1.y - dy);
+      ctx.lineTo(handle2.x + dx, handle2.y + dy);
+      ctx.stroke();
+    }
+  </script>
+</html>
