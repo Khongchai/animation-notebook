@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      html,
+      body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body onload="draw();">
+    <div><canvas id="canvas"></canvas></div>
+  </body>
+  <script>
+    let canvas = document.getElementById("canvas"),
+      context = canvas.getContext("2d"),
+      width = (canvas.width = window.innerWidth),
+      height = (canvas.height = window.innerHeight),
+      fl = 300,
+      points = [],
+      numPoints = 200,
+      centerZ = 2000,
+      radius = 1000,
+      baseAngle = 0,
+      rotationSpeed = 0.01;
+
+    for (let i = 0; i < numPoints; i += 1) {
+      let card = {
+        angle: 0.09 * i,
+        // Distribute points from -2000 to 2000
+        y: numPoints * 10 - i * (4000 / numPoints),
+        img: document.createElement("img"),
+      };
+      card.x = Math.cos(card.angle + baseAngle) * radius;
+      card.z = centerZ + Math.sin(card.angle + baseAngle) * radius;
+      points.push(card);
+    }
+
+    context.translate(width / 2, height / 2);
+
+    document.body.addEventListener("mousemove", function (event) {
+      rotationSpeed = (event.clientX - width / 2) * 0.00005;
+      ypos = (event.clientY - height / 2) * 2;
+    });
+
+    update();
+
+    function update() {
+      baseAngle += rotationSpeed;
+      context.clearRect(-width / 2, -height / 2, width, height);
+      for (let i = 0; i < numPoints; i++) {
+        let point = points[i],
+          perspective = fl / (fl + point.z);
+
+        const angle = point.angle + baseAngle;
+
+        context.save();
+        context.scale(perspective, perspective);
+        context.translate(point.x, point.y);
+
+        // This line is where the quick hack happens.
+        context.scale(Math.sin(angle), 1);
+
+        context.beginPath();
+        context.arc(0, 0, 80, 0, Math.PI * 2, false);
+        context.fill();
+
+        context.restore();
+
+        point.x = Math.cos(angle) * radius;
+        point.z = centerZ + Math.sin(angle) * radius;
+      }
+      requestAnimationFrame(update);
+    }
+  </script>
+</html>
