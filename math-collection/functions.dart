@@ -169,3 +169,5 @@ double dotProduct(Vector v1, Vector v2) {
 double angleBetween(Vector v1, Vector v2) {
   return acos(dotProduct(v1, v2) / (v1.length * v2.length));
 }
+
+
