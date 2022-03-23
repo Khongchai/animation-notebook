@@ -57,7 +57,7 @@
     canvas.width = width;
     canvas.height = height;
 
-    const particleAmount = 2000;
+    const particleAmount = 200;
     const particles = [];
 
     const metrics = new Metrics();
@@ -65,7 +65,7 @@
     const runningTimeCounter = document.getElementById("running-time-counter");
 
     const rectangularBound = new RectangularBound(0, 0, width, height);
-    const quadtree = new Quadtree(0, rectangularBound);
+    const quadtree = new Quadtree(0, rectangularBound, ctx);
 
     let massString = "";
     let particleMass = 1;

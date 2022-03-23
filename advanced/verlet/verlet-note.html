@@ -1,0 +1,91 @@
+<!-- https://www.algorithm-archive.org/contents/verlet_integration/verlet_integration.html?fbclid=IwAR03C8Kyu6cCOtn_XPqovaafTg15ZQY2p95Rq7D7IXecmsngRkKq30lruXQ -->
+
+<!-- Verlet integration is essentailly the fact that you can determine the position of an object in a system where acceleration is dynamic; eg. a function of position.>
+<!-- The point is that, with basic kinematic equation, we always need x, v, and a, but with verlet integration, by combining  -->
+<!-- the equation we need to solve the next time step with the previous time step, we would be able to calculate the trajectory of an object-->
+<!-- with more accuracy. -->
+
+<!-- https://gamedevelopment.tutsplus.com/tutorials/simulate-tearable-cloth-and-ragdolls-with-simple-verlet-integration--gamedev-519 -->
+<!-- Even though at its core, the algorithm has always been used since the 60s to model molecular dynamics, the algorithm was applied to -->
+<!-- Hitman: Codename 47 as the basis for the game's ragdoll physics. -->
+
+<!-- Verlet vs Euler -->
+<!-- Verlet is more accurate in that instead of having the velocity of an object stored with the object and added onto it every frame,  -->
+<!-- verlet relies instead on the inertia by using the previous and current position. -->
+<!-- This might not make much of a differnece in a linear system, but in a dynamic system (molecular dynamics, ragdoll physics), -->
+<!-- the difference is quite clear. -->
+
+<!-- Where verlet shines in ragdoll simulation is  when you include the constraint in the picture and you have something that can produce-->
+<!-- a "believable" physics by combining just the constraint, like a stick, to an object. -->
+
+<!-- Further reading: http://graphics.cs.cmu.edu/nsp/course/15-869/2006/papers/jakobsen.htm -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      html,
+      body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body onload="draw();">
+    <div><canvas id="canvas"></canvas></div>
+  </body>
+  <script></script>
+  <script>
+    let canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+
+    ctx.fillStyle = "black";
+
+    const pos = { x: 0, y: width / 2 };
+    const prevPos = { ...pos };
+    const dt = 0.5;
+    const acc = 1;
+
+    let t = 0;
+
+    // Simple Verlet
+    // const draw = () => {
+    //   ctx.clearRect(0, 0, width, height);
+
+    //   ctx.beginPath();
+    //   ctx.arc(pos.x, pos.y, 20, 0, 2 * Math.PI);
+    //   ctx.fill();
+
+    //   const tempPos = { ...pos };
+
+    //   pos.x = pos.x * 2 - prevPos.x + acc * dt * dt;
+    //   prevPos.x = tempPos.x;
+
+    //   t += dt;
+
+    //   requestAnimationFrame(draw);
+    // };
+
+    // Velocity Verlet
+    const draw = () => {
+      ctx.clearRect(0, 0, width, height);
+
+      ctx.beginPath();
+      ctx.arc(pos.x, pos.y, 20, 0, 2 * Math.PI);
+      ctx.fill();
+
+      pos.x += pos.x - prevPos.x + acc * dt * dt;
+      t += dt;
+
+      requestAnimationFrame(draw);
+    };
+  </script>
+</html>
