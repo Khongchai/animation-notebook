@@ -18,17 +18,42 @@
     <div><canvas id="canvas"></canvas></div>
   </body>
   <script>
+    class Point {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+      }
+    }
+  </script>
+  <script>
     let canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
     var width = window.innerWidth;
     var height = window.innerHeight;
     canvas.width = width;
     canvas.height = height;
+
+    // Use the fractal tree code to generate a tree
+    /*
+     * treeSegments is an array of objects that contain the start
+     * and end points of each segment of the tree.
+     */
+    const treeSegments = [{ start: new Point(width / 2, 0), end: new Point() }];
+
     const draw = () => {
       ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
       //TODO
 
       requestAnimationFrame(draw);
     };
+  </script>
+  <script>
+    function getStick(p0, p1) {
+      return {
+        p0: p0,
+        p1: p1,
+        length: Math.sqrt(Math.pow(p0.x - p1.x, 2) + Math.pow(p0.y - p1.y, 2)),
+      };
+    }
   </script>
 </html>

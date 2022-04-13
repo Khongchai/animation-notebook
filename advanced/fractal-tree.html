@@ -1,0 +1,42 @@
+<!-- https://www.rosettacode.org/wiki/Fractal_tree -->
+<!-- Draw the trunk;
+At the end of the trunk, split by some angle and draw two branches;
+Repeat at the end of each branch until a sufficient level of branching is reached -->
+<html>
+  <body>
+    <canvas id="canvas" width="600" height="500"></canvas>
+
+    <script type="text/javascript">
+      var elem = document.getElementById("canvas");
+      var context = elem.getContext("2d");
+
+      context.fillStyle = "#C0C0C0";
+      context.lineWidth = 1;
+
+      var depth = 8;
+      const branchSplitRadian = 0.349066; // About 20 degrees
+
+      function drawLine(x1, y1, x2, y2) {
+        context.moveTo(x1, y1);
+        context.lineTo(x2, y2);
+      }
+
+      function drawTree(x1, y1, beginningAngle, depth) {
+        if (depth !== 0) {
+          // We multiply by the depth variable so that we have shorter and shorter angle
+          // as we go deeper into the tree.
+          const x2 = x1 + Math.cos(beginningAngle) * depth * 10;
+          const y2 = y1 + Math.sin(beginningAngle) * depth * 10;
+          drawLine(x1, y1, x2, y2);
+          drawTree(x2, y2, beginningAngle - branchSplitRadian, depth - 1);
+          drawTree(x2, y2, beginningAngle + branchSplitRadian, depth - 1);
+        }
+      }
+
+      context.beginPath();
+      drawTree(300, 500, -Math.PI / 2, depth);
+      context.closePath();
+      context.stroke();
+    </script>
+  </body>
+</html>
