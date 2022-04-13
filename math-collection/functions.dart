@@ -170,4 +170,20 @@ double angleBetween(Vector v1, Vector v2) {
   return acos(dotProduct(v1, v2) / (v1.length * v2.length));
 }
 
+// Result of combining the standard forms of
+// the p0, p1 line and p2, p3 line.
+Vector lineIntersect(Vector p0, Vector p1, Vector p2, Vector p3) {
+  final A1 = p1.y - p0.y;
+  final B1 = p0.x - p1.x;
+  final C1 = A1 * p0.x + B1 * p0.y;
+  final A2 = p3.y - p2.y;
+  final B2 = p2.x - p3.x;
+  final C2 = A2 * p2.x + B2 * p2.y;
 
+  final denominator = A1 * B2 - A2 * B1;
+
+  return Vector(
+    x: (B2 * C1 - B1 * C2) / denominator,
+    y: (A1 * C2 - A2 * C1) / denominator,
+  );
+}
