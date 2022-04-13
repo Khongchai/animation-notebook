@@ -18,6 +18,21 @@
     <div><canvas id="canvas"></canvas></div>
   </body>
   <script>
+    class ParallellLineError extends Error {
+      constructor(message) {
+        super(message);
+        this.name = "ParallellLinesError";
+      }
+    }
+
+    class CollinearError extends Error {
+      constructor(message) {
+        super(message);
+        this.name = "CollinearLinesError";
+      }
+    }
+  </script>
+  <script>
     function lineIntersect(p0, p1, p2, p3) {
       const A1 = p1.y - p0.y;
       const B1 = p0.x - p1.x;
@@ -27,6 +42,17 @@
       const C2 = A2 * p2.x + B2 * p2.y;
 
       const denominator = A1 * B2 - A2 * B1;
+
+      const isParallel = denominator === 0 && C1 !== C2;
+      // For collinear lines, we can just compare anything, really.
+      const isCollinear = denominator === 0 && C1 == C2;
+
+      if (isCollinear) {
+        throw new CollinearError();
+      }
+      if (isParallel) {
+        throw new ParallellLineError();
+      }
 
       return {
         x: (B2 * C1 - B1 * C2) / denominator,
@@ -43,14 +69,24 @@
       x: 500,
       y: 600,
     };
+    // Collinear
     const p2 = {
       x: 100,
-      y: 400,
+      y: 200,
     };
     const p3 = {
       x: 500,
-      y: 800,
+      y: 600,
     };
+    // Parallel
+    // const p2 = {
+    //   x: 100,
+    //   y: 400,
+    // };
+    // const p3 = {
+    //   x: 500,
+    //   y: 800,
+    // };
 
     let canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
