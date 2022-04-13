@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      html,
+      body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <div><canvas id="canvas"></canvas></div>
+  </body>
+  <script>
+    let canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+
+    const star0 = {
+      x: 200,
+      y: 200,
+      points: [
+        { x: 0, y: 0 },
+        { x: 0, y: 0 },
+        { x: 0, y: 0 },
+        { x: 0, y: 0 },
+        { x: 0, y: 0 },
+        { x: 0, y: 0 },
+        { x: 0, y: 0 },
+        { x: 0, y: 0 },
+        { x: 0, y: 0 },
+        { x: 0, y: 0 },
+      ],
+      // The offsets needed for each point from the center to make a star.
+      offset: [
+        { x: 100, y: 0 },
+        { x: 40, y: 29 },
+        { x: 31, y: 95 },
+        { x: -15, y: 48 },
+        { x: -81, y: 59 },
+        { x: -50, y: 0 },
+        { x: -81, y: -59 },
+        { x: -15, y: -48 },
+        { x: 31, y: -95 },
+        { x: 40, y: -29 },
+      ],
+    };
+    const star1 = {
+      x: 400,
+      y: 500,
+      points: [
+        { x: 0, y: 0 },
+        { x: 0, y: 0 },
+        { x: 0, y: 0 },
+        { x: 0, y: 0 },
+        { x: 0, y: 0 },
+        { x: 0, y: 0 },
+        { x: 0, y: 0 },
+        { x: 0, y: 0 },
+        { x: 0, y: 0 },
+        { x: 0, y: 0 },
+      ],
+      // The offsets needed for each point from the center to make a star.
+      offset: [
+        { x: 100, y: 0 },
+        { x: 40, y: 29 },
+        { x: 31, y: 95 },
+        { x: -15, y: 48 },
+        { x: -81, y: 59 },
+        { x: -50, y: 0 },
+        { x: -81, y: -59 },
+        { x: -15, y: -48 },
+        { x: 31, y: -95 },
+        { x: 40, y: -29 },
+      ],
+    };
+
+    window.addEventListener("load", () => {
+      updateStar(star0);
+      drawStar(star0);
+      updateStar(star1);
+      drawStar(star1);
+    });
+
+    let colorValue = 0;
+
+    const mousePos = {
+      x: 0,
+      y: 0,
+    };
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+
+      star0.x = mousePos.x;
+      star0.y = mousePos.y;
+
+      updateStar(star0);
+      drawStar(star0);
+      updateStar(star1);
+      drawStar(star1);
+
+      if (checkStarCollision(star0, star1)) {
+        colorValue = Math.min(255, colorValue + 0.2);
+      } else {
+        colorValue = Math.max(0, colorValue - 0.2);
+      }
+
+      ctx.fillStyle = `rgb(${colorValue}, 0, 0)`;
+
+      requestAnimationFrame(draw);
+    }
+
+    window.addEventListener("mousemove", (e) => {
+      mousePos.x = e.x;
+      mousePos.y = e.y;
+      draw();
+    });
+  </script>
+  <script>
+    function updateStar(star) {
+      star.points.forEach((p, i) => {
+        const offset = star.offset[i];
+        p.x = star.x + offset.x;
+        p.y = star.y + offset.y;
+      });
+    }
+
+    function checkStarCollision(star1, star2) {
+      for (let i = 0; i < star1.points.length; i++) {
+        const p1 = star1.points[i];
+        const p2 = star1.points[(i + 1) % star1.points.length];
+        for (let j = 0; j < star2.points.length; j++) {
+          const p3 = star2.points[j];
+          const p4 = star2.points[(j + 1) % star2.points.length];
+          if (segmentIntersect(p1, p2, p3, p4)) {
+            return true;
+          }
+        }
+      }
+
+      return false;
+    }
+
+    function drawStar(star) {
+      ctx.beginPath();
+      ctx.moveTo(star.points[0].x, star.points[0].y);
+      for (let i = 1; i < star.points.length; i++) {
+        ctx.lineTo(star.points[i].x, star.points[i].y);
+      }
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    function segmentIntersect(p0, p1, p2, p3) {
+      var A1 = p1.y - p0.y,
+        B1 = p0.x - p1.x,
+        C1 = A1 * p0.x + B1 * p0.y,
+        A2 = p3.y - p2.y,
+        B2 = p2.x - p3.x,
+        C2 = A2 * p2.x + B2 * p2.y,
+        denominator = A1 * B2 - A2 * B1;
+
+      if (denominator == 0) {
+        return null;
+      }
+
+      var intersectX = (B2 * C1 - B1 * C2) / denominator,
+        intersectY = (A1 * C2 - A2 * C1) / denominator;
+
+      if (isIntersecting({ x: intersectX, y: intersectY }, p0, p1, p2, p3)) {
+        return {
+          x: intersectX,
+          y: intersectY,
+        };
+      } else {
+        return null;
+      }
+    }
+    function isIntersecting(pointToCheck, p0, p1, p2, p3) {
+      const rx0 = (pointToCheck.x - p0.x) / (p1.x - p0.x),
+        ry0 = (pointToCheck.y - p0.y) / (p1.y - p0.y),
+        rx1 = (pointToCheck.x - p2.x) / (p3.x - p2.x),
+        ry1 = (pointToCheck.y - p2.y) / (p3.y - p2.y);
+
+      if (
+        ((0 <= rx0 && rx0 <= 1) || (0 <= ry0 && ry0 <= 1)) &&
+        ((0 <= rx1 && rx1 <= 1) || (0 <= ry1 && ry1 <= 1))
+      ) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+  </script>
+</html>

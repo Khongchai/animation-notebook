@@ -1,0 +1,154 @@
+<!-- TODO after, apply this to one of the older example with collision and stuff. -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      html,
+      body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body onload="draw();">
+    <div><canvas id="canvas"></canvas></div>
+  </body>
+  <script>
+    let canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+
+    const particle = {
+      vx: Math.random() * 10 - 5,
+      vy: Math.random() * 10 - 5,
+      prevX: width / 2,
+      prevY: height / 2,
+      curX: width / 2,
+      curY: height / 2,
+    };
+
+    const lines = [];
+
+    for (let i = 0; i < 10; i++) {
+      lines.push({
+        p0: {
+          x: Math.random() * width,
+          y: Math.random() * height,
+        },
+        p1: {
+          x: Math.random() * width,
+          y: Math.random() * height,
+        },
+      });
+    }
+  </script>
+  <script>
+    function draw() {
+      ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+
+      drawLines();
+      drawParticle();
+      updateParticle();
+
+      requestAnimationFrame(draw);
+    }
+
+    function updateParticle() {
+      lines.forEach((l) => {
+        const p1 = {
+          x: l.p0.x,
+          y: l.p0.y,
+        };
+        const p2 = {
+          x: l.p1.x,
+          y: l.p1.y,
+        };
+        const p3 = {
+          x: particle.curX,
+          y: particle.curY,
+        };
+        const p4 = {
+          x: particle.prevX,
+          y: particle.prevY,
+        };
+
+        if (segmentIntersect(p1, p2, p3, p4)) {
+          particle.curX = particle.prevX;
+          particle.curY = particle.prevY;
+          particle.vx = -particle.vx * 0.7;
+          particle.vy = -particle.vy * 0.7;
+        }
+      });
+
+      particle.prevX = particle.curX;
+      particle.prevY = particle.curY;
+      particle.vy += 0.2;
+      particle.curX += particle.vx;
+      particle.curY += particle.vy;
+    }
+
+    function drawParticle() {
+      ctx.fillRect(particle.curX - 2, particle.curY - 2, 4, 4);
+    }
+
+    function drawLines() {
+      ctx.beginPath();
+
+      for (let i = 0; i < lines.length; i++) {
+        ctx.moveTo(lines[i].p0.x, lines[i].p0.y);
+        ctx.lineTo(lines[i].p1.x, lines[i].p1.y);
+      }
+      ctx.stroke();
+    }
+  </script>
+  <script>
+    function segmentIntersect(p0, p1, p2, p3) {
+      var A1 = p1.y - p0.y,
+        B1 = p0.x - p1.x,
+        C1 = A1 * p0.x + B1 * p0.y,
+        A2 = p3.y - p2.y,
+        B2 = p2.x - p3.x,
+        C2 = A2 * p2.x + B2 * p2.y,
+        denominator = A1 * B2 - A2 * B1;
+
+      if (denominator == 0) {
+        return null;
+      }
+
+      var intersectX = (B2 * C1 - B1 * C2) / denominator,
+        intersectY = (A1 * C2 - A2 * C1) / denominator;
+
+      if (isIntersecting2({ x: intersectX, y: intersectY }, p0, p1, p2, p3)) {
+        return {
+          x: intersectX,
+          y: intersectY,
+        };
+      } else {
+        return null;
+      }
+    }
+    function isIntersecting2(pointToCheck, p0, p1, p2, p3) {
+      const rx0 = (pointToCheck.x - p0.x) / (p1.x - p0.x),
+        ry0 = (pointToCheck.y - p0.y) / (p1.y - p0.y),
+        rx1 = (pointToCheck.x - p2.x) / (p3.x - p2.x),
+        ry1 = (pointToCheck.y - p2.y) / (p3.y - p2.y);
+
+      if (
+        ((0 <= rx0 && rx0 <= 1) || (0 <= ry0 && ry0 <= 1)) &&
+        ((0 <= rx1 && rx1 <= 1) || (0 <= ry1 && ry1 <= 1))
+      ) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+  </script>
+</html>
