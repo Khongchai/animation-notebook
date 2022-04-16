@@ -1,3 +1,9 @@
+<!-- Steps -->
+<!-- Draw tree segment DONE -->
+<!-- Draw tree handle (the circle points) DONE -->
+<!-- Make each of the node repel one another -->
+<!-- Drag and follow mouse -->
+<!-- Constraint each point based on the stick -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -22,8 +28,41 @@
       constructor(x, y) {
         this.x = x;
         this.y = y;
+        this.radius = 10;
       }
     }
+  </script>
+  <script>
+    let canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+
+    const treeSegments = {
+      segments: [],
+      getPoints: function () {
+        let points = [];
+
+        // Get the first point at the bottom
+        points.push(new Point(this.segments[0].p0.x, this.segments[0].p0.y));
+
+        for (let i = 0; i < this.segments.length; i++) {
+          points.push(new Point(this.segments[i].p1.x, this.segments[i].p1.y));
+        }
+        return points;
+      },
+    };
+  </script>
+  <script>
+    window.addEventListener("mousedown", (e) => {
+      treeSegments.forEach((segment) => {
+        if (segment == e.target) {
+          segment.style.backgroundColor = "red";
+        }
+      });
+    });
   </script>
   <script>
     function getTreeSegments(x1, y1, beginningAngle, depth, arrayToAddTo) {
@@ -60,27 +99,41 @@
         );
       }
     }
-  </script>
-  <script>
-    let canvas = document.getElementById("canvas");
-    const ctx = canvas.getContext("2d");
-    var width = window.innerWidth;
-    var height = window.innerHeight;
-    canvas.width = width;
-    canvas.height = height;
 
-    const treeSegments = [];
-    getTreeSegments(width / 2, height / 1.5, -Math.PI / 2, 5, treeSegments);
+    function drawPoints(treeSegments) {
+      treeSegments.getPoints().forEach((point) => {
+        ctx.beginPath();
+        ctx.arc(point.x, point.y, point.radius, 0, 2 * Math.PI);
+        ctx.fill();
+      });
+    }
 
-    const draw = () => {
-      ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
-
-      treeSegments.forEach((segment) => {
+    function drawSegments(treeSegments) {
+      treeSegments.segments.forEach((segment) => {
         ctx.beginPath();
         ctx.moveTo(segment.p0.x, segment.p0.y);
         ctx.lineTo(segment.p1.x, segment.p1.y);
         ctx.stroke();
       });
+    }
+
+    function updatePointsBasedOnUserInteraction(points) {}
+  </script>
+  <script>
+    getTreeSegments(
+      width / 2,
+      height / 1.5,
+      -Math.PI / 2,
+      5,
+      treeSegments.segments
+    );
+
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+
+      updatePointsBasedOnUserInteraction();
+      drawSegments(treeSegments);
+      drawPoints(treeSegments);
 
       requestAnimationFrame(draw);
     };

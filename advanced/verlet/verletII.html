@@ -92,7 +92,7 @@
       });
     }
 
-    function constraintPoints() {
+    function constraintPointsWithinScreen() {
       points.forEach((p) => {
         const vx = (p.x - p.prevX) * friction;
         const vy = (p.y - p.prevY) * friction;
@@ -165,7 +165,7 @@
     const draw = () => {
       updatePoints(points, bounce, grav);
       updateSticks();
-      constraintPoints();
+      constraintPointsWithinScreen();
       drawPoints(points, ctx, 5);
       drawSticks(sticks, ctx);
       requestAnimationFrame(draw);
