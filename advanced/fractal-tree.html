@@ -25,8 +25,9 @@ Repeat at the end of each branch until a sufficient level of branching is reache
         if (depth !== 0) {
           // We multiply by the depth variable so that we have shorter and shorter angle
           // as we go deeper into the tree.
-          const x2 = x1 + Math.cos(beginningAngle) * depth * 10;
-          const y2 = y1 + Math.sin(beginningAngle) * depth * 10;
+          const scale = 10;
+          const x2 = x1 + Math.cos(beginningAngle) * depth * scale;
+          const y2 = y1 + Math.sin(beginningAngle) * depth * scale;
           drawLine(x1, y1, x2, y2);
           drawTree(x2, y2, beginningAngle - branchSplitRadian, depth - 1);
           drawTree(x2, y2, beginningAngle + branchSplitRadian, depth - 1);

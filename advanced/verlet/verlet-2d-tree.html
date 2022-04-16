@@ -26,6 +26,42 @@
     }
   </script>
   <script>
+    function getTreeSegments(x1, y1, beginningAngle, depth, arrayToAddTo) {
+      const branchSplitRadian = 0.349066; // About 20 degrees
+      const scale = 30;
+
+      if (depth !== 0) {
+        const x2 = x1 + Math.cos(beginningAngle) * depth * scale;
+        const y2 = y1 + Math.sin(beginningAngle) * depth * scale;
+        arrayToAddTo.push({
+          p0: {
+            x: x1,
+            y: y1,
+          },
+          p1: {
+            x: x2,
+            y: y2,
+          },
+          length: Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2)),
+        });
+        getTreeSegments(
+          x2,
+          y2,
+          beginningAngle - branchSplitRadian,
+          depth - 1,
+          arrayToAddTo
+        );
+        getTreeSegments(
+          x2,
+          y2,
+          beginningAngle + branchSplitRadian,
+          depth - 1,
+          arrayToAddTo
+        );
+      }
+    }
+  </script>
+  <script>
     let canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
     var width = window.innerWidth;
@@ -33,27 +69,20 @@
     canvas.width = width;
     canvas.height = height;
 
-    // Use the fractal tree code to generate a tree
-    /*
-     * treeSegments is an array of objects that contain the start
-     * and end points of each segment of the tree.
-     */
-    const treeSegments = [{ start: new Point(width / 2, 0), end: new Point() }];
+    const treeSegments = [];
+    getTreeSegments(width / 2, height / 1.5, -Math.PI / 2, 5, treeSegments);
 
     const draw = () => {
       ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
-      //TODO
+
+      treeSegments.forEach((segment) => {
+        ctx.beginPath();
+        ctx.moveTo(segment.p0.x, segment.p0.y);
+        ctx.lineTo(segment.p1.x, segment.p1.y);
+        ctx.stroke();
+      });
 
       requestAnimationFrame(draw);
     };
-  </script>
-  <script>
-    function getStick(p0, p1) {
-      return {
-        p0: p0,
-        p1: p1,
-        length: Math.sqrt(Math.pow(p0.x - p1.x, 2) + Math.pow(p0.y - p1.y, 2)),
-      };
-    }
   </script>
 </html>
