@@ -1,5 +1,7 @@
 <!-- https://codepen.io/marselbairam/pen/yLeqLBd?editors=1010 -->
-
+<!-- Summary -->
+<!-- Particle repeller can be achieved by TODO  -->
+<!-- The generation works by -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -13,6 +15,7 @@
         border: 0;
         padding: 0;
         margin: 0;
+        background-color: rgb(20, 25, 45);
       }
 
       canvas {
@@ -23,7 +26,109 @@
   <body onload="draw();">
     <div><canvas id="canvas"></canvas></div>
   </body>
+  <script>
+    class Dot {
+      constructor(radius, x, y) {
+        this.pos = {
+          x,
+          y,
+        };
+        this.vel = {
+          x: 0,
+          y: 0,
+        };
+        this.radius =
+          radius ||
+          Math.random() * (config.dotMaxRad - config.dotMinRad) +
+            config.dotMinRad;
+        this.mass = this.radius * config.massFactor;
+        this.color = config.defaultColor;
+      }
 
+      /**
+       * @param {number} x
+       * @param {number} y
+       * @param {2dRenderingContext}
+       */
+      draw(ctx, x, y) {
+        this.pos.x = x || this.pos.x + this.vel.x;
+        this.pos.y = y || this.pos.y + this.vel.y;
+
+        this._createCircle(
+          this.pos.x,
+          this.pos.y,
+          this.rad,
+          true,
+          this.color,
+          ctx
+        );
+        this._createCircle(
+          this.pos.x,
+          this.pos.y,
+          this.rad,
+          false,
+          config.defaultColor,
+          ctx
+        );
+      }
+
+      /**
+       * @param {number} x
+       * @param {number} y
+       * @param {number} radius
+       * @param {boolean} fill
+       * @param {string} color
+       * @param {CanvasRenderingContext2D} ctx
+       */
+      _createCircle(x, y, radius, fill, color, ctx) {
+        ctx.fillStyle = ctx.strokeStyle = color;
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.closePath();
+        fill ? ctx.fill() : ctx.stroke();
+      }
+    }
+  </script>
+  <script>
+    /**
+     * @param {Dot[]} dots
+     */
+    function updateDots(dots, ctx) {
+      for (let i = 0; i < dots.length; i++) {
+        const acc = { x: 0, y: 0 };
+
+        for (let j = 0; j < dots.length; j++) {
+          if (i === j) continue;
+
+          const D = dots[i];
+          const d = dots[j];
+          const dx = d.pos.x - D.pos.x;
+          const dy = d.pos.y - D.pos.y;
+          const dist = Math.sqrt(dx * dx + dy * dy) || 1; // Avoid division by zero
+          const force = (dist - config.sphereRad) / (dist * d.mass); // TODO find out how this works
+
+          //TODO
+          //   if (j === 0) {
+          //   let alpha = config.mouseSize / dist;
+          //   a.color = `rgba(250, 10, 30, ${alpha})`;
+          //   dist < config.mouseSize ? force = (dist - config.mouseSize) * b.mass : force = a.mass;
+          // }
+
+          acc.x += delta.x * force;
+          acc.y += delta.y * force;
+        }
+
+        // Big ones move faster with this equation
+        dots[i].vel.x = dots[i].vel.x * config.smooth + acc.x * dots[i].mass;
+        dots[i].vel.y = dots[i].vel.y * config.smooth + acc.y * dots[i].mass;
+      }
+
+      // If main dot, follow mouse, else use velocity
+      dots.forEach((d) =>
+        d == dots[0] ? d.draw(ctx, mouse.x, mouse.y) : d.draw(ctx)
+      );
+    }
+  </script>
   <script>
     let canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
@@ -50,62 +155,35 @@
       defaultColor: "rgba(250, 10, 30, .9)",
       smooth: 0.65,
     };
+
+    const mouse = {
+      x: width / 2,
+      y: height / 2,
+      down: false,
+    };
+
+    const dots = [];
+    dots.push(new Dot(config.bigDotRad));
   </script>
-  <script></script>
   <script>
-    class Dot {
-      constructor(radius, x, y) {
-        this.pos = {
-          x,
-          y,
-        };
-        this.vel = {
-          x: 0,
-          y: 0,
-        };
-        this.radius = radius || random(config.dotMinRad, config.dotMaxRad);
-        this.mass = this.radius * config.massFactor;
-        this.color = config.defaultColor;
-      }
-
-      draw(x, y, ctx) {
-        this.pos.x = x || this.pos.x + this.vel.x;
-        this.pos.y = y || this.pos.y + this.vel.y;
-
-        _createCircle(this.pos.x, this.pos.y, this.rad, true, this.color, ctx);
-        _createCircle(
-          this.pos.x,
-          this.pos.y,
-          this.rad,
-          false,
-          config.defColor,
-          ctx
-        );
-      }
-
-      /**
-       * @param {number} x
-       * @param {number} y
-       * @param {number} radius
-       * @param {boolean} fill
-       * @param {string} color
-       * @param {CanvasRenderingContext2D} ctx
-       */
-      _createCircle(x, y, radius, fill, color, ctx) {
-        ctx.fillStyle = ctx.strokeStyle = color;
-        ctx.beginPath();
-        ctx.arc(x, y, radius, 0, TWO_PI);
-        ctx.closePath();
-        fill ? ctx.fill() : ctx.stroke();
-      }
-    }
+    canvas.addEventListener("mousemove", ({ x, y }) => {
+      mouse.x = x;
+      mouse.y = y;
+    });
+    canvas.addEventListener("mousedown", () => (mouse.down = true));
+    canvas.addEventListener("mousedown", () => (mouse.down = false));
   </script>
+
   <script>
     const draw = () => {
-      ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
-      //if you see this, canvas is working
-      ctx.arc(width / 2, height / 2, 100, 0, 2 * Math.PI);
-      ctx.stroke();
+      ctx.clearRect(0, 0, width, height);
+
+      if (mouse.down) {
+        dots.push(new Dot());
+      }
+
+      updateDots(dots, ctx);
+
       requestAnimationFrame(draw);
     };
   </script>
