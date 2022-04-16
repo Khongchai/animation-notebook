@@ -1,7 +1,7 @@
 <!-- https://codepen.io/marselbairam/pen/yLeqLBd?editors=1010 -->
 <!-- Summary -->
-<!-- Particle repeller can be achieved by TODO  -->
-<!-- The generation works by -->
+<!-- Particle repeller can be achieved by setting the min value of the distance between the repeller and other particles to be the radius of the repeller. -->
+<!-- The generation works by simply generating particles and attracting it to other particles do the rest. -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -28,7 +28,7 @@
   </body>
   <script>
     class Dot {
-      constructor(radius, x, y) {
+      constructor(x, y, radius) {
         this.pos = {
           x,
           y,
@@ -46,9 +46,9 @@
       }
 
       /**
+       * @param {2dRenderingContext} ctx
        * @param {number} x
        * @param {number} y
-       * @param {2dRenderingContext}
        */
       draw(ctx, x, y) {
         this.pos.x = x || this.pos.x + this.vel.x;
@@ -57,7 +57,7 @@
         this._createCircle(
           this.pos.x,
           this.pos.y,
-          this.rad,
+          this.radius,
           true,
           this.color,
           ctx
@@ -65,7 +65,7 @@
         this._createCircle(
           this.pos.x,
           this.pos.y,
-          this.rad,
+          this.radius,
           false,
           config.defaultColor,
           ctx
@@ -84,7 +84,6 @@
         ctx.fillStyle = ctx.strokeStyle = color;
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
-        ctx.closePath();
         fill ? ctx.fill() : ctx.stroke();
       }
     }
@@ -93,39 +92,50 @@
     /**
      * @param {Dot[]} dots
      */
-    function updateDots(dots, ctx) {
+    function updateDots(dots) {
       for (let i = 0; i < dots.length; i++) {
+        if (i === 0) continue;
         const acc = { x: 0, y: 0 };
 
         for (let j = 0; j < dots.length; j++) {
           if (i === j) continue;
 
-          const D = dots[i];
-          const d = dots[j];
-          const dx = d.pos.x - D.pos.x;
-          const dy = d.pos.y - D.pos.y;
+          const dx = dots[j].pos.x - dots[i].pos.x;
+          const dy = dots[j].pos.y - dots[i].pos.y;
           const dist = Math.sqrt(dx * dx + dy * dy) || 1; // Avoid division by zero
-          const force = (dist - config.sphereRad) / (dist * d.mass); // TODO find out how this works
 
-          //TODO
-          //   if (j === 0) {
-          //   let alpha = config.mouseSize / dist;
-          //   a.color = `rgba(250, 10, 30, ${alpha})`;
-          //   dist < config.mouseSize ? force = (dist - config.mouseSize) * b.mass : force = a.mass;
-          // }
+          const damp = dots[j].mass;
+          // This is the logic of the entire generation system.
+          let force = ((dist - config.sphereRad) / dist) * dots[j].mass;
 
-          acc.x += delta.x * force;
-          acc.y += delta.y * force;
+          // For how everything else interact with the repeller
+          const isTheBigCircle = j === 0;
+          if (isTheBigCircle) {
+            let alpha = config.mouseSize / dist;
+            dots[i].color = `rgba(250, 10, 30, ${alpha})`;
+
+            dist < config.mouseSize
+              ? (force = (dist - config.mouseSize) * dots[j].mass)
+              : (force = dots[i].mass);
+          }
+
+          acc.x += dx * force;
+          acc.y += dy * force;
         }
 
         // Big ones move faster with this equation
         dots[i].vel.x = dots[i].vel.x * config.smooth + acc.x * dots[i].mass;
         dots[i].vel.y = dots[i].vel.y * config.smooth + acc.y * dots[i].mass;
       }
+    }
 
-      // If main dot, follow mouse, else use velocity
-      dots.forEach((d) =>
-        d == dots[0] ? d.draw(ctx, mouse.x, mouse.y) : d.draw(ctx)
+    /**
+     * @param {Dot[]} dots
+     * @param {2dRenderingContext} ctx
+     */
+    function drawDots(dots, ctx) {
+      dots.forEach((d, i) =>
+        i == 0 ? d.draw(ctx, mouse.x, mouse.y) : d.draw(ctx)
       );
     }
   </script>
@@ -163,7 +173,7 @@
     };
 
     const dots = [];
-    dots.push(new Dot(config.bigDotRad));
+    dots.push(new Dot(0, 0, config.bigDotRad));
   </script>
   <script>
     canvas.addEventListener("mousemove", ({ x, y }) => {
@@ -171,7 +181,7 @@
       mouse.y = y;
     });
     canvas.addEventListener("mousedown", () => (mouse.down = true));
-    canvas.addEventListener("mousedown", () => (mouse.down = false));
+    canvas.addEventListener("mouseup", () => (mouse.down = false));
   </script>
 
   <script>
@@ -179,10 +189,11 @@
       ctx.clearRect(0, 0, width, height);
 
       if (mouse.down) {
-        dots.push(new Dot());
+        dots.push(new Dot(mouse.x, mouse.y));
       }
 
-      updateDots(dots, ctx);
+      updateDots(dots);
+      drawDots(dots, ctx);
 
       requestAnimationFrame(draw);
     };
