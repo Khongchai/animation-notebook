@@ -105,7 +105,7 @@
           const dist = Math.sqrt(dx * dx + dy * dy) || 1; // Avoid division by zero
 
           const damp = dots[j].mass;
-          // This is the logic of the entire generation system.
+          // This is the logic of the particle bubble.
           let force = ((dist - config.sphereRad) / dist) * dots[j].mass;
 
           // For how everything else interact with the repeller
@@ -114,6 +114,9 @@
             let alpha = config.mouseSize / dist;
             dots[i].color = `rgba(250, 10, 30, ${alpha})`;
 
+            // This is the logic of the repeller.
+            // The config.mouseSize here is the same logic as the spring distance.
+            // Check in particle3.js
             dist < config.mouseSize
               ? (force = (dist - config.mouseSize) * dots[j].mass)
               : (force = dots[i].mass);

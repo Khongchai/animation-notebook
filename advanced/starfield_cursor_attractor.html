@@ -134,9 +134,12 @@
 
       gravitateTo(p) {
         const angle = this.angleTo(p);
+
         const distance = this.distanceTo(p);
 
+        // Looks and feels much nicer with setLength commented out.
         //We're not using the gravitational constant here because we're not trying to simulate the real world
+
         this.gravity.setLength(p.mass / distance ** 2);
         this.gravity.setAngle(angle);
 
