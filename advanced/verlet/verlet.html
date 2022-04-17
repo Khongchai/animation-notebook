@@ -54,9 +54,27 @@
         p.y += vy;
         p.y += grav;
 
+        // With verlet integration, when we constrain the point to be within a screen,
+        // we are essentailly just doing p.x = max(min(p.x, width), 0) for when the particle's
+        // restitution coefficient is zero. This separate if statement is just for the bounce.
+        // The calculation for p.prevX, other than the bounce, remains the same.
+
+        // Explanation from: https://www.gpgstudy.com/gpgiki/GDC_2001:_Advanced_Character_Physics
+        /**
+              void ParticleSystem::SatisfyConstraints() {
+              for(int i=0; i<NUM_PARTICLES; i++) { // For all particles
+                Vector3& x = m_xi;
+                x = vmin(vmax(x, Vector3(0,0,0)),
+                    Vector3(1000,1000,1000));
+                }
+              }
+              (vmax operates on vectors taking the component-wise maximum whereas vmin takes the component-wise minimum.) 
+              This keeps all particle positions inside the cube and handles both collisions and resting contact. The beauty 
+              of the Verlet integration scheme is that the corresponding changes in velocity will be handled automatically. 
+              In the following calls to TimeStep(), the velocity is automatically regulated to contain no component in the 
+              normal direction of the surface (corresponding to a restitution coefficient of zero). See Figure 1. 
+          */
         if (p.x > width) {
-          // With this technique, when we bounce, we are essentially setting
-          //  the position of prev to be the future value of the position.
           p.x = width;
           p.prevX = p.x + vx * bounce;
         } else if (p.x < 0) {
