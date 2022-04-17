@@ -12,6 +12,7 @@
         border: 0;
         padding: 0;
         margin: 0;
+        background-color: rgb(20, 25, 45);
       }
       canvas {
         display: block;
@@ -36,13 +37,21 @@
     const points = [];
     const sticks = [];
 
+    const pointRadius = 20;
+
     function generateTree(p0, beginningAngle, depth, pointsArray, sticksArray) {
       const branchSplitRadian = 0.349066; // About 20 degrees
-      const scale = 30;
+      const scale = 50;
+
+      const getRandomAngle = () => {
+        const randomness = Math.random() * 0.2 + 0.9;
+        const randomAngle = beginningAngle * randomness;
+        return randomAngle;
+      };
 
       if (depth !== 0) {
-        const x2 = p0.x + Math.cos(beginningAngle) * depth * scale;
-        const y2 = p0.y + Math.sin(beginningAngle) * depth * scale;
+        const x2 = p0.x + Math.cos(getRandomAngle()) * depth * scale;
+        const y2 = p0.y + Math.sin(getRandomAngle()) * depth * scale;
 
         const p1 = {
           x: x2,
@@ -97,7 +106,7 @@
         p.x += vx;
         p.y += vy;
         //Comment this for a weightless system
-        p.y += grav;
+        // p.y += grav;
       });
     }
 
@@ -131,6 +140,7 @@
     }
 
     function drawPoints(points, ctx, radius) {
+      ctx.fillStyle = "green";
       points.forEach((p) => {
         ctx.beginPath();
         ctx.arc(p.x, p.y, radius, 0, 2 * Math.PI);
@@ -169,6 +179,8 @@
     }
 
     function drawSticks() {
+      ctx.lineWidth = 5;
+      ctx.strokeStyle = "brown";
       sticks.forEach((s) => {
         ctx.beginPath();
         ctx.moveTo(s.p0.x, s.p0.y);
@@ -184,8 +196,8 @@
       updatePoints(points, bounce, grav);
       updateSticks();
       constraintPoints();
-      drawPoints(points, ctx, 5);
       drawSticks(sticks, ctx);
+      drawPoints(points, ctx, pointRadius);
       requestAnimationFrame(draw);
     };
   </script>
