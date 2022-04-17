@@ -193,6 +193,24 @@
       });
     }
 
+    /**
+     * If performance is a concern:
+     * 
+     * We now discuss how to get rid of the square root operation. 
+     * If the constraints are all satisfied (which they should be at least almost), 
+     * we already know what the result of the square root operation in a particular
+     *  constraint expression ought to be, namely the rest length r of the corresponding 
+     * stick. We can use this fact to approximate the square root function. Mathematically, 
+     * what we do is approximate the square root function by its 1st order Taylor-expansion 
+     * at a neighborhood of the rest length r (this is equivalent to one Newton-Raphson
+     * iteration with initial guess r). After some rewriting, we obtain the following pseudo-code:
+
+        // Pseudo-code for satisfying (C2) using sqrt approximation
+        delta = x2-x1;
+        delta*=restlength*restlength/(delta*delta+restlength*restlength)-0.5;
+        x1 -= delta;
+        x2 += delta; 
+    */
     function updateSticks() {
       sticks.forEach((s) => {
         const dx = s.p1.x - s.p0.x;

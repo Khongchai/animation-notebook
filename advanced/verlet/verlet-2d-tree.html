@@ -1,6 +1,11 @@
+<!-- For future references, a more useful model for points would be nodes with reference to all its children -->
+<!-- so that we can perform node stuff, like dfs, and bfs. -->
+<!-- Nodes are also easier to perform angular constrain on. -->
+
 <!-- Without angular constraints, the verlet system will feel like ropes. -->
 <!-- TODO list -->
 <!-- tree stiffness that should retain the treeshape https://subprotocol.com/system/tree.html-->
+<!-- For the angular constraint, we can do dot product  -->
 <!-- each leaf repels one another -->
 <!DOCTYPE html>
 <html lang="en">
@@ -42,8 +47,10 @@
 
     const points = [];
     const sticks = [];
-    // Sticks that are not drawn but are used to keep the tree shape
+
+    // Data models that are not drawn but are used to keep the tree shape
     const structureSticks = [];
+    const angularConstraintReferences = [];
 
     const pointRadius = 20;
 
@@ -54,19 +61,32 @@
       y: 0,
     };
 
-    function generateTree(p0, beginningAngle, depth, pointsArray, sticksArray) {
-      const branchSplitRadian = 0.349066; // About 20 degrees
+    const beginningAngle = -Math.PI / 2;
+    const branchSplitRadian = 0.749066; // About 20 degrees
+
+    function generateTree(
+      p0,
+      beginningAngle,
+      depth,
+      pointsArray,
+      sticksArray,
+      angularConstraintReferences
+    ) {
       const scale = 50;
 
-      const getRandomAngle = () => {
-        const randomness = Math.random() * 0.2 + 0.9;
-        const randomAngle = beginningAngle * randomness;
-        return randomAngle;
+      const getRandomAngle = (debugRandomnessOn = true) => {
+        if (debugRandomnessOn) {
+          const randomness = Math.random() * 0.2 + 0.9;
+          const randomAngle = beginningAngle * randomness;
+          return randomAngle;
+        } else {
+          return beginningAngle;
+        }
       };
 
       if (depth !== 0) {
-        const x2 = p0.x + Math.cos(getRandomAngle()) * depth * scale;
-        const y2 = p0.y + Math.sin(getRandomAngle()) * depth * scale;
+        const x2 = p0.x + Math.cos(beginningAngle) * depth * scale;
+        const y2 = p0.y + Math.sin(beginningAngle) * depth * scale;
 
         const p1 = {
           x: x2,
@@ -87,17 +107,24 @@
           beginningAngle - branchSplitRadian,
           depth - 1,
           pointsArray,
-          sticksArray
+          sticksArray,
+          angularConstraintReferences
         );
         const newPoint2 = generateTree(
           p1,
           beginningAngle + branchSplitRadian,
           depth - 1,
           pointsArray,
-          sticksArray
+          sticksArray,
+          angularConstraintReferences
         );
 
         if (newPoint1 && newPoint2) {
+          angularConstraintReferences.push({
+            vertex: p1,
+            p0: newPoint1,
+            p1: newPoint2,
+          });
           structureSticks.push({
             p0: newPoint1,
             p1: newPoint2,
@@ -121,7 +148,15 @@
       // Pin the root.
       pinned: true,
     });
-    generateTree(points[0], -Math.PI / 2, 4, points, sticks);
+    generateTree(
+      points[0],
+      beginningAngle,
+      4,
+      // 4,
+      points,
+      sticks,
+      angularConstraintReferences
+    );
   </script>
   <script>
     function updatePoints(points, bounce, grav) {
@@ -142,7 +177,7 @@
         p.x += vx;
         p.y += vy;
         //Comment this for a weightless system
-        // p.y += grav;
+        // p.y -= grav;
       });
     }
 
@@ -194,7 +229,7 @@
       });
     }
 
-    function constrainPointsPosition(sticks) {
+    function constraintPointsPosition(sticks) {
       sticks.forEach((s, i) => {
         const dx = s.p1.x - s.p0.x;
         const dy = s.p1.y - s.p0.y;
@@ -224,6 +259,71 @@
       });
     }
 
+    function dotProduct(p0, p1) {
+      return p0.x * p1.x + p0.y * p1.y;
+    }
+
+    function angleBetween(v0, v1) {
+      const dot = dotProduct(v0, v1);
+
+      const magV0 = Math.sqrt(v0.x * v0.x + v0.y * v0.y);
+      const magV1 = Math.sqrt(v1.x * v1.x + v1.y * v1.y);
+      const cosTheta = dot / (magV0 * magV1);
+      return Math.acos(cosTheta);
+    }
+
+    /**
+     * @param {{x: number, y: number}} origin
+     * @param {number} theta
+     */
+    function rotateVector(origin, pointToRotate, theta) {
+      const x = pointToRotate.x - origin.x;
+      const y = pointToRotate.y - origin.y;
+      const newVec = {
+        x: x * Math.cos(theta) - y * Math.sin(theta) + origin.x,
+        y: x * Math.sin(theta) + y * Math.cos(theta) + origin.y,
+        vertex: origin,
+      };
+
+      return newVec;
+    }
+
+    //TODO not really working
+    function angularConstrain(angularConstraintReferences) {
+      const angularConstraint = branchSplitRadian * 2;
+
+      angularConstraintReferences.forEach((ref) => {
+        const v0 = {
+          x: ref.p0.x - ref.vertex.x,
+          y: ref.p0.y - ref.vertex.y,
+        };
+        const v1 = {
+          x: ref.p1.x - ref.vertex.x,
+          y: ref.p1.y - ref.vertex.y,
+        };
+        const angle = angleBetween(v0, v1);
+
+        let angleDiff = angularConstraint - angle;
+
+        if (angleDiff <= -Math.PI) angleDiff += 2 * Math.PI;
+        else if (angleDiff >= Math.PI) angleDiff -= 2 * Math.PI;
+
+        angleDiff *= 0.0002;
+
+        // TODO add angleDiff to p0 and p1 position
+        const newP0 = rotateVector(ref.vertex, ref.p0, angleDiff);
+        const newP1 = rotateVector(ref.vertex, ref.p1, -angleDiff);
+        const newVertex1 = rotateVector(newP0, ref.vertex, angleDiff);
+        const newVertex2 = rotateVector(newP1, newVertex1, angleDiff);
+        ref.p0.x = newP0.x;
+        ref.p0.y = newP0.y;
+        ref.p1.x = newP1.x;
+        ref.p1.y = newP1.y;
+        ref.vertex.x = newVertex2.x;
+        ref.vertex.y = newVertex2.y;
+      });
+    }
+
     function drawSticks(sticks, ctx) {
       ctx.lineWidth = 5;
       ctx.strokeStyle = "brown";
@@ -240,7 +340,8 @@
       ctx.clearRect(0, 0, width, height);
 
       updatePoints(points, bounce, grav);
-      constrainPointsPosition(sticks);
+      constraintPointsPosition(sticks);
+      angularConstrain(angularConstraintReferences);
       // constrainPointsPosition(structureSticks);
       checkWallCollisions();
       drawSticks(sticks, ctx);
