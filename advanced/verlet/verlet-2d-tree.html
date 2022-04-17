@@ -1,4 +1,7 @@
-<!-- Same as verlet.html but with more stuff. -->
+<!-- TODO list -->
+<!-- Glowing leaves -->
+<!-- tree stiffness that should retain the treeshape https://subprotocol.com/system/tree.html-->
+<!-- each leaf repels one another -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -36,8 +39,17 @@
 
     const points = [];
     const sticks = [];
+    // Sticks that are not drawn but are used to keep the tree shape
+    const structureSticks = [];
 
     const pointRadius = 20;
+
+    // Pointer to which point we would like to have it follow the cursor.
+    let pointToMove = null;
+    const mouse = {
+      x: 0,
+      y: 0,
+    };
 
     function generateTree(p0, beginningAngle, depth, pointsArray, sticksArray) {
       const branchSplitRadian = 0.349066; // About 20 degrees
@@ -67,20 +79,34 @@
             Math.pow(p1.x - p0.x, 2) + Math.pow(p1.y - p0.y, 2)
           ),
         });
-        generateTree(
+        const newPoint1 = generateTree(
           p1,
           beginningAngle - branchSplitRadian,
           depth - 1,
           pointsArray,
           sticksArray
         );
-        generateTree(
+        const newPoint2 = generateTree(
           p1,
           beginningAngle + branchSplitRadian,
           depth - 1,
           pointsArray,
           sticksArray
         );
+
+        if (newPoint1 && newPoint2) {
+          structureSticks.push({
+            p0: newPoint1,
+            p1: newPoint2,
+            length: Math.sqrt(
+              Math.pow(newPoint2.x - newPoint1.x, 2) +
+                Math.pow(newPoint2.y - newPoint1.y, 2)
+            ),
+          });
+        }
+
+        // p1 is the new point generated from this recursive call.
+        return p1;
       }
     }
 
@@ -89,11 +115,17 @@
       y: height / 1.5,
       prevX: width / 2,
       prevY: height / 1.5,
+      // Pin the root.
+      pinned: true,
     });
     generateTree(points[0], -Math.PI / 2, 4, points, sticks);
   </script>
   <script>
     function updatePoints(points, bounce, grav) {
+      if (pointToMove) {
+        pointToMove.x = mouse.x;
+        pointToMove.y = mouse.y;
+      }
       points.forEach((p) => {
         if (p.pinned) return;
 
@@ -106,7 +138,7 @@
         p.x += vx;
         p.y += vy;
         //Comment this for a weightless system
-        // p.y += grav;
+        // p.y -= grav;
       });
     }
 
@@ -148,7 +180,7 @@
       });
     }
 
-    function updateSticks() {
+    function updateSticks(sticks) {
       sticks.forEach((s, i) => {
         const dx = s.p1.x - s.p0.x;
         const dy = s.p1.y - s.p0.y;
@@ -178,7 +210,7 @@
       });
     }
 
-    function drawSticks() {
+    function drawSticks(sticks, ctx) {
       ctx.lineWidth = 5;
       ctx.strokeStyle = "brown";
       sticks.forEach((s) => {
@@ -194,16 +226,34 @@
       ctx.clearRect(0, 0, width, height);
 
       updatePoints(points, bounce, grav);
-      updateSticks();
+      updateSticks(sticks);
+      updateSticks(structureSticks);
       constraintPoints();
       drawSticks(sticks, ctx);
+      // drawSticks(structureSticks, ctx);
       drawPoints(points, ctx, pointRadius);
       requestAnimationFrame(draw);
     };
   </script>
   <script>
-    document.addEventListener("click", (e) => {
-      points[4].pinned = !points[4].pinned;
+    window.addEventListener("mousedown", (e) => {
+      points.forEach((p) => {
+        const dx = e.clientX - p.x;
+        const dy = e.clientY - p.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < pointRadius) {
+          pointToMove = p;
+        }
+      });
+    });
+
+    window.addEventListener("mouseup", () => {
+      pointToMove = null;
+    });
+
+    window.addEventListener("mousemove", (e) => {
+      mouse.x = e.x;
+      mouse.y = e.y;
     });
   </script>
 </html>
