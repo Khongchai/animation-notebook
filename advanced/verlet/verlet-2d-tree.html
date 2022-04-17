@@ -1,5 +1,5 @@
+<!-- Without angular constraints, the verlet system will feel like ropes. -->
 <!-- TODO list -->
-<!-- Glowing leaves -->
 <!-- tree stiffness that should retain the treeshape https://subprotocol.com/system/tree.html-->
 <!-- each leaf repels one another -->
 <!DOCTYPE html>
@@ -32,6 +32,9 @@
     var height = window.innerHeight;
     canvas.width = width;
     canvas.height = height;
+
+    // Distance from mouse to leaf at which we begin coloring the leaves.
+    const mouseAndPointGlowThreshold = 100;
 
     const bounce = 0.9;
     const grav = 0.2;
@@ -126,6 +129,7 @@
         pointToMove.x = mouse.x;
         pointToMove.y = mouse.y;
       }
+
       points.forEach((p) => {
         if (p.pinned) return;
 
@@ -138,12 +142,11 @@
         p.x += vx;
         p.y += vy;
         //Comment this for a weightless system
-        // p.y -= grav;
+        // p.y += grav;
       });
     }
 
-    // Bounce off walls
-    function constraintPoints() {
+    function checkWallCollisions() {
       points.forEach((p) => {
         if (p.pinned) return;
 
@@ -171,16 +174,27 @@
       });
     }
 
-    function drawPoints(points, ctx, radius) {
-      ctx.fillStyle = "green";
+    function drawPoints(points, ctx, radius, mouse, threshold) {
       points.forEach((p) => {
+        const dist =
+          Math.sqrt(Math.pow(p.x - mouse.x, 2) + Math.pow(p.y - mouse.y, 2)) ||
+          1;
+        const alpha = threshold / dist;
+
+        ctx.strokeStyle = `rgba(0, 200, 20, 1)`;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, radius, 0, 2 * Math.PI);
+        ctx.stroke();
+
+        ctx.fillStyle = `rgba(0, 200, 20, ${alpha + 0.2})`;
         ctx.beginPath();
         ctx.arc(p.x, p.y, radius, 0, 2 * Math.PI);
         ctx.fill();
       });
     }
 
-    function updateSticks(sticks) {
+    function constrainPointsPosition(sticks) {
       sticks.forEach((s, i) => {
         const dx = s.p1.x - s.p0.x;
         const dy = s.p1.y - s.p0.y;
@@ -226,12 +240,12 @@
       ctx.clearRect(0, 0, width, height);
 
       updatePoints(points, bounce, grav);
-      updateSticks(sticks);
-      updateSticks(structureSticks);
-      constraintPoints();
+      constrainPointsPosition(sticks);
+      // constrainPointsPosition(structureSticks);
+      checkWallCollisions();
       drawSticks(sticks, ctx);
       // drawSticks(structureSticks, ctx);
-      drawPoints(points, ctx, pointRadius);
+      drawPoints(points, ctx, pointRadius, mouse, mouseAndPointGlowThreshold);
       requestAnimationFrame(draw);
     };
   </script>
