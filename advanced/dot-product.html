@@ -25,6 +25,8 @@
     canvas.width = width;
     canvas.height = height;
 
+    const grabPointRadius = 10;
+
     //For keeping track of the mouse position so that
     //the grabbed object won't jump around on click
     const mouseCenterAndDownDiff = {
@@ -67,7 +69,7 @@
 
     function drawPoint(p) {
       ctx.beginPath();
-      ctx.arc(p.x, p.y, 10, 0, 2 * Math.PI);
+      ctx.arc(p.x, p.y, grabPointRadius, 0, 2 * Math.PI);
       ctx.stroke();
     }
 
@@ -157,7 +159,7 @@
     function hitTest(p, x, y) {
       const dx = p.x - x;
       const dy = p.y - y;
-      return Math.sqrt(dx * dx + dy * dy) <= 10;
+      return Math.sqrt(dx * dx + dy * dy) <= grabPointRadius;
     }
 
     draw();

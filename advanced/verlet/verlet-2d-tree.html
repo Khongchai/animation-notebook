@@ -1,9 +1,4 @@
-<!-- Steps -->
-<!-- Draw tree segment DONE -->
-<!-- Draw tree handle (the circle points) DONE -->
-<!-- Make each of the node repel one another -->
-<!-- Drag and follow mouse -->
-<!-- Constraint each point based on the stick -->
+<!-- Same as verlet.html but with more stuff. -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -18,20 +13,14 @@
         padding: 0;
         margin: 0;
       }
+      canvas {
+        display: block;
+      }
     </style>
   </head>
   <body onload="draw();">
     <div><canvas id="canvas"></canvas></div>
   </body>
-  <script>
-    class Point {
-      constructor(x, y) {
-        this.x = x;
-        this.y = y;
-        this.radius = 10;
-      }
-    }
-  </script>
   <script>
     let canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
@@ -40,102 +29,169 @@
     canvas.width = width;
     canvas.height = height;
 
-    const treeSegments = {
-      segments: [],
-      getPoints: function () {
-        let points = [];
+    const bounce = 0.9;
+    const grav = 0.2;
+    const friction = 0.999;
 
-        // Get the first point at the bottom
-        points.push(new Point(this.segments[0].p0.x, this.segments[0].p0.y));
+    const points = [];
+    const sticks = [];
 
-        for (let i = 0; i < this.segments.length; i++) {
-          points.push(new Point(this.segments[i].p1.x, this.segments[i].p1.y));
-        }
-        return points;
-      },
-    };
-  </script>
-  <script>
-    window.addEventListener("mousedown", (e) => {
-      treeSegments.forEach((segment) => {
-        if (segment == e.target) {
-          segment.style.backgroundColor = "red";
-        }
-      });
-    });
-  </script>
-  <script>
-    function getTreeSegments(x1, y1, beginningAngle, depth, arrayToAddTo) {
+    function generateTree(p0, beginningAngle, depth, pointsArray, sticksArray) {
       const branchSplitRadian = 0.349066; // About 20 degrees
       const scale = 30;
 
       if (depth !== 0) {
-        const x2 = x1 + Math.cos(beginningAngle) * depth * scale;
-        const y2 = y1 + Math.sin(beginningAngle) * depth * scale;
-        arrayToAddTo.push({
-          p0: {
-            x: x1,
-            y: y1,
-          },
-          p1: {
-            x: x2,
-            y: y2,
-          },
-          length: Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2)),
+        const x2 = p0.x + Math.cos(beginningAngle) * depth * scale;
+        const y2 = p0.y + Math.sin(beginningAngle) * depth * scale;
+
+        const p1 = {
+          x: x2,
+          y: y2,
+          prevX: x2,
+          prevY: y2,
+        };
+        pointsArray.push(p1);
+        sticksArray.push({
+          p0,
+          p1,
+          length: Math.sqrt(
+            Math.pow(p1.x - p0.x, 2) + Math.pow(p1.y - p0.y, 2)
+          ),
         });
-        getTreeSegments(
-          x2,
-          y2,
+        generateTree(
+          p1,
           beginningAngle - branchSplitRadian,
           depth - 1,
-          arrayToAddTo
+          pointsArray,
+          sticksArray
         );
-        getTreeSegments(
-          x2,
-          y2,
+        generateTree(
+          p1,
           beginningAngle + branchSplitRadian,
           depth - 1,
-          arrayToAddTo
+          pointsArray,
+          sticksArray
         );
       }
     }
 
-    function drawPoints(treeSegments) {
-      treeSegments.getPoints().forEach((point) => {
+    points.push({
+      x: width / 2,
+      y: height / 1.5,
+      prevX: width / 2,
+      prevY: height / 1.5,
+    });
+    generateTree(points[0], -Math.PI / 2, 4, points, sticks);
+  </script>
+  <script>
+    function updatePoints(points, bounce, grav) {
+      points.forEach((p) => {
+        if (p.pinned) return;
+
+        const vx = (p.x - p.prevX) * friction;
+        const vy = (p.y - p.prevY) * friction;
+
+        p.prevX = p.x;
+        p.prevY = p.y;
+
+        p.x += vx;
+        p.y += vy;
+        //Comment this for a weightless system
+        p.y += grav;
+      });
+    }
+
+    // Bounce off walls
+    function constraintPoints() {
+      points.forEach((p) => {
+        if (p.pinned) return;
+
+        const vx = (p.x - p.prevX) * friction;
+        const vy = (p.y - p.prevY) * friction;
+
+        if (p.x > width) {
+          // With this technique, when we bounce, we are essentially setting
+          //  the position of prev to be the future value of the position.
+          p.x = width;
+          p.prevX = p.x + vx * bounce;
+        } else if (p.x < 0) {
+          p.x = 0;
+          p.prevX = p.x + vx * bounce;
+        }
+
+        // -5 = radius of circle
+        if (p.y > height - 5) {
+          p.y = height - 5;
+          p.prevY = p.y + vy * bounce;
+        } else if (p.y < 0) {
+          p.y = 0;
+          p.prevY = p.y + vy * bounce;
+        }
+      });
+    }
+
+    function drawPoints(points, ctx, radius) {
+      points.forEach((p) => {
         ctx.beginPath();
-        ctx.arc(point.x, point.y, point.radius, 0, 2 * Math.PI);
+        ctx.arc(p.x, p.y, radius, 0, 2 * Math.PI);
         ctx.fill();
       });
     }
 
-    function drawSegments(treeSegments) {
-      treeSegments.segments.forEach((segment) => {
-        ctx.beginPath();
-        ctx.moveTo(segment.p0.x, segment.p0.y);
-        ctx.lineTo(segment.p1.x, segment.p1.y);
-        ctx.stroke();
+    function updateSticks() {
+      sticks.forEach((s, i) => {
+        const dx = s.p1.x - s.p0.x;
+        const dy = s.p1.y - s.p0.y;
+
+        // dist is essentially the length of the stick
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        // difference is the difference between the length of the stick and
+        // the actual length of the distance between the two points.
+        const difference = s.length - dist;
+        const halfDifference = difference / 2;
+        const percent = halfDifference / dist;
+        // halfPercent for each side
+        const halfPercent = percent;
+
+        const offsetX = dx * halfPercent;
+        const offsetY = dy * halfPercent;
+
+        if (!s.p0.pinned) {
+          s.p0.x -= offsetX;
+          s.p0.y -= offsetY;
+        }
+
+        if (!s.p1.pinned) {
+          s.p1.x += offsetX;
+          s.p1.y += offsetY;
+        }
       });
     }
 
-    function updatePointsBasedOnUserInteraction(points) {}
+    function drawSticks() {
+      sticks.forEach((s) => {
+        ctx.beginPath();
+        ctx.moveTo(s.p0.x, s.p0.y);
+        ctx.lineTo(s.p1.x, s.p1.y);
+        ctx.stroke();
+      });
+    }
   </script>
   <script>
-    getTreeSegments(
-      width / 2,
-      height / 1.5,
-      -Math.PI / 2,
-      5,
-      treeSegments.segments
-    );
-
     const draw = () => {
-      ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+      ctx.clearRect(0, 0, width, height);
 
-      updatePointsBasedOnUserInteraction();
-      drawSegments(treeSegments);
-      drawPoints(treeSegments);
-
+      updatePoints(points, bounce, grav);
+      updateSticks();
+      constraintPoints();
+      drawPoints(points, ctx, 5);
+      drawSticks(sticks, ctx);
       requestAnimationFrame(draw);
     };
+  </script>
+  <script>
+    document.addEventListener("click", (e) => {
+      points[4].pinned = !points[4].pinned;
+    });
   </script>
 </html>
