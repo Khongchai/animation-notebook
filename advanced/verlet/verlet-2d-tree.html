@@ -140,6 +140,16 @@
       }
     }
 
+    // root
+    points.push({
+      x: width / 2,
+      y: height / 1.2,
+      prevX: width / 2,
+      prevY: height / 1.2,
+      // Pin the root
+      pinned: true,
+    });
+    // root
     points.push({
       x: width / 2,
       y: height / 1.5,
@@ -148,15 +158,45 @@
       // Pin the root.
       pinned: true,
     });
-    generateTree(
-      points[0],
-      beginningAngle,
-      4,
-      // 4,
-      points,
-      sticks,
-      angularConstraintReferences
-    );
+
+    // Test
+    points.push({
+      x: width / 2,
+      y: height / 1.8,
+      prevX: width / 2,
+      prevY: height / 1.5,
+      // Pin the root.
+      pinned: true,
+    });
+
+    // generateTree(
+    //   points[1],
+    //   beginningAngle,
+    //   4,
+    //   points,
+    //   sticks,
+    //   angularConstraintReferences
+    // );
+
+    // Push the first stick
+    sticks.push({
+      p0: points[0],
+      p1: points[1],
+      length: Math.sqrt(
+        Math.pow(points[1].x - points[0].x, 2) +
+          Math.pow(points[1].y - points[0].y, 2)
+      ),
+    });
+
+    //test
+    sticks.push({
+      p0: points[1],
+      p1: points[2],
+      length: Math.sqrt(
+        Math.pow(points[1].x - points[2].x, 2) +
+          Math.pow(points[1].y - points[2].y, 2)
+      ),
+    });
   </script>
   <script>
     function updatePoints(points, bounce, grav) {
@@ -263,12 +303,29 @@
       return p0.x * p1.x + p0.y * p1.y;
     }
 
+    function normalize(v) {
+      const m = Math.sqrt(v.x * v.x + v.y * v.y);
+      const n = {
+        x: v.x / m,
+        y: v.y / m,
+      };
+      return n;
+    }
+
+    function vec(p0, p1) {
+      return {
+        x: p1.x - p0.x,
+        y: p1.y - p0.y,
+      };
+    }
+
     function angleBetween(v0, v1) {
       const dot = dotProduct(v0, v1);
 
       const magV0 = Math.sqrt(v0.x * v0.x + v0.y * v0.y);
       const magV1 = Math.sqrt(v1.x * v1.x + v1.y * v1.y);
       const cosTheta = dot / (magV0 * magV1);
+
       return Math.acos(cosTheta);
     }
 
@@ -290,31 +347,26 @@
 
     //TODO not really working
     function angularConstrain(angularConstraintReferences) {
-      const angularConstraint = branchSplitRadian * 2;
-
       angularConstraintReferences.forEach((ref) => {
-        const v0 = {
-          x: ref.p0.x - ref.vertex.x,
-          y: ref.p0.y - ref.vertex.y,
-        };
-        const v1 = {
-          x: ref.p1.x - ref.vertex.x,
-          y: ref.p1.y - ref.vertex.y,
-        };
+        const angularConstraint = ref.angle;
+
+        const v0 = normalize(vec(ref.vertex, ref.p0));
+        const v1 = normalize(vec(ref.vertex, ref.p1));
+
         const angle = angleBetween(v0, v1);
 
-        let angleDiff = angularConstraint - angle;
+        let angleDiff = angle - angularConstraint;
 
         if (angleDiff <= -Math.PI) angleDiff += 2 * Math.PI;
         else if (angleDiff >= Math.PI) angleDiff -= 2 * Math.PI;
 
-        angleDiff *= 0.0002;
+        angleDiff *= 0.02;
 
         // TODO add angleDiff to p0 and p1 position
         const newP0 = rotateVector(ref.vertex, ref.p0, angleDiff);
         const newP1 = rotateVector(ref.vertex, ref.p1, -angleDiff);
         const newVertex1 = rotateVector(newP0, ref.vertex, angleDiff);
-        const newVertex2 = rotateVector(newP1, newVertex1, angleDiff);
+        const newVertex2 = rotateVector(newP1, newVertex1, -angleDiff);
         ref.p0.x = newP0.x;
         ref.p0.y = newP0.y;
         ref.p1.x = newP1.x;
@@ -341,8 +393,18 @@
 
       updatePoints(points, bounce, grav);
       constraintPointsPosition(sticks);
-      angularConstrain(angularConstraintReferences);
-      // constrainPointsPosition(structureSticks);
+
+      // Test by constraining only the first 2 branches
+      angularConstrain([
+        {
+          p0: points[0],
+          p1: points[2],
+          vertex: points[1],
+          angle: Math.PI,
+        },
+      ]);
+      // angularConstrain(angularConstraintReferences);
+
       checkWallCollisions();
       drawSticks(sticks, ctx);
       // drawSticks(structureSticks, ctx);
