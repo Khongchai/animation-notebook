@@ -269,7 +269,7 @@
       });
     }
 
-    function constraintPointsPosition(sticks) {
+    function distanceConstrain(sticks) {
       sticks.forEach((s, i) => {
         const dx = s.p1.x - s.p0.x;
         const dy = s.p1.y - s.p0.y;
@@ -345,11 +345,12 @@
       return newVec;
     }
 
-    //TODO not really working
+    // Bug: dot product doesn't really know when angle exceeds 180 degrees
     function angularConstrain(angularConstraintReferences) {
       angularConstraintReferences.forEach((ref) => {
         const angularConstraint = ref.angle;
 
+        // Normalization makes it easier to debug
         const v0 = normalize(vec(ref.vertex, ref.p0));
         const v1 = normalize(vec(ref.vertex, ref.p1));
 
@@ -357,22 +358,27 @@
 
         let angleDiff = angle - angularConstraint;
 
-        if (angleDiff <= -Math.PI) angleDiff += 2 * Math.PI;
-        else if (angleDiff >= Math.PI) angleDiff -= 2 * Math.PI;
+        // What is this for anyway?
+        // if (angleDiff <= -Math.PI) {
+        //   angleDiff += 2 * Math.PI;
+        // } else if (angleDiff >= Math.PI) {
+        //   angleDiff -= 2 * Math.PI;
+        // }
+
+        // console.log(angleDiff);
 
         angleDiff *= 0.02;
 
-        // TODO add angleDiff to p0 and p1 position
-        const newP0 = rotateVector(ref.vertex, ref.p0, angleDiff);
-        const newP1 = rotateVector(ref.vertex, ref.p1, -angleDiff);
-        const newVertex1 = rotateVector(newP0, ref.vertex, angleDiff);
-        const newVertex2 = rotateVector(newP1, newVertex1, -angleDiff);
-        ref.p0.x = newP0.x;
-        ref.p0.y = newP0.y;
-        ref.p1.x = newP1.x;
-        ref.p1.y = newP1.y;
-        ref.vertex.x = newVertex2.x;
-        ref.vertex.y = newVertex2.y;
+        // const newP0 = rotateVector(ref.vertex, ref.p0, angleDiff);
+        // const newP1 = rotateVector(ref.vertex, ref.p1, -angleDiff);
+        // const newVertex1 = rotateVector(newP0, ref.vertex, angleDiff);
+        // const newVertex2 = rotateVector(newP1, newVertex1, -angleDiff);
+        // ref.p0.x = newP0.x;
+        // ref.p0.y = newP0.y;
+        // ref.p1.x = newP1.x;
+        // ref.p1.y = newP1.y;
+        // ref.vertex.x = newVertex2.x;
+        // ref.vertex.y = newVertex2.y;
       });
     }
 
@@ -392,7 +398,7 @@
       ctx.clearRect(0, 0, width, height);
 
       updatePoints(points, bounce, grav);
-      constraintPointsPosition(sticks);
+      distanceConstrain(sticks);
 
       // Test by constraining only the first 2 branches
       angularConstrain([
