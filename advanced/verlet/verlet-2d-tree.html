@@ -358,7 +358,7 @@
 
         let angleDiff = angle - angularConstraint;
 
-        // What is this for anyway?
+        // Normalizing the angle to be between pi and -pi
         // if (angleDiff <= -Math.PI) {
         //   angleDiff += 2 * Math.PI;
         // } else if (angleDiff >= Math.PI) {
@@ -369,16 +369,16 @@
 
         angleDiff *= 0.02;
 
-        // const newP0 = rotateVector(ref.vertex, ref.p0, angleDiff);
-        // const newP1 = rotateVector(ref.vertex, ref.p1, -angleDiff);
-        // const newVertex1 = rotateVector(newP0, ref.vertex, angleDiff);
-        // const newVertex2 = rotateVector(newP1, newVertex1, -angleDiff);
-        // ref.p0.x = newP0.x;
-        // ref.p0.y = newP0.y;
-        // ref.p1.x = newP1.x;
-        // ref.p1.y = newP1.y;
-        // ref.vertex.x = newVertex2.x;
-        // ref.vertex.y = newVertex2.y;
+        const newP0 = rotateVector(ref.vertex, ref.p0, angleDiff);
+        const newP1 = rotateVector(ref.vertex, ref.p1, -angleDiff);
+        const newVertex1 = rotateVector(newP0, ref.vertex, angleDiff);
+        const newVertex2 = rotateVector(newP1, newVertex1, -angleDiff);
+        ref.p0.x = newP0.x;
+        ref.p0.y = newP0.y;
+        ref.p1.x = newP1.x;
+        ref.p1.y = newP1.y;
+        ref.vertex.x = newVertex2.x;
+        ref.vertex.y = newVertex2.y;
       });
     }
 
