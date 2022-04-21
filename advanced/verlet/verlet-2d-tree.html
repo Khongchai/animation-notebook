@@ -147,7 +147,6 @@
       prevX: width / 2,
       prevY: height / 1.2,
       // Pin the root
-      pinned: true,
     });
     // root
     points.push({
@@ -156,7 +155,6 @@
       prevX: width / 2,
       prevY: height / 1.5,
       // Pin the root.
-      pinned: true,
     });
 
     // Test
@@ -166,7 +164,6 @@
       prevX: width / 2,
       prevY: height / 1.5,
       // Pin the root.
-      pinned: true,
     });
 
     // generateTree(
@@ -217,7 +214,7 @@
         p.x += vx;
         p.y += vy;
         //Comment this for a weightless system
-        // p.y -= grav;
+        p.y += grav;
       });
     }
 
@@ -319,14 +316,12 @@
       };
     }
 
+    function determinant(v0, v1) {
+      return v0.x * v1.y - v0.y * v1.x;
+    }
+
     function angleBetween(v0, v1) {
-      const dot = dotProduct(v0, v1);
-
-      const magV0 = Math.sqrt(v0.x * v0.x + v0.y * v0.y);
-      const magV1 = Math.sqrt(v1.x * v1.x + v1.y * v1.y);
-      const cosTheta = dot / (magV0 * magV1);
-
-      return Math.acos(cosTheta);
+      return Math.atan2(-determinant(v0, v1), -dotProduct(v0, v1)) * Math.PI;
     }
 
     /**
@@ -359,13 +354,12 @@
         let angleDiff = angle - angularConstraint;
 
         // Normalizing the angle to be between pi and -pi
-        // if (angleDiff <= -Math.PI) {
-        //   angleDiff += 2 * Math.PI;
-        // } else if (angleDiff >= Math.PI) {
-        //   angleDiff -= 2 * Math.PI;
-        // }
-
-        // console.log(angleDiff);
+        // Not sure if this is necessary
+        if (angleDiff <= -Math.PI) {
+          angleDiff += 2 * Math.PI;
+        } else if (angleDiff >= Math.PI) {
+          angleDiff -= 2 * Math.PI;
+        }
 
         angleDiff *= 0.02;
 
