@@ -321,7 +321,7 @@
     }
 
     function angleBetween(v0, v1) {
-      return Math.atan2(-determinant(v0, v1), -dotProduct(v0, v1)) * Math.PI;
+      return Math.atan2(determinant(v0, v1), dotProduct(v0, v1));
     }
 
     /**
