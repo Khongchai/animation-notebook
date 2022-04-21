@@ -361,7 +361,10 @@
           angleDiff -= 2 * Math.PI;
         }
 
-        angleDiff *= 0.02;
+        //The ideal constraints are less than 0.1
+        const angularConstraintJointStrength = 0.005;
+
+        angleDiff *= angularConstraintJointStrength;
 
         const newP0 = rotateVector(ref.vertex, ref.p0, angleDiff);
         const newP1 = rotateVector(ref.vertex, ref.p1, -angleDiff);
