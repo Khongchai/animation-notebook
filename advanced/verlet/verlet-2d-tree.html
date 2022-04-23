@@ -5,7 +5,6 @@
 <!-- Without angular constraints, the verlet system will feel like ropes. -->
 <!-- TODO list -->
 <!-- tree stiffness that should retain the treeshape https://subprotocol.com/system/tree.html-->
-<!-- For the angular constraint, we can do dot product  -->
 <!-- each leaf repels one another -->
 <!DOCTYPE html>
 <html lang="en">
@@ -31,171 +30,6 @@
     <div><canvas id="canvas"></canvas></div>
   </body>
   <script>
-    let canvas = document.getElementById("canvas");
-    const ctx = canvas.getContext("2d");
-    var width = window.innerWidth;
-    var height = window.innerHeight;
-    canvas.width = width;
-    canvas.height = height;
-
-    // Distance from mouse to leaf at which we begin coloring the leaves.
-    const mouseAndPointGlowThreshold = 100;
-
-    const bounce = 0.9;
-    const grav = 0.2;
-    const friction = 0.999;
-
-    const points = [];
-    const sticks = [];
-
-    // Data models that are not drawn but are used to keep the tree shape
-    const structureSticks = [];
-    const angularConstraintReferences = [];
-
-    const pointRadius = 20;
-
-    // Pointer to which point we would like to have it follow the cursor.
-    let pointToMove = null;
-    const mouse = {
-      x: 0,
-      y: 0,
-    };
-
-    const beginningAngle = -Math.PI / 2;
-    const branchSplitRadian = 0.749066; // About 20 degrees
-
-    function generateTree(
-      p0,
-      beginningAngle,
-      depth,
-      pointsArray,
-      sticksArray,
-      angularConstraintReferences
-    ) {
-      const scale = 50;
-
-      const getRandomAngle = (debugRandomnessOn = true) => {
-        if (debugRandomnessOn) {
-          const randomness = Math.random() * 0.2 + 0.9;
-          const randomAngle = beginningAngle * randomness;
-          return randomAngle;
-        } else {
-          return beginningAngle;
-        }
-      };
-
-      if (depth !== 0) {
-        const x2 = p0.x + Math.cos(beginningAngle) * depth * scale;
-        const y2 = p0.y + Math.sin(beginningAngle) * depth * scale;
-
-        const p1 = {
-          x: x2,
-          y: y2,
-          prevX: x2,
-          prevY: y2,
-        };
-        pointsArray.push(p1);
-        sticksArray.push({
-          p0,
-          p1,
-          length: Math.sqrt(
-            Math.pow(p1.x - p0.x, 2) + Math.pow(p1.y - p0.y, 2)
-          ),
-        });
-        const newPoint1 = generateTree(
-          p1,
-          beginningAngle - branchSplitRadian,
-          depth - 1,
-          pointsArray,
-          sticksArray,
-          angularConstraintReferences
-        );
-        const newPoint2 = generateTree(
-          p1,
-          beginningAngle + branchSplitRadian,
-          depth - 1,
-          pointsArray,
-          sticksArray,
-          angularConstraintReferences
-        );
-
-        if (newPoint1 && newPoint2) {
-          angularConstraintReferences.push({
-            vertex: p1,
-            p0: newPoint1,
-            p1: newPoint2,
-          });
-          structureSticks.push({
-            p0: newPoint1,
-            p1: newPoint2,
-            length: Math.sqrt(
-              Math.pow(newPoint2.x - newPoint1.x, 2) +
-                Math.pow(newPoint2.y - newPoint1.y, 2)
-            ),
-          });
-        }
-
-        // p1 is the new point generated from this recursive call.
-        return p1;
-      }
-    }
-
-    // root
-    points.push({
-      x: width / 2,
-      y: height / 1.2,
-      prevX: width / 2,
-      prevY: height / 1.2,
-      // Pin the root
-    });
-    // root
-    points.push({
-      x: width / 2,
-      y: height / 1.5,
-      prevX: width / 2,
-      prevY: height / 1.5,
-      // Pin the root.
-    });
-
-    // Test
-    points.push({
-      x: width / 2,
-      y: height / 1.8,
-      prevX: width / 2,
-      prevY: height / 1.5,
-      // Pin the root.
-    });
-
-    // generateTree(
-    //   points[1],
-    //   beginningAngle,
-    //   4,
-    //   points,
-    //   sticks,
-    //   angularConstraintReferences
-    // );
-
-    // Push the first stick
-    sticks.push({
-      p0: points[0],
-      p1: points[1],
-      length: Math.sqrt(
-        Math.pow(points[1].x - points[0].x, 2) +
-          Math.pow(points[1].y - points[0].y, 2)
-      ),
-    });
-
-    //test
-    sticks.push({
-      p0: points[1],
-      p1: points[2],
-      length: Math.sqrt(
-        Math.pow(points[1].x - points[2].x, 2) +
-          Math.pow(points[1].y - points[2].y, 2)
-      ),
-    });
-  </script>
-  <script>
     function updatePoints(points, bounce, grav) {
       if (pointToMove) {
         pointToMove.x = mouse.x;
@@ -214,7 +48,7 @@
         p.x += vx;
         p.y += vy;
         //Comment this for a weightless system
-        p.y += grav;
+        // p.y -= grav;
       });
     }
 
@@ -362,7 +196,7 @@
         }
 
         //The ideal constraints are less than 0.1
-        const angularConstraintJointStrength = 0.005;
+        const angularConstraintJointStrength = 0.09;
 
         angleDiff *= angularConstraintJointStrength;
 
@@ -370,12 +204,18 @@
         const newP1 = rotateVector(ref.vertex, ref.p1, -angleDiff);
         const newVertex1 = rotateVector(newP0, ref.vertex, angleDiff);
         const newVertex2 = rotateVector(newP1, newVertex1, -angleDiff);
-        ref.p0.x = newP0.x;
-        ref.p0.y = newP0.y;
-        ref.p1.x = newP1.x;
-        ref.p1.y = newP1.y;
-        ref.vertex.x = newVertex2.x;
-        ref.vertex.y = newVertex2.y;
+        if (!ref.p0.pinned) {
+          ref.p0.x = newP0.x;
+          ref.p0.y = newP0.y;
+        }
+        if (!ref.p1.pinned) {
+          ref.p1.x = newP1.x;
+          ref.p1.y = newP1.y;
+        }
+        if (!ref.vertex.pinned) {
+          ref.vertex.x = newVertex2.x;
+          ref.vertex.y = newVertex2.y;
+        }
       });
     }
 
@@ -391,6 +231,178 @@
     }
   </script>
   <script>
+    let canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+
+    // Distance from mouse to leaf at which we begin coloring the leaves.
+    const mouseAndPointGlowThreshold = 100;
+
+    const bounce = 0.9;
+    const grav = 0.2;
+    const friction = 0.999;
+
+    const points = [];
+    const sticks = [];
+
+    // Data models that are not drawn but are used to keep the tree shape
+    const structureSticks = [];
+    const angularConstraintReferences = [];
+
+    const pointRadius = 20;
+
+    // Pointer to which point we would like to have it follow the cursor.
+    let pointToMove = null;
+    const mouse = {
+      x: 0,
+      y: 0,
+    };
+
+    const beginningAngle = -Math.PI / 2;
+    const branchSplitRadian = 0.949066; // About 20 degrees
+
+    function generateTree(
+      p0,
+      beginningAngle,
+      depth,
+      pointsArray,
+      sticksArray,
+      angularConstraintReferences
+    ) {
+      const scale = 50;
+
+      const getRandomAngle = (debugRandomnessOn = true) => {
+        if (debugRandomnessOn) {
+          const randomness = Math.random() * 0.2 + 0.9;
+          const randomAngle = beginningAngle * randomness;
+          return randomAngle;
+        } else {
+          return beginningAngle;
+        }
+      };
+
+      if (depth !== 0) {
+        const x2 = p0.x + Math.cos(beginningAngle) * depth * scale;
+        const y2 = p0.y + Math.sin(beginningAngle) * depth * scale;
+
+        const p1 = {
+          x: x2,
+          y: y2,
+          prevX: x2,
+          prevY: y2,
+        };
+        pointsArray.push(p1);
+        sticksArray.push({
+          p0,
+          p1,
+          length: Math.sqrt(
+            Math.pow(p1.x - p0.x, 2) + Math.pow(p1.y - p0.y, 2)
+          ),
+        });
+        const newPoint1 = generateTree(
+          p1,
+          beginningAngle - branchSplitRadian,
+          depth - 1,
+          pointsArray,
+          sticksArray,
+          angularConstraintReferences
+        );
+        const newPoint2 = generateTree(
+          p1,
+          beginningAngle + branchSplitRadian,
+          depth - 1,
+          pointsArray,
+          sticksArray,
+          angularConstraintReferences
+        );
+
+        if (newPoint1 && newPoint2) {
+          angularConstraintReferences.push({
+            vertex: p1,
+            p0: p0,
+            p1: newPoint1,
+            angle: angleBetween(vec(p1, p0), vec(p1, newPoint1)),
+          });
+          angularConstraintReferences.push({
+            vertex: p1,
+            p0: p0,
+            p1: newPoint2,
+            angle: angleBetween(vec(p1, p0), vec(p1, newPoint2)),
+          });
+          structureSticks.push({
+            p0: newPoint1,
+            p1: newPoint2,
+            length: Math.sqrt(
+              Math.pow(newPoint2.x - newPoint1.x, 2) +
+                Math.pow(newPoint2.y - newPoint1.y, 2)
+            ),
+          });
+        }
+
+        // p1 is the new point generated from this recursive call.
+        return p1;
+      }
+    }
+
+    // root
+    points.push({
+      x: width / 2,
+      y: height / 1.1,
+      prevX: width / 2,
+      prevY: height / 1.1,
+      // Pin the root
+      pinned: true,
+    });
+
+    points.push({
+      x: width / 2,
+      y: height / 1.3,
+      prevX: width / 2,
+      prevY: height / 1.3,
+      pinned: true,
+    });
+
+    generateTree(
+      points[1],
+      beginningAngle,
+      4,
+      points,
+      sticks,
+      angularConstraintReferences
+    );
+
+    angularConstraintReferences.push({
+      p0: points[0],
+      p1: points[2],
+      vertex: points[1],
+      angle: -Math.PI,
+    });
+
+    // Push the first stick
+    sticks.push({
+      p0: points[0],
+      p1: points[1],
+      length: Math.sqrt(
+        Math.pow(points[1].x - points[0].x, 2) +
+          Math.pow(points[1].y - points[0].y, 2)
+      ),
+    });
+
+    //test
+    sticks.push({
+      p0: points[1],
+      p1: points[2],
+      length: Math.sqrt(
+        Math.pow(points[1].x - points[2].x, 2) +
+          Math.pow(points[1].y - points[2].y, 2)
+      ),
+    });
+  </script>
+
+  <script>
     const draw = () => {
       ctx.clearRect(0, 0, width, height);
 
@@ -398,15 +410,7 @@
       distanceConstrain(sticks);
 
       // Test by constraining only the first 2 branches
-      angularConstrain([
-        {
-          p0: points[0],
-          p1: points[2],
-          vertex: points[1],
-          angle: Math.PI,
-        },
-      ]);
-      // angularConstrain(angularConstraintReferences);
+      angularConstrain(angularConstraintReferences);
 
       checkWallCollisions();
       drawSticks(sticks, ctx);
