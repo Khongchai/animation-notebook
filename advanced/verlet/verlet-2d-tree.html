@@ -2,9 +2,6 @@
 <!-- so that we can perform node stuff, like dfs, and bfs. -->
 <!-- Nodes are also easier to perform angular constrain on. -->
 
-<!-- Without angular constraints, the verlet system will feel like ropes. -->
-<!-- TODO list -->
-<!-- tree stiffness that should retain the treeshape https://subprotocol.com/system/tree.html-->
 <!-- each leaf repels one another -->
 <!DOCTYPE html>
 <html lang="en">
@@ -48,7 +45,7 @@
         p.x += vx;
         p.y += vy;
         //Comment this for a weightless system
-        // p.y -= grav;
+        // p.y += grav;
       });
     }
 
@@ -196,7 +193,7 @@
         }
 
         //The ideal constraints are less than 0.1
-        const angularConstraintJointStrength = 0.09;
+        const angularConstraintJointStrength = 0.11;
 
         angleDiff *= angularConstraintJointStrength;
 
@@ -248,8 +245,9 @@
     const points = [];
     const sticks = [];
 
+    const focalLength = 700;
+
     // Data models that are not drawn but are used to keep the tree shape
-    const structureSticks = [];
     const angularConstraintReferences = [];
 
     const pointRadius = 20;
@@ -261,8 +259,25 @@
       y: 0,
     };
 
+    const particlesArray = [];
+    for (let i = 0; i < 200; i++) {
+      const newParticle = {
+        x: Math.random() * canvas.width - canvas.width / 2,
+        y: Math.random() * -canvas.height * 2,
+        z: Math.random() * 4000,
+        radius: Math.random() * 3 + 2,
+        color: "rgba(240, 94, 27, 0.7)",
+        shadowColor: "rgba(300, 94, 27, 0.9)",
+      };
+      newParticle.initialZ = newParticle.z;
+      newParticle.initialX = newParticle.x;
+      newParticle.initialY = newParticle.y;
+
+      particlesArray.push(newParticle);
+    }
+
     const beginningAngle = -Math.PI / 2;
-    const branchSplitRadian = 0.949066; // About 20 degrees
+    const branchSplitRadian = 0.349066;
 
     function generateTree(
       p0,
@@ -272,7 +287,7 @@
       sticksArray,
       angularConstraintReferences
     ) {
-      const scale = 50;
+      const scale = 40;
 
       const getRandomAngle = (debugRandomnessOn = true) => {
         if (debugRandomnessOn) {
@@ -332,14 +347,6 @@
             p1: newPoint2,
             angle: angleBetween(vec(p1, p0), vec(p1, newPoint2)),
           });
-          structureSticks.push({
-            p0: newPoint1,
-            p1: newPoint2,
-            length: Math.sqrt(
-              Math.pow(newPoint2.x - newPoint1.x, 2) +
-                Math.pow(newPoint2.y - newPoint1.y, 2)
-            ),
-          });
         }
 
         // p1 is the new point generated from this recursive call.
@@ -368,7 +375,7 @@
     generateTree(
       points[1],
       beginningAngle,
-      4,
+      5,
       points,
       sticks,
       angularConstraintReferences
@@ -391,7 +398,7 @@
       ),
     });
 
-    //test
+    // Second stick, before the recursive call
     sticks.push({
       p0: points[1],
       p1: points[2],
@@ -407,14 +414,15 @@
       ctx.clearRect(0, 0, width, height);
 
       updatePoints(points, bounce, grav);
-      distanceConstrain(sticks);
 
       // Test by constraining only the first 2 branches
-      angularConstrain(angularConstraintReferences);
+      for (let i = 0; i < 10; i++) {
+        distanceConstrain(sticks);
+        angularConstrain(angularConstraintReferences);
+      }
 
       checkWallCollisions();
       drawSticks(sticks, ctx);
-      // drawSticks(structureSticks, ctx);
       drawPoints(points, ctx, pointRadius, mouse, mouseAndPointGlowThreshold);
       requestAnimationFrame(draw);
     };
