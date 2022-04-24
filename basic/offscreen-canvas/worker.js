@@ -4,6 +4,10 @@ let tick = 0;
 onmessage = function (message) {
   canvas = message.data.drawingSurface;
   context = canvas.getContext("2d");
+
+  // Returns the data for the current context back to the main thread.
+  this.postMessage(JSON.stringify(context));
+
   draw();
 };
 

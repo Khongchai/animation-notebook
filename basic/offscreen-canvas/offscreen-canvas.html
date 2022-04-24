@@ -23,41 +23,47 @@
     <!-- Interrupter script, run a long process periodically on the main thread. -->
     <script>
       setInterval(() => {
+        let c = 0;
         for (let i = 0; i < 20000; i++) {
-          console.log("Running some long tasks...");
+          // console.log("Running some long tasks...");
         }
       }, 1000);
     </script>
     <!-- On-screen canvas, gets interrupted everytime long tasks happen on the main thread. -->
-    <script>
-      // const context = canvas.getContext("2d");
+    <!-- <script>
+      const context = canvas.getContext("2d");
 
-      // let tick = 0;
-      // function draw() {
-      //   tick += 0.1;
+      let tick = 0;
+      function draw() {
+        tick += 0.1;
 
-      //   context.clearRect(0, 0, canvas.width, canvas.height);
-      //   context.beginPath();
-      //   context.arc(
-      //     canvas.width / 2,
-      //     canvas.height / 2,
-      //     100,
-      //     0 + tick,
-      //     Math.PI + tick,
-      //     true
-      //   );
-      //   context.stroke();
-      //   requestAnimationFrame(draw);
-      // }
-      // draw();
-    </script>
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.beginPath();
+        context.arc(
+          canvas.width / 2,
+          canvas.height / 2,
+          100,
+          0 + tick,
+          Math.PI + tick,
+          true
+        );
+        context.stroke();
+        requestAnimationFrame(draw);
+      }
+      draw();
+    </script> -->
     <!-- Off-screen canvas, doesn't really care what happens on the main thread. -->
     <script>
       const offscreenCanvas = canvas.transferControlToOffscreen();
       const worker = new Worker("worker.js");
+
       worker.postMessage({ drawingSurface: offscreenCanvas }, [
         offscreenCanvas,
       ]);
+
+      worker.onmessage = (message) => {
+        console.log(message);
+      };
     </script>
   </body>
 </html>
