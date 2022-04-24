@@ -6,7 +6,8 @@ onmessage = function (message) {
   context = canvas.getContext("2d");
 
   // Returns the data for the current context back to the main thread.
-  this.postMessage(JSON.stringify(context));
+  // But this doesn't work....for some reason.
+  this.postMessage(JSON.parse(JSON.stringify(context)));
 
   draw();
 };
