@@ -54,6 +54,14 @@
     </script> -->
     <!-- Off-screen canvas, doesn't really care what happens on the main thread. -->
     <script>
+      // Side note: passing an object with lambda functions will not work with workers.
+      // class SomeRandomObject {
+      //   someValue = 2;
+
+      //   setSomeValue = (newValue) => (someValue = newValue);
+      // }
+      // const someRandomObject = new SomeRandomObject();
+
       const offscreenCanvas = canvas.transferControlToOffscreen();
       const worker = new Worker("worker.js");
 
