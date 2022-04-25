@@ -62,16 +62,30 @@
       // }
       // const someRandomObject = new SomeRandomObject();
 
+      const foo = {
+        a: 1,
+      };
+
+      const objectForTransferringData = {
+        foo,
+      };
+
       const offscreenCanvas = canvas.transferControlToOffscreen();
       const worker = new Worker("worker.js");
 
-      worker.postMessage({ drawingSurface: offscreenCanvas }, [
-        offscreenCanvas,
-      ]);
+      worker.postMessage(
+        { drawingSurface: offscreenCanvas, objectForTransferringData },
+        [offscreenCanvas]
+      );
 
       worker.onmessage = (message) => {
         console.log(message.data);
       };
+
+      window.addEventListener("click", () => {
+        ++foo.a;
+        console.log(++foo.a);
+      });
     </script>
   </body>
 </html>

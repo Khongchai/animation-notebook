@@ -1,6 +1,9 @@
 let context;
 let canvas;
 let tick = 0;
+
+let objectForTransferringData;
+
 onmessage = function (message) {
   canvas = message.data.drawingSurface;
   context = canvas.getContext("2d");
@@ -9,10 +12,14 @@ onmessage = function (message) {
   // But this doesn't work....for some reason.
   this.postMessage(JSON.parse(JSON.stringify(context)));
 
+  objectForTransferringData = message.data.objectForTransferringData;
+
   draw();
 };
 
 function draw() {
+  console.log(objectForTransferringData.foo.a);
+
   tick += 0.1;
 
   context.clearRect(0, 0, canvas.width, canvas.height);
