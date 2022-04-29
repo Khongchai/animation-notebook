@@ -76,8 +76,7 @@
         mouseIn ? t2 : 0
       );
       //   draw with lines
-      roundedRect(
-        ctx,
+      ctx.roundedRect(
         prevMouseX,
         prevMouseY,
         //Same thing cus square, yo
@@ -115,5 +114,22 @@
       ctx.arcTo(x, y, x, y + radius, radius);
       ctx.stroke();
     }
+
+    // this works too
+    CanvasRenderingContext2D.prototype.roundedRect = function (
+      x,
+      y,
+      width,
+      height,
+      radius
+    ) {
+      this.beginPath();
+      this.moveTo(x, y + radius);
+      this.arcTo(x, y + height, x + radius, y + height, radius); // x and y here is the top left
+      this.arcTo(x + width, y + height, x + width, y + height - radius, radius);
+      this.arcTo(x + width, y, x + width - radius, y, radius);
+      this.arcTo(x, y, x, y + radius, radius);
+      this.stroke();
+    };
   </script>
 </html>
