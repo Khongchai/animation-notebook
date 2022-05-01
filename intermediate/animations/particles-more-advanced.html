@@ -28,8 +28,15 @@
   </body>
   <script>
     let canvas = document.getElementById("canvas");
+    canvas.clientWidth = window.innerWidth;
+    canvas.clientHeight = window.innerHeight;
     canvas.setAttribute("width", canvas.clientWidth);
     canvas.setAttribute("height", canvas.clientHeight);
+
+    window.onresize = () => {
+      canvas.setAttribute("width", canvas.clientWidth);
+      canvas.setAttribute("height", canvas.clientHeight);
+    };
 
     const ctx = canvas.getContext("2d");
 
