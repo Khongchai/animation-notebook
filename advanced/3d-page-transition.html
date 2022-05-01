@@ -1,0 +1,188 @@
+<!-- Steps -->
+<!-- 1. Make bunch of particles -->
+<!-- 2. Make them rotateable -->
+<!-- 3. Now rotate with code -->
+<!-- 4. Shift another page in from the right and lazily load it. -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      html,
+      body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+      }
+      .scroll-container {
+        position: relative;
+        height: 100%;
+      }
+      .scroll-container div {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        display: grid;
+        place-items: center;
+      }
+      .navigation-buttons-container {
+        width: fit-content;
+        height: fit-content;
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        padding-bottom: 2rem;
+      }
+      .navigation-buttons-container button:not(:last-child) {
+        margin-right: 1rem;
+      }
+      .navigation-buttons-container button {
+        padding: 0.5rem 1rem;
+      }
+
+      .pages-container {
+        width: 100%;
+        height: 100%;
+        background: rgb(15, 15, 39);
+      }
+      .pages-container div {
+        color: white;
+        font-size: 2rem;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+        transition: all 0.3s;
+      }
+      @keyframes move-left-animation {
+        from {
+          transform: translateX(0);
+        }
+        to {
+          transform: translateX(-100%);
+        }
+      }
+      .move-left {
+        animation: move-left-animation 1s ease-in-out forwards;
+      }
+      @keyframes move-right-animation {
+        from {
+          transform: translateX(0);
+        }
+        to {
+          transform: translateX(100%);
+        }
+      }
+      .move-right {
+        animation: move-right-animation 1s
+          cubic-bezier(0.175, 0.885, 0.32, 1.275) 1s ease-in-out forwards;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="scroll-container">
+      <section class="pages-container"></section>
+      <section class="navigation-buttons-container">
+        <button id="prev-button">Previous Page</button>
+        <button id="next-button">Next Page</button>
+      </section>
+    </div>
+    <!-- <div><canvas id="canvas"></canvas></div> -->
+  </body>
+  <!-- Scroll logic -->
+  <script>
+    class PageController {
+      container;
+      previousTriggerElement;
+      nextTriggerElement;
+      currentPageIndex;
+      pages;
+
+      constructor(container, prev, next, pages) {
+        this.container = container;
+        this.previousTriggerElement = prev;
+        this.nextTriggerElement = next;
+        this.currentPageIndex = 0;
+        this.pages = pages;
+
+        this.previousTriggerElement.onclick = () =>
+          this.transitionTo(this.currentPageIndex - 1);
+        this.nextTriggerElement.onclick = () =>
+          this.transitionTo(this.currentPageIndex + 1);
+
+        this.loadPages();
+      }
+
+      loadPages() {
+        //set first page to the first element in the array.
+        this.container.innerHTML = `
+        <div>
+            ${this.pages[this.currentPageIndex]}
+        </div>
+        `;
+      }
+
+      transitionTo(index) {
+        const indexOfPageToTransitionTo = Math.max(
+          0,
+          Math.min(index, this.pages.length - 1)
+        );
+        if (indexOfPageToTransitionTo === this.currentPageIndex) {
+          return;
+        }
+
+        const pageToTransitionTo = this.pages[indexOfPageToTransitionTo];
+        const currentPage = this.pages[this.currentPageIndex];
+        const goForward = indexOfPageToTransitionTo > this.currentPageIndex;
+        const nextPageStartPos = goForward ? "left: 100%" : "right: 100%";
+
+        const className = goForward ? "move-left" : "move-right";
+
+        // Focus on current page first.
+        this.container.innerHTML = `
+            <div class="${className}">
+                ${currentPage}
+            </div>
+            <div class="${className}" style="${nextPageStartPos}">
+                ${pageToTransitionTo}
+            </div>
+        `;
+
+        this.currentPageIndex = index;
+      }
+    }
+  </script>
+  <script>
+    const scrollContainer = document.querySelector(".pages-container");
+    const prevButton = document.getElementById("prev-button");
+    const nextButton = document.getElementById("next-button");
+
+    const pageController = new PageController(
+      scrollContainer,
+      prevButton,
+      nextButton,
+      // In React, make these JSX.
+      [`<div>First page</div>`, `<div>Second page</div>`]
+    );
+  </script>
+  <!-- don't forget to call body.onload = draw(); -->
+  <!-- <script>
+    let canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+      //if you see this, canvas is working
+      ctx.arc(width / 2, height / 2, 100, 0, 2 * Math.PI);
+      ctx.stroke();
+      requestAnimationFrame(draw);
+    };
+  </script> -->
+</html>
