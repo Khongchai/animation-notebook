@@ -245,8 +245,6 @@
     const points = [];
     const sticks = [];
 
-    const focalLength = 700;
-
     // Data models that are not drawn but are used to keep the tree shape
     const angularConstraintReferences = [];
 
@@ -258,23 +256,6 @@
       x: 0,
       y: 0,
     };
-
-    const particlesArray = [];
-    for (let i = 0; i < 200; i++) {
-      const newParticle = {
-        x: Math.random() * canvas.width - canvas.width / 2,
-        y: Math.random() * -canvas.height * 2,
-        z: Math.random() * 4000,
-        radius: Math.random() * 3 + 2,
-        color: "rgba(240, 94, 27, 0.7)",
-        shadowColor: "rgba(300, 94, 27, 0.9)",
-      };
-      newParticle.initialZ = newParticle.z;
-      newParticle.initialX = newParticle.x;
-      newParticle.initialY = newParticle.y;
-
-      particlesArray.push(newParticle);
-    }
 
     const beginningAngle = -Math.PI / 2;
     const branchSplitRadian = 0.349066;
