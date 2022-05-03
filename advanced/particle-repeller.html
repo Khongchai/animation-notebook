@@ -117,9 +117,16 @@
             // This is the logic of the repeller.
             // The config.mouseSize here is the same logic as the spring distance.
             // Check in particle3.js
-            dist < config.mouseSize
-              ? (force = (dist - config.mouseSize) * dots[j].mass)
-              : (force = dots[i].mass);
+
+            // If bias is not 1, each particle will position itself differently, depends on its radius.
+            const bias = dots[i].radius * 0.1;
+            const mouseSize = config.mouseSize * bias;
+
+            if (dist < mouseSize) {
+              force = (dist - mouseSize) * dots[j].mass;
+            } else {
+              force = dots[i].mass;
+            }
           }
 
           acc.x += dx * force;
