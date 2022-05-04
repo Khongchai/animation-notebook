@@ -105,8 +105,10 @@
           const dist = Math.sqrt(dx * dx + dy * dy) || 1; // Avoid division by zero
 
           const damp = dots[j].mass;
-          // This is the logic of the particle bubble.
-          let force = ((dist - config.sphereRad) / dist) * dots[j].mass;
+          // This is the attraction logic of the particle bubble.
+          // Also how the tiny circles position themselves
+          // let force = ((dist - config.sphereRad) / dist) * damp;
+          let force = 0;
 
           // For how everything else interact with the repeller
           const isTheBigCircle = j === 0;
@@ -119,13 +121,15 @@
             // Check in particle3.js
 
             // If bias is not 1, each particle will position itself differently, depends on its radius.
-            const bias = dots[i].radius * 0.1;
+            // const bias = dots[i].radius * 0.1;
+            const bias = 1;
             const mouseSize = config.mouseSize * bias;
 
             if (dist < mouseSize) {
-              force = (dist - mouseSize) * dots[j].mass;
+              force = (dist - mouseSize) * damp;
             } else {
-              force = dots[i].mass;
+              // force = damp;
+              force = 0;
             }
           }
 
