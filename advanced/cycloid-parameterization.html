@@ -21,23 +21,76 @@
     <div><canvas id="canvas"></canvas></div>
   </body>
   <script>
+    // IMPORTANT: you have to differentiate between drawing the shape of a circle or the path.
+  </script>
+  <script>
     const c = console.log;
   </script>
   <script>
-    function graphCycloid(ctx, baseRadius, beginAngle, endAngle, subdivision) {
+    function traceCycloidPath(
+      currentAngle,
+      nextAngle,
+      radius,
+      baseRadius = 0,
+      rodLength
+    ) {
+      const newRadius = radius + baseRadius;
+
+      const cycloidCenterX = newRadius * Math.cos(currentAngle);
+      const cycloidCenterY = newRadius * Math.sin(currentAngle);
+
+      const rodCenterX =
+        rodLength *
+        Math.cos(currentAngle + (baseRadius / radius) * currentAngle);
+      const rodCenterY =
+        rodLength *
+        Math.cos(currentAngle + (baseRadius / radius) * currentAngle);
+
+      const nextCycloidCenterX = newRadius * Math.cos(nextAngle);
+      const nextCycloidCenterY = newRadius * Math.sin(nextAngle);
+
+      const nextRodCenterX =
+        rodLength * Math.cos(nextAngle + (baseRadius / radius) * nextAngle);
+      const nextRodCenterY =
+        rodLength * Math.cos(nextAngle + (baseRadius / radius) * nextAngle);
+
+      return {
+        currentX: cycloidCenterX + rodCenterX,
+        currentY: cycloidCenterY + rodCenterY,
+        nextX: nextCycloidCenterX + nextRodCenterX,
+        nextY: nextCycloidCenterY + nextRodCenterY,
+      };
+    }
+  </script>
+  <script>
+    function graphCycloid(
+      ctx,
+      baseRadius,
+      beginAngle,
+      endAngle,
+      subdivision,
+      cycloidRadii = [],
+      rodLength
+    ) {
       const points = range(beginAngle, endAngle, subdivision);
       const angleFraction = (endAngle - beginAngle) / points.length;
 
       for (let i = 0; i < points.length; i++) {
         const currentAngle = beginAngle + angleFraction * i;
-        const currentX = baseRadius * Math.cos(currentAngle);
-        const currentY = baseRadius * Math.sin(currentAngle);
-
         const nextAngle = beginAngle + angleFraction * (i + 1);
-        const nextX = baseRadius * Math.cos(nextAngle);
-        const nextY = baseRadius * Math.sin(nextAngle);
 
-        drawLine(ctx, currentX, currentY, nextX, nextY);
+        cycloidRadii.forEach((radius) => {
+          drawLine(
+            ctx,
+            traceCycloidPath(
+              currentAngle,
+              nextAngle,
+              baseRadius,
+              radius,
+              rodLength
+            )
+          );
+        });
       }
     }
 
@@ -51,10 +104,10 @@
       return array;
     }
 
-    function drawLine(ctx, x1, y1, x2, y2) {
+    function drawLine(ctx, { currentX, currentY, nextX, nextY }) {
       ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
+      ctx.moveTo(currentX, currentY);
+      ctx.lineTo(nextX, nextY);
       ctx.stroke();
     }
   </script>
@@ -68,6 +121,6 @@
 
     ctx.translate(width / 2, height / 2);
 
-    graphCycloid(ctx, 200, 0, 2 * Math.PI, 1000);
+    graphCycloid(ctx, 120.4, 0, 100 * Math.PI, 10000, [70.1], 349.75);
   </script>
 </html>
