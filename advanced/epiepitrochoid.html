@@ -31,24 +31,22 @@
     ctx.translate(width / 2, height / 2);
     let previousPoint, currentPoint;
 
-    let timeStep = 0.1;
+    let timeStep = 1;
     let time = 0;
-    const points = 10000;
-
-    const baseCircleRadius = 300;
-    const epitrochoidRadius = 140;
-    const rodLengthScale = 1;
-    const rodLength = epitrochoidRadius * rodLengthScale;
-    const cycloidSpeedScale = 0.4;
-    const clockDirection = "clockwise";
-    const moveOutsideOfParent = false;
+    const points = 1000;
 
     const draw = () => {
       for (let i = 0; i < points; i++) {
-        time += timeStep * 6 * (Math.PI / 180);
+        const baseCircleRadius = 300;
 
+        const epitrochoidRadius = 140;
         const alpha = time;
-        const beta = time * baseCircleRadius * epitrochoidRadius;
+        const beta = time * (baseCircleRadius * epitrochoidRadius);
+
+        const rodLengthScale = 0.5;
+        const rodLength = epitrochoidRadius * rodLengthScale;
+
+        const cycloidSpeedScale = 0.4;
 
         const newPoint = epitrochoid(
           baseCircleRadius,
@@ -56,9 +54,7 @@
           alpha,
           beta,
           rodLength,
-          cycloidSpeedScale,
-          clockDirection,
-          moveOutsideOfParent
+          cycloidSpeedScale
         );
         if (!previousPoint) {
           previousPoint = newPoint;
@@ -66,38 +62,21 @@
           currentPoint = newPoint;
 
           ctx.beginPath();
-          ctx.arc(previousPoint.x, previousPoint.y, 1.5, 0, 2 * Math.PI);
-          // ctx.moveTo(previousPoint.x, previousPoint.y);
-          // ctx.lineTo(currentPoint.x, currentPoint.y);
-          // ctx.stroke();
-          ctx.fill();
+          ctx.moveTo(previousPoint.x, previousPoint.y);
+          ctx.lineTo(currentPoint.x, currentPoint.y);
+          ctx.stroke();
 
           previousPoint = currentPoint;
         }
+
+        time += timeStep * 6 * (Math.PI / 180);
       }
     };
 
-    function epitrochoid(
-      r1,
-      r2,
-      alpha,
-      beta,
-      h,
-      k,
-      clockDirection,
-      outsideOfParent
-    ) {
-      const conditionalXTrig =
-        clockDirection === "counterclockwise" ? Math.cos : Math.sin;
-      const conditionalYTrig =
-        clockDirection === "counterclockwise" ? Math.sin : Math.cos;
-
-      const _r2 = outsideOfParent ? r2 : -r2;
+    function epitrochoid(r1, r2, alpha, beta, h, k) {
       return {
-        x:
-          (r1 + _r2) * conditionalXTrig(alpha * k) + h * Math.cos(alpha + beta),
-        y:
-          (r1 + _r2) * conditionalYTrig(alpha * k) + h * Math.sin(alpha + beta),
+        x: (r1 + r2) * Math.cos(alpha) + h * Math.cos((alpha + beta) * k),
+        y: (r1 + r2) * Math.sin(alpha) + h * Math.sin((alpha + beta) * k),
       };
     }
   </script>
