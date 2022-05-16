@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      html,
+      body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <div><canvas id="canvas"></canvas></div>
+  </body>
+  <script>
+    let canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+    ctx.strokeStyle = "black";
+    ctx.translate(width / 2, height / 2);
+    let previousPoint, currentPoint;
+
+    let timeStep = 1;
+    let time = 0;
+    const points = 4000;
+
+    const draw = () => {
+      for (let i = 0; i < points; i++) {
+        const baseCircleRadius = 300;
+
+        const epitrochoidRadius = 140;
+        const alpha = time;
+        const beta = time * (baseCircleRadius * epitrochoidRadius);
+
+        const rodLengthScale = 1;
+        const rodLength = epitrochoidRadius * rodLengthScale;
+
+        const newPoint = epitrochoid(
+          baseCircleRadius,
+          epitrochoidRadius,
+          alpha,
+          beta,
+          rodLength
+        );
+        if (!previousPoint) {
+          previousPoint = newPoint;
+        } else {
+          currentPoint = newPoint;
+
+          ctx.beginPath();
+          ctx.moveTo(previousPoint.x, previousPoint.y);
+          ctx.lineTo(currentPoint.x, currentPoint.y);
+          ctx.stroke();
+
+          previousPoint = currentPoint;
+        }
+
+        time += timeStep * 6 * (Math.PI / 180);
+      }
+    };
+
+    function epitrochoid(r1, r2, alpha, beta, h) {
+      return {
+        x: (r1 + r2) * Math.cos(alpha) + h * Math.cos((alpha + beta) * 1.02),
+        y: (r1 + r2) * Math.sin(alpha) + h * Math.sin((alpha + beta) * 1.02),
+      };
+    }
+  </script>
+  <script>
+    draw();
+  </script>
+</html>
