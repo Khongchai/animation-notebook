@@ -46,12 +46,15 @@
         const rodLengthScale = 1;
         const rodLength = epitrochoidRadius * rodLengthScale;
 
+        const cycloidSpeedScale = 1.35;
+
         const newPoint = epitrochoid(
           baseCircleRadius,
           epitrochoidRadius,
           alpha,
           beta,
-          rodLength
+          rodLength,
+          cycloidSpeedScale
         );
         if (!previousPoint) {
           previousPoint = newPoint;
@@ -70,10 +73,10 @@
       }
     };
 
-    function epitrochoid(r1, r2, alpha, beta, h) {
+    function epitrochoid(r1, r2, alpha, beta, h, k) {
       return {
-        x: (r1 + r2) * Math.cos(alpha) + h * Math.cos((alpha + beta) * 1.02),
-        y: (r1 + r2) * Math.sin(alpha) + h * Math.sin((alpha + beta) * 1.02),
+        x: (r1 + r2) * Math.cos(alpha) + h * Math.cos((alpha + beta) * k),
+        y: (r1 + r2) * Math.sin(alpha) + h * Math.sin((alpha + beta) * k),
       };
     }
   </script>
