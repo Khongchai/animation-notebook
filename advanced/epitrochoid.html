@@ -23,8 +23,8 @@
   <script>
     function epitrochoid(r1, r2, h, alpha, beta) {
       return {
-        x: (r1 + r2) * Math.cos(alpha) + h * Math.cos(alpha + beta),
-        y: (r1 + r2) * Math.sin(alpha) + h * Math.sin(alpha + beta),
+        x: (r1 + r2) * Math.cos(alpha) + h * Math.cos(beta),
+        y: (r1 + r2) * Math.sin(alpha) + h * Math.sin(beta),
       };
     }
   </script>
@@ -39,14 +39,14 @@
     canvas.width = width;
     canvas.height = height;
     ctx.translate(width / 2, height / 2);
-    ctx.scale(0.4, 0.4);
+    ctx.scale(0.6, 0.6);
 
     ctx.strokeStyle = "black";
 
     // Speed scale of 1 means the inner cycloid will cover the same distance regardless of its radius.
     // Corresponds to global animation speed
     // These two variables controls how far the points are distributed from one another
-    const timeStepScalar = 1;
+    const timeStepScalar = 10;
     const step = timeStepScalar * ((Math.PI * 2) / 60);
 
     const points = 1000;
@@ -59,13 +59,19 @@
     };
 
     const r1 = 300;
-    const r2 = 300;
+    const r2 = 140;
     const rodLengthScale = 1;
     const rodLength = rodLengthScale * r2;
   </script>
   <script>
     const draw = () => {
+      ctx.clearRect(-width / 2, -height / 2, width, height);
       let alpha = 0;
+      // Corresponds to the local cycloid speed scale
+      // It is alpha because when you adjust the cycloidSPeedScale,
+      // you are moving the cycloid around the circle faster,
+      // so that's like moving the alpha, not the beta
+      const alphaScale = 1.21; // beta is going to be equals to this times alpha
 
       for (let _ = 0; _ < points; _++) {
         alpha += step;
@@ -74,8 +80,8 @@
           r1,
           r2,
           rodLength,
-          alpha,
-          (alpha * r1) / r2
+          alpha * alphaScale,
+          alpha
         );
         if (!previousPoints) {
           previousPoints = newPoint;
