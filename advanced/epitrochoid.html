@@ -21,10 +21,13 @@
     <div><canvas id="canvas"></canvas></div>
   </body>
   <script>
-    function epitrochoid(r1, r2, h, alpha, beta) {
+    function epitrochoid(r1, r2, h, alpha, beta, rotationDirection) {
+      const isClockwise = rotationDirection === "clockwise";
+      const xTrig = isClockwise ? Math.sin : Math.cos;
+      const yTrig = isClockwise ? Math.cos : Math.sin;
       return {
-        x: (r1 + r2) * Math.cos(alpha) + h * Math.cos(beta),
-        y: (r1 + r2) * Math.sin(alpha) + h * Math.sin(beta),
+        x: (r1 + r2) * xTrig(alpha) + h * Math.cos(beta),
+        y: (r1 + r2) * yTrig(alpha) + h * Math.sin(beta),
       };
     }
   </script>
@@ -46,7 +49,7 @@
     // Speed scale of 1 means the inner cycloid will cover the same distance regardless of its radius.
     // Corresponds to global animation speed
     // These two variables controls how far the points are distributed from one another
-    const timeStepScalar = 10;
+    const timeStepScalar = 1;
     const step = timeStepScalar * ((Math.PI * 2) / 60);
 
     const points = 1000;
@@ -60,7 +63,8 @@
 
     const r1 = 300;
     const r2 = 140;
-    const rodLengthScale = 1;
+    const rotationDirection = "clockwise";
+    const rodLengthScale = 0.5;
     const rodLength = rodLengthScale * r2;
   </script>
   <script>
@@ -71,7 +75,7 @@
       // It is alpha because when you adjust the cycloidSPeedScale,
       // you are moving the cycloid around the circle faster,
       // so that's like moving the alpha, not the beta
-      const alphaScale = 1.21; // beta is going to be equals to this times alpha
+      const alphaScale = 0.4; // beta is going to be equals to this times alpha
 
       for (let _ = 0; _ < points; _++) {
         alpha += step;
@@ -81,7 +85,8 @@
           r2,
           rodLength,
           alpha * alphaScale,
-          alpha
+          alpha,
+          rotationDirection
         );
         if (!previousPoints) {
           previousPoints = newPoint;
