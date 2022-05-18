@@ -79,9 +79,8 @@
     canvas.width = width;
     canvas.height = height;
     ctx.translate(width / 2, height / 2);
-    ctx.scale(0.6, 0.6);
-
-    ctx.strokeStyle = "black";
+    ctx.fillRect(-width / 2, -height / 2, width, height);
+    ctx.scale(0.35, 0.35);
 
     // Speed scale of 1 means the inner cycloid will cover the same distance regardless of its radius.
     // Corresponds to global animation speed
@@ -98,14 +97,14 @@
       y: 0,
     };
 
-    const r0 = 300;
-    const r1 = 140;
+    const r0 = 400;
+    const r1 = 120;
     const r2 = 100;
-    const r3 = 80.51;
-    const r2RotationDirection = "counterClockwise";
+    const r3 = 123.51;
+    const r2RotationDirection = "clockwise";
     const r1RotationDirection = "counterClockwise";
-    const r0RotationDirection = "clockwise";
-    const rodLengthScale = 0.46;
+    const r0RotationDirection = "counterClockwise";
+    const rodLengthScale = 0.86;
     const rodLength = rodLengthScale * r3;
     const r1OutsideOfParent = true;
     const r2OutsideOfParent = true;
@@ -113,10 +112,9 @@
   </script>
   <script>
     const draw = () => {
-      ctx.clearRect(-width / 2, -height / 2, width, height);
       let theta = 0;
-      const betaScale = 0.4;
-      const gammaScale = 0.9;
+      const betaScale = 0.69;
+      const gammaScale = 1;
       const deltaScale = 1;
 
       for (let _ = 0; _ < points; _++) {
@@ -146,6 +144,7 @@
           ctx.beginPath();
           ctx.moveTo(previousPoints.x, previousPoints.y);
           ctx.lineTo(currentPoint.x, currentPoint.y);
+          ctx.strokeStyle = "pink";
           ctx.stroke();
 
           previousPoints = currentPoint;
