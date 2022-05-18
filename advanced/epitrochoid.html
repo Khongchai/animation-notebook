@@ -21,13 +21,24 @@
     <div><canvas id="canvas"></canvas></div>
   </body>
   <script>
-    function epitrochoid(r1, r2, h, alpha, beta, rotationDirection) {
+    function epitrochoid(
+      r1,
+      r2,
+      h,
+      alpha,
+      beta,
+      rotationDirection,
+      moveOutsideOfParent
+    ) {
       const isClockwise = rotationDirection === "clockwise";
       const xTrig = isClockwise ? Math.sin : Math.cos;
       const yTrig = isClockwise ? Math.cos : Math.sin;
+
+      const _r2 = moveOutsideOfParent ? r2 : -r2;
+
       return {
-        x: (r1 + r2) * xTrig(alpha) + h * Math.cos(beta),
-        y: (r1 + r2) * yTrig(alpha) + h * Math.sin(beta),
+        x: (r1 + _r2) * xTrig(alpha) + h * Math.cos(beta),
+        y: (r1 + _r2) * yTrig(alpha) + h * Math.sin(beta),
       };
     }
   </script>
@@ -42,7 +53,7 @@
     canvas.width = width;
     canvas.height = height;
     ctx.translate(width / 2, height / 2);
-    ctx.scale(0.6, 0.6);
+    ctx.scale(0.3, 0.3);
 
     ctx.strokeStyle = "black";
 
@@ -63,9 +74,10 @@
 
     const r1 = 300;
     const r2 = 140;
-    const rotationDirection = "clockwise";
-    const rodLengthScale = 0.5;
+    const rotationDirection = "counterClockwise";
+    const rodLengthScale = 3.9;
     const rodLength = rodLengthScale * r2;
+    const moveOutsideOfParent = true;
   </script>
   <script>
     const draw = () => {
@@ -75,7 +87,7 @@
       // It is alpha because when you adjust the cycloidSPeedScale,
       // you are moving the cycloid around the circle faster,
       // so that's like moving the alpha, not the beta
-      const alphaScale = 0.4; // beta is going to be equals to this times alpha
+      const alphaScale = 4.44; // beta is going to be equals to this times alpha
 
       for (let _ = 0; _ < points; _++) {
         alpha += step;
@@ -86,7 +98,8 @@
           rodLength,
           alpha * alphaScale,
           alpha,
-          rotationDirection
+          rotationDirection,
+          moveOutsideOfParent
         );
         if (!previousPoints) {
           previousPoints = newPoint;
