@@ -1,0 +1,138 @@
+<!-- TODO -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      html,
+      body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <div><canvas id="canvas"></canvas></div>
+  </body>
+  <script>
+    function epiepitrochoid(
+      r1,
+      r2,
+      r3,
+      h,
+      alpha,
+      beta,
+      gamma,
+      rotationDirection,
+      parentRotationDirection,
+      moveOutsideOfParent,
+      parentOutsideOfGrandParent
+    ) {
+      const isClockwise = rotationDirection === "clockwise";
+      const xTrig = isClockwise ? Math.sin : Math.cos;
+      const yTrig = isClockwise ? Math.cos : Math.sin;
+
+      const isParentClockwise = parentRotationDirection == "clockwise";
+      const parentXTrig = isParentClockwise ? Math.sin : Math.cos;
+      const parentYTrig = isParentClockwise ? Math.cos : Math.sin;
+
+      //TODO r2OutsideOfParent and r3OutsideOfParent
+      const _r2 = moveOutsideOfParent ? r2 : -r2;
+      const _r3 = parentOutsideOfGrandParent ? r3 : -r3;
+
+      return {
+        x:
+          (r1 + _r2) * parentXTrig(alpha) +
+          (r2 + _r3) * xTrig(beta) +
+          h * Math.cos(gamma),
+        y:
+          (r1 + _r2) * parentYTrig(alpha) +
+          (r2 + _r3) * yTrig(beta) +
+          h * Math.sin(gamma),
+      };
+    }
+  </script>
+  <script>
+    let canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+    ctx.translate(width / 2, height / 2);
+    ctx.scale(0.6, 0.6);
+
+    ctx.strokeStyle = "black";
+
+    // Speed scale of 1 means the inner cycloid will cover the same distance regardless of its radius.
+    // Corresponds to global animation speed
+    // These two variables controls how far the points are distributed from one another
+    const timeStepScalar = 1;
+    const step = timeStepScalar * ((Math.PI * 2) / 60);
+
+    const points = 8000;
+
+    let previousPoints = null;
+
+    let currentPoint = {
+      x: 0,
+      y: 0,
+    };
+
+    const r1 = 300;
+    const r2 = 140;
+    const r3 = 80;
+    const rotationDirection = "counterClockwise";
+    const parentRotationDirection = "clockwise";
+    const rodLengthScale = 4;
+    const rodLength = rodLengthScale * r3;
+    const moveOutsideOfParent = true;
+    const parentOutsideOfGrandParent = true;
+  </script>
+  <script>
+    const draw = () => {
+      ctx.clearRect(-width / 2, -height / 2, width, height);
+      let theta = 0;
+      const betaScale = 0.13;
+      const gammaScale = 0.63;
+
+      for (let _ = 0; _ < points; _++) {
+        theta += step;
+
+        const newPoint = epiepitrochoid(
+          r1,
+          r2,
+          r3,
+          rodLength,
+          theta * betaScale,
+          theta * gammaScale,
+          theta,
+          rotationDirection,
+          parentRotationDirection,
+          moveOutsideOfParent,
+          parentOutsideOfGrandParent
+        );
+        if (!previousPoints) {
+          previousPoints = newPoint;
+        } else {
+          currentPoint = newPoint;
+          ctx.beginPath();
+          ctx.moveTo(previousPoints.x, previousPoints.y);
+          ctx.lineTo(currentPoint.x, currentPoint.y);
+          ctx.stroke();
+
+          previousPoints = currentPoint;
+        }
+      }
+    };
+
+    draw();
+  </script>
+</html>
