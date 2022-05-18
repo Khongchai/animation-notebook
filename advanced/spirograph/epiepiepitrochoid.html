@@ -22,6 +22,10 @@
     <div><canvas id="canvas"></canvas></div>
   </body>
   <script>
+    const getXTrig = (rotationDirection) =>
+      rotationDirection === "clockwise" ? Math.sin : Math.cos;
+    const getYTrig = (rotationDirection) =>
+      rotationDirection === "clockwise" ? Math.cos : Math.sin;
     // No r3RotationDirection because remember, for our cycloid model,
     // the speed of the cycloid itself is constant.
     function epiepitrochoid(
@@ -41,17 +45,14 @@
       r2OutsideOfParent,
       r3OutsideOfParent
     ) {
-      const isR2Clockwise = r2RotationDirection === "clockwise";
-      const r2XTrig = isR2Clockwise ? Math.sin : Math.cos;
-      const r2YTrig = isR2Clockwise ? Math.cos : Math.sin;
+      const r2XTrig = getXTrig(r2RotationDirection);
+      const r2YTrig = getYTrig(r2RotationDirection);
 
-      const isR1Clockwise = r1RotationDirection === "clockwise";
-      const r1XTrig = isR1Clockwise ? Math.sin : Math.cos;
-      const r1YTrig = isR1Clockwise ? Math.cos : Math.sin;
+      const r1XTrig = getXTrig(r1RotationDirection);
+      const r1YTrig = getYTrig(r1RotationDirection);
 
-      const isR0Clockwise = r0RotationDirection == "clockwise";
-      const r0XTrig = isR0Clockwise ? Math.sin : Math.cos;
-      const r0YTrig = isR0Clockwise ? Math.cos : Math.sin;
+      const r0XTrig = getXTrig(r0RotationDirection);
+      const r0YTrig = getYTrig(r0RotationDirection);
 
       const _r1 = r1OutsideOfParent ? r1 : -r1;
       const _r2 = r2OutsideOfParent ? r2 : -r2;
