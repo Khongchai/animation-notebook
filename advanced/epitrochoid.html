@@ -43,9 +43,6 @@
     }
   </script>
   <script>
-    //TODO redo and go from just a simple circle.
-    // Then do whatever it takes to match 100%
-
     let canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
     var width = window.innerWidth;
@@ -53,7 +50,7 @@
     canvas.width = width;
     canvas.height = height;
     ctx.translate(width / 2, height / 2);
-    ctx.scale(0.3, 0.3);
+    ctx.scale(0.7, 0.7);
 
     ctx.strokeStyle = "black";
 
@@ -63,7 +60,7 @@
     const timeStepScalar = 1;
     const step = timeStepScalar * ((Math.PI * 2) / 60);
 
-    const points = 1000;
+    const points = 3000;
 
     let previousPoints = null;
 
@@ -75,29 +72,28 @@
     const r1 = 300;
     const r2 = 140;
     const rotationDirection = "counterClockwise";
-    const rodLengthScale = 3.9;
+    const rodLengthScale = 1.1;
     const rodLength = rodLengthScale * r2;
-    const moveOutsideOfParent = true;
+    const moveOutsideOfParent = false;
   </script>
   <script>
     const draw = () => {
       ctx.clearRect(-width / 2, -height / 2, width, height);
-      let alpha = 0;
+      let theta = 0;
       // Corresponds to the local cycloid speed scale
       // It is alpha because when you adjust the cycloidSPeedScale,
       // you are moving the cycloid around the circle faster,
-      // so that's like moving the alpha, not the beta
-      const alphaScale = 4.44; // beta is going to be equals to this times alpha
+      const betaScale = 0.93; // beta is going to be equals to this times theta
 
       for (let _ = 0; _ < points; _++) {
-        alpha += step;
+        theta += step;
 
         const newPoint = epitrochoid(
           r1,
           r2,
           rodLength,
-          alpha * alphaScale,
-          alpha,
+          theta * betaScale,
+          theta,
           rotationDirection,
           moveOutsideOfParent
         );

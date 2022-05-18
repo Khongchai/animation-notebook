@@ -21,66 +21,106 @@
     <div><canvas id="canvas"></canvas></div>
   </body>
   <script>
+    function epitrochoid(
+      r1,
+      r2,
+      r3,
+      h,
+      alpha,
+      beta,
+      gamma,
+      rotationDirection,
+      moveOutsideOfParent
+    ) {
+      const isClockwise = rotationDirection === "clockwise";
+      const xTrig = isClockwise ? Math.sin : Math.cos;
+      const yTrig = isClockwise ? Math.cos : Math.sin;
+
+      //TODO r2OutsideOfParent and r3OutsideOfParent
+      const _r2 = moveOutsideOfParent ? r2 : -r2;
+
+      return {
+        x:
+          (r1 + _r2) * xTrig(alpha) +
+          (r2 + r3) * Math.cos(beta) +
+          h * Math.cos(gamma),
+        y:
+          (r1 + _r2) * yTrig(alpha) +
+          (r2 + r3) * Math.sin(beta) +
+          h * Math.sin(gamma),
+      };
+    }
+  </script>
+  <script>
     let canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
     var width = window.innerWidth;
     var height = window.innerHeight;
     canvas.width = width;
     canvas.height = height;
-    ctx.strokeStyle = "black";
     ctx.translate(width / 2, height / 2);
-    let previousPoint, currentPoint;
+    ctx.scale(0.6, 0.6);
 
-    let timeStep = 1;
-    let time = 0;
-    const points = 1000;
+    ctx.strokeStyle = "black";
 
+    // Speed scale of 1 means the inner cycloid will cover the same distance regardless of its radius.
+    // Corresponds to global animation speed
+    // These two variables controls how far the points are distributed from one another
+    const timeStepScalar = 1;
+    const step = timeStepScalar * ((Math.PI * 2) / 60);
+
+    const points = 3000;
+
+    let previousPoints = null;
+
+    let currentPoint = {
+      x: 0,
+      y: 0,
+    };
+
+    const r1 = 300;
+    const r2 = 140;
+    const r3 = 70;
+    const rotationDirection = "counterClockwise";
+    const rodLengthScale = 1;
+    const rodLength = rodLengthScale * r3;
+    const moveOutsideOfParent = true;
+  </script>
+  <script>
     const draw = () => {
-      for (let i = 0; i < points; i++) {
-        const baseCircleRadius = 300;
+      ctx.clearRect(-width / 2, -height / 2, width, height);
+      let theta = 0;
+      const betaScale = 0.4;
+      const gammaScale = 0.5;
 
-        const epitrochoidRadius = 140;
-        const alpha = time;
-        const beta = time * (baseCircleRadius * epitrochoidRadius);
-
-        const rodLengthScale = 0.5;
-        const rodLength = epitrochoidRadius * rodLengthScale;
-
-        const cycloidSpeedScale = 0.4;
+      for (let _ = 0; _ < points; _++) {
+        theta += step;
 
         const newPoint = epitrochoid(
-          baseCircleRadius,
-          epitrochoidRadius,
-          alpha,
-          beta,
+          r1,
+          r2,
+          r3,
           rodLength,
-          cycloidSpeedScale
+          theta * betaScale,
+          theta * gammaScale,
+          theta,
+          rotationDirection,
+          moveOutsideOfParent
         );
-        if (!previousPoint) {
-          previousPoint = newPoint;
+        if (!previousPoints) {
+          previousPoints = newPoint;
         } else {
           currentPoint = newPoint;
-
           ctx.beginPath();
-          ctx.moveTo(previousPoint.x, previousPoint.y);
+          ctx.moveTo(previousPoints.x, previousPoints.y);
           ctx.lineTo(currentPoint.x, currentPoint.y);
           ctx.stroke();
 
-          previousPoint = currentPoint;
+          previousPoints = currentPoint;
         }
-
-        time += timeStep * 6 * (Math.PI / 180);
       }
     };
 
-    function epitrochoid(r1, r2, alpha, beta, h, k) {
-      return {
-        x: (r1 + r2) * Math.cos(alpha) + h * Math.cos((alpha + beta) * k),
-        y: (r1 + r2) * Math.sin(alpha) + h * Math.sin((alpha + beta) * k),
-      };
-    }
-  </script>
-  <script>
     draw();
   </script>
 </html>
