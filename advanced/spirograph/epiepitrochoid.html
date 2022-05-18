@@ -42,7 +42,6 @@
       const parentXTrig = isParentClockwise ? Math.sin : Math.cos;
       const parentYTrig = isParentClockwise ? Math.cos : Math.sin;
 
-      //TODO r2OutsideOfParent and r3OutsideOfParent
       const _r2 = moveOutsideOfParent ? r2 : -r2;
       const _r3 = parentOutsideOfGrandParent ? r3 : -r3;
 
@@ -87,10 +86,10 @@
 
     const r1 = 300;
     const r2 = 140;
-    const r3 = 80;
+    const r3 = 100;
     const rotationDirection = "counterClockwise";
     const parentRotationDirection = "clockwise";
-    const rodLengthScale = 4;
+    const rodLengthScale = 0.8;
     const rodLength = rodLengthScale * r3;
     const moveOutsideOfParent = true;
     const parentOutsideOfGrandParent = true;
@@ -99,8 +98,8 @@
     const draw = () => {
       ctx.clearRect(-width / 2, -height / 2, width, height);
       let theta = 0;
-      const betaScale = 0.13;
-      const gammaScale = 0.63;
+      const betaScale = 0.4;
+      const gammaScale = 0.9;
 
       for (let _ = 0; _ < points; _++) {
         theta += step;

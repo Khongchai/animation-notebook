@@ -22,7 +22,10 @@
     <div><canvas id="canvas"></canvas></div>
   </body>
   <script>
+    // No r3RotationDirection because remember, for our cycloid model,
+    // the speed of the cycloid itself is constant.
     function epiepitrochoid(
+      r0,
       r1,
       r2,
       r3,
@@ -30,32 +33,41 @@
       alpha,
       beta,
       gamma,
-      rotationDirection,
-      parentRotationDirection,
-      moveOutsideOfParent,
-      parentOutsideOfGrandParent
+      delta,
+      r0RotationDirection,
+      r1RotationDirection,
+      r2RotationDirection,
+      r1OutsideOfParent,
+      r2OutsideOfParent,
+      r3OutsideOfParent
     ) {
-      const isClockwise = rotationDirection === "clockwise";
-      const xTrig = isClockwise ? Math.sin : Math.cos;
-      const yTrig = isClockwise ? Math.cos : Math.sin;
+      const isR2Clockwise = r2RotationDirection === "clockwise";
+      const r2XTrig = isR2Clockwise ? Math.sin : Math.cos;
+      const r2YTrig = isR2Clockwise ? Math.cos : Math.sin;
 
-      const isParentClockwise = parentRotationDirection == "clockwise";
-      const parentXTrig = isParentClockwise ? Math.sin : Math.cos;
-      const parentYTrig = isParentClockwise ? Math.cos : Math.sin;
+      const isR1Clockwise = r1RotationDirection === "clockwise";
+      const r1XTrig = isR1Clockwise ? Math.sin : Math.cos;
+      const r1YTrig = isR1Clockwise ? Math.cos : Math.sin;
 
-      //TODO r2OutsideOfParent and r3OutsideOfParent
-      const _r2 = moveOutsideOfParent ? r2 : -r2;
-      const _r3 = parentOutsideOfGrandParent ? r3 : -r3;
+      const isR0Clockwise = r0RotationDirection == "clockwise";
+      const r0XTrig = isR0Clockwise ? Math.sin : Math.cos;
+      const r0YTrig = isR0Clockwise ? Math.cos : Math.sin;
+
+      const _r1 = r1OutsideOfParent ? r1 : -r1;
+      const _r2 = r2OutsideOfParent ? r2 : -r2;
+      const _r3 = r3OutsideOfParent ? r3 : -r3;
 
       return {
         x:
-          (r1 + _r2) * parentXTrig(alpha) +
-          (r2 + _r3) * xTrig(beta) +
-          h * Math.cos(gamma),
+          (r0 + _r1) * r0XTrig(alpha) +
+          (r1 + _r2) * r1XTrig(beta) +
+          (r2 + _r3) * r2XTrig(gamma) +
+          h * Math.cos(delta),
         y:
-          (r1 + _r2) * parentYTrig(alpha) +
-          (r2 + _r3) * yTrig(beta) +
-          h * Math.sin(gamma),
+          (r0 + _r1) * r0YTrig(alpha) +
+          (r1 + _r2) * r1YTrig(beta) +
+          (r2 + _r3) * r2YTrig(gamma) +
+          h * Math.sin(delta),
       };
     }
   </script>
@@ -86,38 +98,46 @@
       y: 0,
     };
 
-    const r1 = 300;
-    const r2 = 140;
-    const r3 = 80;
-    const rotationDirection = "counterClockwise";
-    const parentRotationDirection = "clockwise";
-    const rodLengthScale = 4;
+    const r0 = 300;
+    const r1 = 140;
+    const r2 = 100;
+    const r3 = 80.51;
+    const r2RotationDirection = "counterClockwise";
+    const r1RotationDirection = "counterClockwise";
+    const r0RotationDirection = "clockwise";
+    const rodLengthScale = 0.46;
     const rodLength = rodLengthScale * r3;
-    const moveOutsideOfParent = true;
-    const parentOutsideOfGrandParent = true;
+    const r1OutsideOfParent = true;
+    const r2OutsideOfParent = true;
+    const r3OutsideOfParent = true;
   </script>
   <script>
     const draw = () => {
       ctx.clearRect(-width / 2, -height / 2, width, height);
       let theta = 0;
-      const betaScale = 0.13;
-      const gammaScale = 0.63;
+      const betaScale = 0.4;
+      const gammaScale = 0.9;
+      const deltaScale = 1;
 
       for (let _ = 0; _ < points; _++) {
         theta += step;
 
         const newPoint = epiepitrochoid(
+          r0,
           r1,
           r2,
           r3,
           rodLength,
           theta * betaScale,
           theta * gammaScale,
+          theta * deltaScale,
           theta,
-          rotationDirection,
-          parentRotationDirection,
-          moveOutsideOfParent,
-          parentOutsideOfGrandParent
+          r0RotationDirection,
+          r1RotationDirection,
+          r2RotationDirection,
+          r1OutsideOfParent,
+          r2OutsideOfParent,
+          r3OutsideOfParent
         );
         if (!previousPoints) {
           previousPoints = newPoint;
