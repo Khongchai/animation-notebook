@@ -28,24 +28,30 @@
       rotationDirection === "clockwise" ? Math.cos : Math.sin;
     // No r3RotationDirection because remember, for our cycloid model,
     // the speed of the cycloid itself is constant.
-    function epiepitrochoid(
+    function epi4trochoid(
       r0,
       r1,
       r2,
       r3,
+      r4,
       h,
       alpha,
       beta,
       gamma,
       delta,
+      epsilon,
       r0RotationDirection,
       r1RotationDirection,
       r2RotationDirection,
+      r3RotationDirection,
       r1OutsideOfParent,
       r2OutsideOfParent,
-      r3OutsideOfParent
+      r3OutsideOfParent,
+      r4OutsideOfParent
     ) {
-      // For the real thing, these conditional functions are better off being pre-computed.
+      const r3XTrig = getXTrig(r3RotationDirection);
+      const r3YTrig = getYTrig(r3RotationDirection);
+
       const r2XTrig = getXTrig(r2RotationDirection);
       const r2YTrig = getYTrig(r2RotationDirection);
 
@@ -58,17 +64,20 @@
       const _r1 = r1OutsideOfParent ? r1 : -r1;
       const _r2 = r2OutsideOfParent ? r2 : -r2;
       const _r3 = r3OutsideOfParent ? r3 : -r3;
+      const _r4 = r4OutsideOfParent ? r4 : -r4;
 
       return {
         x:
           (r0 + _r1) * r0XTrig(alpha) +
           (r1 + _r2) * r1XTrig(beta) +
           (r2 + _r3) * r2XTrig(gamma) +
+          (r3 + _r4) * r3XTrig(epsilon) +
           h * Math.cos(delta),
         y:
           (r0 + _r1) * r0YTrig(alpha) +
           (r1 + _r2) * r1YTrig(beta) +
           (r2 + _r3) * r2YTrig(gamma) +
+          (r3 + _r4) * r3YTrig(epsilon) +
           h * Math.sin(delta),
       };
     }
@@ -87,10 +96,10 @@
     // Speed scale of 1 means the inner cycloid will cover the same distance regardless of its radius.
     // Corresponds to global animation speed
     // These two variables controls how far the points are distributed from one another
-    const timeStepScalar = 1;
+    const timeStepScalar = 0.5;
     const step = timeStepScalar * ((Math.PI * 2) / 60);
 
-    const points = 8000;
+    const points = 20000;
 
     let previousPoints = null;
 
@@ -99,45 +108,53 @@
       y: 0,
     };
 
-    const r0 = 400;
-    const r1 = 120;
-    const r2 = 100;
-    const r3 = 123.51;
+    const r0 = 500;
+    const r1 = 100;
+    const r2 = 200;
+    const r3 = 100;
+    const r4 = 100;
+    const r3RotationDirection = "counterClockwise";
     const r2RotationDirection = "clockwise";
     const r1RotationDirection = "counterClockwise";
     const r0RotationDirection = "counterClockwise";
-    const rodLengthScale = 0.86;
-    const rodLength = rodLengthScale * r3;
+    const rodLengthScale = 1;
+    const rodLength = rodLengthScale * r4;
     const r1OutsideOfParent = true;
     const r2OutsideOfParent = true;
     const r3OutsideOfParent = true;
+    const r4OutsideOfParent = false;
   </script>
   <script>
     const draw = () => {
       let theta = 0;
-      const betaScale = 0.69;
-      const gammaScale = 1;
-      const deltaScale = 1;
+      const betaScale = 1.101;
+      const gammaScale = 2.101;
+      const deltaScale = 3.101;
+      const epsilonScale = 4.101;
 
       for (let _ = 0; _ < points; _++) {
         theta += step;
 
-        const newPoint = epiepitrochoid(
+        const newPoint = epi4trochoid(
           r0,
           r1,
           r2,
           r3,
+          r4,
           rodLength,
           theta * betaScale,
           theta * gammaScale,
           theta * deltaScale,
+          theta * epsilonScale,
           theta,
           r0RotationDirection,
           r1RotationDirection,
           r2RotationDirection,
+          r3RotationDirection,
           r1OutsideOfParent,
           r2OutsideOfParent,
-          r3OutsideOfParent
+          r3OutsideOfParent,
+          r4OutsideOfParent
         );
         if (!previousPoints) {
           previousPoints = newPoint;
