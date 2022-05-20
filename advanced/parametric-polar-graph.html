@@ -30,9 +30,9 @@
           return t;
         },
         function (t) {
-          return 200 * Math.sin(t / 1.2);
+          return 200 * Math.acos(Math.cos(t / 1.1));
         },
-        range(0, 500, 800)
+        range(0, 500, 2000)
       );
     };
 

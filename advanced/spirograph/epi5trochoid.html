@@ -71,14 +71,14 @@
           (r0 + _r1) * r0XTrig(alpha) +
           (r1 + _r2) * r1XTrig(beta) +
           (r2 + _r3) * r2XTrig(gamma) +
-          (r3 + _r4) * r3XTrig(delta) +
-          h * Math.cos(epsilon),
+          (r3 + _r4) * r3XTrig(epsilon) +
+          h * Math.cos(delta),
         y:
           (r0 + _r1) * r0YTrig(alpha) +
           (r1 + _r2) * r1YTrig(beta) +
           (r2 + _r3) * r2YTrig(gamma) +
           (r3 + _r4) * r3YTrig(epsilon) +
-          h * Math.sin(epsilon),
+          h * Math.sin(delta),
       };
     }
   </script>
@@ -96,10 +96,10 @@
     // Speed scale of 1 means the inner cycloid will cover the same distance regardless of its radius.
     // Corresponds to global animation speed
     // These two variables controls how far the points are distributed from one another
-    const timeStepScalar = 0.3;
+    const timeStepScalar = 0.5;
     const step = timeStepScalar * ((Math.PI * 2) / 60);
 
-    const points = 100;
+    const points = 20000;
 
     let previousPoints = null;
 
@@ -109,10 +109,10 @@
     };
 
     const r0 = 500;
-    const r1 = 50;
+    const r1 = 100;
     const r2 = 200;
     const r3 = 100;
-    const r4 = 150;
+    const r4 = 100;
     const r3RotationDirection = "counterClockwise";
     const r2RotationDirection = "clockwise";
     const r1RotationDirection = "counterClockwise";
@@ -122,15 +122,15 @@
     const r1OutsideOfParent = true;
     const r2OutsideOfParent = true;
     const r3OutsideOfParent = true;
-    const r4OutsideOfParent = true;
+    const r4OutsideOfParent = false;
   </script>
   <script>
     const draw = () => {
       let theta = 0;
-      const betaScale = 1.2;
-      const gammaScale = 5;
-      const deltaScale = 4.11;
-      const epsilonScale = 1;
+      const betaScale = 1.101;
+      const gammaScale = 2.101;
+      const deltaScale = 3.101;
+      const epsilonScale = 4.101;
 
       for (let _ = 0; _ < points; _++) {
         theta += step;
