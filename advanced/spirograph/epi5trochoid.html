@@ -28,27 +28,34 @@
       rotationDirection === "clockwise" ? Math.cos : Math.sin;
     // No r3RotationDirection because remember, for our cycloid model,
     // the speed of the cycloid itself is constant.
-    function epi4trochoid(
+    function epi5trochoid(
       r0,
       r1,
       r2,
       r3,
       r4,
+      r5,
       h,
       alpha,
       beta,
       gamma,
       delta,
       epsilon,
+      zeta,
       r0RotationDirection,
       r1RotationDirection,
       r2RotationDirection,
       r3RotationDirection,
+      r4RotationDirection,
       r1OutsideOfParent,
       r2OutsideOfParent,
       r3OutsideOfParent,
-      r4OutsideOfParent
+      r4OutsideOfParent,
+      r5OutsideOfParent
     ) {
+      const r4XTrig = getXTrig(r4RotationDirection);
+      const r4YTrig = getYTrig(r4RotationDirection);
+
       const r3XTrig = getXTrig(r3RotationDirection);
       const r3YTrig = getYTrig(r3RotationDirection);
 
@@ -65,20 +72,23 @@
       const _r2 = r2OutsideOfParent ? r2 : -r2;
       const _r3 = r3OutsideOfParent ? r3 : -r3;
       const _r4 = r4OutsideOfParent ? r4 : -r4;
+      const _r5 = r5OutsideOfParent ? r5 : -r5;
 
       return {
         x:
           (r0 + _r1) * r0XTrig(alpha) +
           (r1 + _r2) * r1XTrig(beta) +
           (r2 + _r3) * r2XTrig(gamma) +
-          (r3 + _r4) * r3XTrig(epsilon) +
-          h * Math.cos(delta),
+          (r3 + _r4) * r3XTrig(delta) +
+          (r4 + _r5) * r4XTrig(epsilon) +
+          h * Math.cos(zeta),
         y:
           (r0 + _r1) * r0YTrig(alpha) +
           (r1 + _r2) * r1YTrig(beta) +
           (r2 + _r3) * r2YTrig(gamma) +
-          (r3 + _r4) * r3YTrig(epsilon) +
-          h * Math.sin(delta),
+          (r3 + _r4) * r3YTrig(delta) +
+          (r4 + _r5) * r4YTrig(epsilon) +
+          h * Math.sin(zeta),
       };
     }
   </script>
@@ -91,7 +101,7 @@
     canvas.height = height;
     ctx.translate(width / 2, height / 2);
     ctx.fillRect(-width / 2, -height / 2, width, height);
-    ctx.scale(0.35, 0.35);
+    ctx.scale(0.3, 0.3);
 
     // Speed scale of 1 means the inner cycloid will cover the same distance regardless of its radius.
     // Corresponds to global animation speed
@@ -99,7 +109,7 @@
     const timeStepScalar = 0.5;
     const step = timeStepScalar * ((Math.PI * 2) / 60);
 
-    const points = 20000;
+    const points = 30000;
 
     let previousPoints = null;
 
@@ -109,52 +119,60 @@
     };
 
     const r0 = 500;
-    const r1 = 100;
+    const r1 = 50;
     const r2 = 200;
     const r3 = 100;
-    const r4 = 100;
+    const r4 = 150;
+    const r5 = 300;
+    const r4RotationDirection = "clockwise";
     const r3RotationDirection = "counterClockwise";
     const r2RotationDirection = "clockwise";
     const r1RotationDirection = "counterClockwise";
     const r0RotationDirection = "counterClockwise";
-    const rodLengthScale = 1;
+    const rodLengthScale = 1.2;
     const rodLength = rodLengthScale * r4;
     const r1OutsideOfParent = true;
     const r2OutsideOfParent = true;
-    const r3OutsideOfParent = true;
-    const r4OutsideOfParent = false;
+    const r3OutsideOfParent = false;
+    const r4OutsideOfParent = true;
+    const r5OutsideOfParent = false;
   </script>
   <script>
     const draw = () => {
       let theta = 0;
-      const betaScale = 1.101;
-      const gammaScale = 2.101;
-      const deltaScale = 3.101;
-      const epsilonScale = 4.101;
+      const betaScale = 1.2;
+      const gammaScale = 4.2;
+      const deltaScale = 4.113;
+      const epsilonScale = 1.2;
+      const zetaScale = 0.9;
 
       for (let _ = 0; _ < points; _++) {
         theta += step;
 
-        const newPoint = epi4trochoid(
+        const newPoint = epi5trochoid(
           r0,
           r1,
           r2,
           r3,
           r4,
+          r5,
           rodLength,
           theta * betaScale,
           theta * gammaScale,
           theta * deltaScale,
           theta * epsilonScale,
+          theta * zetaScale,
           theta,
           r0RotationDirection,
           r1RotationDirection,
           r2RotationDirection,
           r3RotationDirection,
+          r4RotationDirection,
           r1OutsideOfParent,
           r2OutsideOfParent,
           r3OutsideOfParent,
-          r4OutsideOfParent
+          r4OutsideOfParent,
+          r5OutsideOfParent
         );
         if (!previousPoints) {
           previousPoints = newPoint;

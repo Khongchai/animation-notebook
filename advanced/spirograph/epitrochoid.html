@@ -31,14 +31,18 @@
       moveOutsideOfParent
     ) {
       const isClockwise = rotationDirection === "clockwise";
-      const xTrig = isClockwise ? Math.sin : Math.cos;
-      const yTrig = isClockwise ? Math.cos : Math.sin;
 
       const _r2 = moveOutsideOfParent ? r2 : -r2;
 
+      // Invert sin and cos if we need to move in the opposite direction
+      // - Math.PI * 0.5 * isClockwise to invert cos to sin and + for vice versa
       return {
-        x: (r1 + _r2) * xTrig(alpha) + h * Math.cos(beta),
-        y: (r1 + _r2) * yTrig(alpha) + h * Math.sin(beta),
+        x:
+          (r1 + _r2) * Math.cos(alpha - Math.PI * 0.5 * isClockwise) +
+          h * Math.cos(beta),
+        y:
+          (r1 + _r2) * Math.sin(alpha + Math.PI * 0.5 * isClockwise) +
+          h * Math.sin(beta),
       };
     }
   </script>
@@ -69,11 +73,11 @@
       y: 0,
     };
 
-    const r1 = 300;
-    const r2 = 300;
-    const rotationDirection = "counterClockwise";
+    const r0 = 300;
+    const r1 = 150;
+    const rotationDirection = "clockwise";
     const rodLengthScale = 1.1;
-    const rodLength = rodLengthScale * r2;
+    const rodLength = rodLengthScale * r1;
     const moveOutsideOfParent = false;
   </script>
   <script>
@@ -83,14 +87,14 @@
       // Corresponds to the local cycloid speed scale
       // It is alpha because when you adjust the cycloidSPeedScale,
       // you are moving the cycloid around the circle faster,
-      const betaScale = 0.93; // beta is going to be equals to this times theta
+      const betaScale = 0.43; // beta is going to be equals to this times theta
 
       for (let _ = 0; _ < points; _++) {
         theta += step;
 
         const newPoint = epitrochoid(
+          r0,
           r1,
-          r2,
           rodLength,
           theta * betaScale,
           theta,

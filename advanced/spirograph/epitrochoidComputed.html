@@ -1,0 +1,143 @@
+<!-- TODO -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      html,
+      body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <div><canvas id="canvas"></canvas></div>
+  </body>
+  <script>
+    /**
+     * Generate current point for epitrochoid of nested level n
+     */
+    function computedEpitrochoid(cycloids, rodLength, theta) {
+      const finalPoint = { x: 0, y: 0 };
+
+      // We don't need to iterate over the last cycloid
+      // Each iteration, we do something with the +1 cycloid,
+      // assuming that the bottomest is the bounding circle.
+      for (let i = 0; i < cycloids.length - 1; i++) {
+        const c1 = cycloid[i];
+        const c2 = cycloids[i + 1];
+        const r = c2.isOutsideOfParent ? c2.r : -c2.r;
+        const isClockwise = c.rotationDirection === "isClockwise";
+        finalPoint.x +=
+          (c1.r + r) *
+          Math.cos(theta * c1.thetaScale - Math.PI * 0.5 * isClockwise);
+        finalPoint.y +=
+          (c1.r + r) *
+          Math.sin(theta * c1.thetaScale - Math.PI * 0.5 * isClockwise);
+      }
+
+      return {
+        x: finalPoint.x + rodLength * Math.cos(theta),
+        y: finalPoint.y + rodLength * Math.sin(theta),
+      };
+    }
+  </script>
+  <script>
+    let canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+    ctx.translate(width / 2, height / 2);
+    ctx.fillRect(-width / 2, -height / 2, width, height);
+    ctx.scale(0.3, 0.3);
+
+    // Speed scale of 1 means the inner cycloid will cover the same distance regardless of its radius.
+    // Corresponds to global animation speed
+    // These two variables controls how far the points are distributed from one another
+    const timeStepScalar = 0.5;
+    const step = timeStepScalar * ((Math.PI * 2) / 60);
+
+    const points = 30000;
+
+    let previousPoints = null;
+
+    let currentPoint = {
+      x: 0,
+      y: 0,
+    };
+
+    const cycloids = [
+      {
+        radius: 500,
+      },
+      {
+        radius: 50,
+      },
+      {
+        radius: 200,
+      },
+      {
+        radius: 100,
+      },
+      {
+        radius: 150,
+      },
+      {
+        radius: 300,
+      },
+    ];
+
+    const r4RotationDirection = "clockwise";
+    const r3RotationDirection = "counterClockwise";
+    const r2RotationDirection = "clockwise";
+    const r1RotationDirection = "counterClockwise";
+    const r0RotationDirection = "counterClockwise";
+    const rodLengthScale = 1.2;
+    const rodLength = rodLengthScale * r4;
+    const r1OutsideOfParent = true;
+    const r2OutsideOfParent = true;
+    const r3OutsideOfParent = false;
+    const r4OutsideOfParent = true;
+    const r5OutsideOfParent = false;
+  </script>
+  <script>
+    const draw = () => {
+      let theta = 0;
+      const betaScale = 1.2;
+      const gammaScale = 4.2;
+      const deltaScale = 4.113;
+      const epsilonScale = 1.2;
+      const zetaScale = 0.9;
+
+      for (let _ = 0; _ < points; _++) {
+        theta += step;
+
+        const newPoint = computedEpitrochoid({}, rodLengthScale, theta);
+        if (!previousPoints) {
+          previousPoints = newPoint;
+        } else {
+          currentPoint = newPoint;
+          ctx.beginPath();
+          ctx.moveTo(previousPoints.x, previousPoints.y);
+          ctx.lineTo(currentPoint.x, currentPoint.y);
+          ctx.strokeStyle = "pink";
+          ctx.stroke();
+
+          previousPoints = currentPoint;
+        }
+      }
+    };
+
+    draw();
+  </script>
+</html>
