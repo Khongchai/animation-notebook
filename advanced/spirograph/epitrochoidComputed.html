@@ -25,23 +25,34 @@
     /**
      * Generate current point for epitrochoid of nested level n
      */
-    function computedEpitrochoid(cycloids, rodLength, theta) {
+    function computedEpitrochoid(cycloids, theta, rodLength) {
+      if (cycloids.length < 2) {
+        throw new Error("Provide at least 2 cycloids");
+      }
+
       const finalPoint = { x: 0, y: 0 };
 
-      // We don't need to iterate over the last cycloid
-      // Each iteration, we do something with the +1 cycloid,
-      // assuming that the bottomest is the bounding circle.
-      for (let i = 0; i < cycloids.length - 1; i++) {
-        const c1 = cycloid[i];
-        const c2 = cycloids[i + 1];
-        const r = c2.isOutsideOfParent ? c2.r : -c2.r;
-        const isClockwise = c.rotationDirection === "isClockwise";
+      // Skip i = 0 because we don't need to iterate over the bounding circle
+      for (let i = 1; i < cycloids.length; i++) {
+        const parentCycloid = cycloids[i - 1];
+        const thisCycloid = cycloids[i];
+        const childCycloidRadius = thisCycloid.isOutsideOfParent
+          ? thisCycloid.radius
+          : -thisCycloid.radius;
+        const isChildArcClockwise =
+          thisCycloid.rotationDirection === "clockwise";
+
+        // We ask the child it needs the parent to scale its theta.
         finalPoint.x +=
-          (c1.r + r) *
-          Math.cos(theta * c1.thetaScale - Math.PI * 0.5 * isClockwise);
+          (parentCycloid.radius + childCycloidRadius) *
+          Math.cos(
+            theta * thisCycloid.thetaScale - Math.PI * 0.5 * isChildArcClockwise
+          );
         finalPoint.y +=
-          (c1.r + r) *
-          Math.sin(theta * c1.thetaScale - Math.PI * 0.5 * isClockwise);
+          (parentCycloid.radius + childCycloidRadius) *
+          Math.sin(
+            theta * thisCycloid.thetaScale + Math.PI * 0.5 * isChildArcClockwise
+          );
       }
 
       return {
@@ -59,7 +70,7 @@
     canvas.height = height;
     ctx.translate(width / 2, height / 2);
     ctx.fillRect(-width / 2, -height / 2, width, height);
-    ctx.scale(0.3, 0.3);
+    ctx.scale(0.25, 0.25);
 
     // Speed scale of 1 means the inner cycloid will cover the same distance regardless of its radius.
     // Corresponds to global animation speed
@@ -67,7 +78,7 @@
     const timeStepScalar = 0.5;
     const step = timeStepScalar * ((Math.PI * 2) / 60);
 
-    const points = 30000;
+    const points = 100000;
 
     let previousPoints = null;
 
@@ -77,52 +88,57 @@
     };
 
     const cycloids = [
+      // Base Circle
       {
-        radius: 500,
-      },
-      {
-        radius: 50,
+        radius: 250,
       },
       {
         radius: 200,
-      },
-      {
-        radius: 100,
-      },
-      {
-        radius: 150,
+        rotationDirection: "counterClockwise",
+        rodLengthScale: 1,
+        thetaScale: 1,
+        isOutsideOfParent: false,
       },
       {
         radius: 300,
+        rotationDirection: "clockwise",
+        rodLengthScale: 1,
+        thetaScale: 1.07,
+        isOutsideOfParent: false,
+      },
+      {
+        radius: 200,
+        rotationDirection: "counterClockwise",
+        rodLengthScale: 2,
+        thetaScale: 1.07,
+        isOutsideOfParent: true,
+      },
+      {
+        radius: 100,
+        rotationDirection: "clockwise",
+        rodLengthScale: 1,
+        thetaScale: 1.07,
+        isOutsideOfParent: false,
+      },
+      {
+        radius: 300,
+        rotationDirection: "clockwise",
+        rodLengthScale: 3,
+        thetaScale: 1.9308,
+        isOutsideOfParent: true,
       },
     ];
-
-    const r4RotationDirection = "clockwise";
-    const r3RotationDirection = "counterClockwise";
-    const r2RotationDirection = "clockwise";
-    const r1RotationDirection = "counterClockwise";
-    const r0RotationDirection = "counterClockwise";
-    const rodLengthScale = 1.2;
-    const rodLength = rodLengthScale * r4;
-    const r1OutsideOfParent = true;
-    const r2OutsideOfParent = true;
-    const r3OutsideOfParent = false;
-    const r4OutsideOfParent = true;
-    const r5OutsideOfParent = false;
+    const lastCycloid = cycloids[cycloids.length - 1];
+    const rodLength = lastCycloid.radius * lastCycloid.rodLengthScale;
   </script>
   <script>
     const draw = () => {
       let theta = 0;
-      const betaScale = 1.2;
-      const gammaScale = 4.2;
-      const deltaScale = 4.113;
-      const epsilonScale = 1.2;
-      const zetaScale = 0.9;
 
       for (let _ = 0; _ < points; _++) {
         theta += step;
 
-        const newPoint = computedEpitrochoid({}, rodLengthScale, theta);
+        const newPoint = computedEpitrochoid(cycloids, theta, rodLength);
         if (!previousPoints) {
           previousPoints = newPoint;
         } else {
