@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      html,
+      body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body onload="draw();">
+    <div><canvas id="canvas"></canvas></div>
+  </body>
+  <script>
+    let canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+
+    let theta = 0;
+
+    const circle = {
+      x: 0,
+      y: 0,
+      radius: 200,
+    };
+
+    canvas.width = width;
+    canvas.height = height;
+
+    //center
+    ctx.save();
+    ctx.translate(width / 2, height / 2);
+    ctx.rotate(Math.PI);
+    const draw = () => {
+      ctx.fillStyle = "rgba(0,0,0,0.3)";
+      ctx.fillRect(
+        -canvas.clientWidth / 2,
+        -canvas.clientHeight / 2,
+        canvas.clientWidth,
+        canvas.clientHeight
+      );
+      const { xOffset, yOffset } = getCircleOffset(theta, circle, {
+        constraintMax: (Math.PI * 3) / 4,
+        constraintMin: Math.PI / 4,
+      });
+
+      ctx.fillStyle = "white";
+      ctx.fillRect(circle.x + xOffset, circle.y + yOffset, 5, 5);
+
+      requestAnimationFrame(draw);
+
+      theta = (theta + (Math.PI * 2) / 120) % (Math.PI * 2);
+    };
+  </script>
+  <script>
+    // Example: constraintMax = 2 * Math.PI / 3 && constraintMin = Math.PI / 4
+    // Begin tracing a triangle path from theta = 2π/3 to theta = π/4
+    function getCircleOffset(theta, circle, { constraintMax, constraintMin }) {
+      if (constraintMin <= theta && theta <= constraintMax) {
+        // just draw a dot at the center for now.
+        return upsideDownPyramidWithAbsoluteValue(circle, theta, {
+          constraintMax,
+          constraintMin,
+        });
+      }
+      const xOffset = Math.cos(theta) * circle.radius;
+      const yOffset = Math.sin(theta) * circle.radius;
+
+      return {
+        xOffset,
+        yOffset,
+      };
+    }
+
+    function upsideDownPyramidWithAbsoluteValue(
+      circle,
+      theta,
+      { constraintMax, constraintMin }
+    ) {
+      const x = Math.cos(theta) * circle.radius;
+      return {
+        xOffset: x,
+        yOffset: Math.abs(x),
+        // xOffset: Math.abs(theta * xCoefficient) + circle.x,
+        // yOffset: Math.abs(theta * yCoefficient) + circle.y,
+      };
+    }
+
+    //TODO
+    function upsideDownPyramidWithArccos(circle, theta) {}
+  </script>
+</html>
