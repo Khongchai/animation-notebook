@@ -27,12 +27,16 @@
     var height = window.innerHeight;
 
     let theta = 0;
+    // For functions that don't exactly map 1-1 with its output like gaussian.
+    let x = 0;
 
     const circle = {
       x: 0,
       y: 0,
       radius: 200,
     };
+
+    const timeStep = 0.015;
 
     canvas.width = width;
     canvas.height = height;
@@ -59,13 +63,26 @@
 
       requestAnimationFrame(draw);
 
-      theta = getConstantTheta(theta);
+      x = (x + timeStep) % Math.E;
+      theta = getGaussianTheta(x);
+      //   theta = getConstantTheta(theta);
     };
   </script>
   <script>
     function getConstantTheta(theta) {
       return (theta + (Math.PI * 2) / 120) % (Math.PI * 2);
     }
+
+    function getLerpedTheta(theta) {
+      return (theta + (Math.PI * 2 - theta) * 0.02) % (Math.PI * 2 * 0.99);
+    }
+
+    function getGaussianTheta(x) {
+      return (
+        Math.pow((1 / Math.E) * 2.4, Math.pow(x - Math.E, 4)) * Math.PI * 2
+      );
+    }
+
     // Example: constraintMax = 2 * Math.PI / 3 && constraintMin = Math.PI / 4
     // Begin tracing a triangle path from theta = 2π/3 to theta = π/4
     function getCircleOffset(theta, circle, { constraintMax, constraintMin }) {
