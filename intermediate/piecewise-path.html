@@ -66,37 +66,16 @@
     // Example: constraintMax = 2 * Math.PI / 3 && constraintMin = Math.PI / 4
     // Begin tracing a triangle path from theta = 2π/3 to theta = π/4
     function getCircleOffset(theta, circle, { constraintMax, constraintMin }) {
-      if (constraintMin <= theta && theta <= constraintMax) {
-        // just draw a dot at the center for now.
-        return upsideDownPyramidWithAbsoluteValue(circle, theta, {
-          constraintMax,
-          constraintMin,
-        });
-      }
       const xOffset = Math.cos(theta) * circle.radius;
       const yOffset = Math.sin(theta) * circle.radius;
 
       return {
         xOffset,
-        yOffset,
+        yOffset:
+          constraintMin <= theta && theta <= constraintMax
+            ? Math.abs(xOffset)
+            : yOffset,
       };
     }
-
-    function upsideDownPyramidWithAbsoluteValue(
-      circle,
-      theta,
-      { constraintMax, constraintMin }
-    ) {
-      const x = Math.cos(theta) * circle.radius;
-      return {
-        xOffset: x,
-        yOffset: Math.abs(x),
-        // xOffset: Math.abs(theta * xCoefficient) + circle.x,
-        // yOffset: Math.abs(theta * yCoefficient) + circle.y,
-      };
-    }
-
-    //TODO
-    function upsideDownPyramidWithArccos(circle, theta) {}
   </script>
 </html>
