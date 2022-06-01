@@ -1,0 +1,54 @@
+<!-- Once and for all, is lerp really linear? -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      html,
+      body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body onload="draw();">
+    <div><canvas id="canvas"></canvas></div>
+  </body>
+  <script>
+    let canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+    let point = null;
+
+    const lerp = (a, b, t) => a + (b - a) * t;
+
+    const timeStep = 0.5;
+
+    let x = 0;
+    while (x < width) {
+      x += timeStep;
+      if (!point) {
+        point = {
+          x,
+          y: lerp(0, height, x / width),
+        };
+        continue;
+      }
+      ctx.moveTo(point.x, point.y);
+      point.x = x;
+      point.y = lerp(point.y, height, 0.0005);
+      ctx.lineTo(point.x, point.y);
+      ctx.stroke();
+    }
+  </script>
+</html>

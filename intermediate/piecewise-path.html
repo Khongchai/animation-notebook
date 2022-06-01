@@ -59,10 +59,13 @@
 
       requestAnimationFrame(draw);
 
-      theta = (theta + (Math.PI * 2) / 120) % (Math.PI * 2);
+      theta = getConstantTheta(theta);
     };
   </script>
   <script>
+    function getConstantTheta(theta) {
+      return (theta + (Math.PI * 2) / 120) % (Math.PI * 2);
+    }
     // Example: constraintMax = 2 * Math.PI / 3 && constraintMin = Math.PI / 4
     // Begin tracing a triangle path from theta = 2π/3 to theta = π/4
     function getCircleOffset(theta, circle, { constraintMax, constraintMin }) {
