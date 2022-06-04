@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      html,
+      body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <script src="../../classes/logger.js"></script>
+  <body onload="draw();">
+    <div><canvas id="canvas"></canvas></div>
+  </body>
+  <script>
+    let canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+
+    const l = new Logger({ logLimit: 100 });
+
+    const squareSize = 50;
+    const squareSizePadded = squareSize + 100;
+
+    const spline = {
+      points: [
+        {
+          x: width / 2 - squareSizePadded * 2,
+          y: height / 2,
+        },
+        {
+          x: width / 2 - squareSizePadded,
+          y: height / 2,
+        },
+        {
+          x: width / 2,
+          y: height / 2,
+        },
+        {
+          x: width / 2 + squareSizePadded,
+          y: height / 2,
+        },
+      ],
+      getPointInSpline: function (t) {
+        if (!(0 <= t) || !(t <= 1)) {
+          throw new Error("t Must be within the range from 0 to 1");
+        }
+
+        const p1 = Math.floor(t);
+        const p0 = Math.max(0, p1 - 1);
+
+        const p2 = p1 + 1;
+        const p3 = p2 + 1;
+
+        const tt = t * t;
+        const ttt = tt * t;
+
+        const q1 = -ttt + 2 - t;
+        const q2 = 3 * ttt - 5 * tt + 2;
+        const q3 = -3 * ttt + 4 * tt + t;
+        const q4 = ttt - tt;
+
+        const tx =
+          this.points[p0].x * q1 +
+          this.points[p1].x * q2 +
+          this.points[p2].x * q3 +
+          this.points[p3].x;
+        const ty =
+          this.points[p0].x * q1 +
+          this.points[p1].y * q2 +
+          this.points[p2].y * q3 +
+          this.points[p3].y;
+
+        return { x: tx * 0.5, y: ty * 0.5 };
+      },
+    };
+
+    ctx.fillStyle = "red";
+  </script>
+
+  <script>
+    //TODO interactions
+    document.addEventListener("mousedown", (e) => {});
+    document.addEventListener("mousemove", (e) => {});
+    document.addEventListener("mouseup", (e) => {});
+  </script>
+  <script>
+    const draw = () => {
+      ctx.fillStyle = "black";
+      ctx.fillRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+
+      for (let i = 0; i < spline.points.length; i++) {
+        const point = spline.points[i];
+        ctx.fillStyle = "red";
+        ctx.fillRect(point.x, point.y, squareSize, squareSize);
+
+        ctx.fillStyle = "white";
+        ctx.font = "30px Arial";
+        ctx.fillText(i, point.x + 15, point.y + 35);
+      }
+
+      //draw the spline
+      for (let t = 0; t < 1; t += 0.05) {
+        const { x, y } = spline.getPointInSpline(t);
+
+        ctx.fillStyle = "white";
+        ctx.arc(3, 3, 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      requestAnimationFrame(draw);
+    };
+  </script>
+</html>
