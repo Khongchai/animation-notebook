@@ -6,6 +6,28 @@ class Logger {
     this.logLimit = logLimit;
   }
 
+  logFor(num, whatever) {
+    if (this.logCount === num) {
+      return;
+    }
+    console.log(whatever);
+    this.logCount++;
+  }
+
+  logFrom(num, whatever) {
+    if (this.logCount >= num) {
+      console.log(whatever);
+    }
+    this.logCount++;
+  }
+
+  logRange(begin, end, whatever) {
+    if (begin <= this.logCount && this.logCount <= end) {
+      console.log(whatever);
+    }
+    this.logCount++;
+  }
+
   logOnce(whatever) {
     if (!this.logCount) {
       console.log(whatever);
