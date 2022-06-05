@@ -1,3 +1,5 @@
+<!-- The formulas are basically just a catmull rom spline, whereas for catmull rom centripital spline,  -->
+<!-- we need to calculate the point t recrusively. -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -39,12 +41,12 @@
       points: [
         {
           x: width / 2 - squareSizePadded * 2,
-          y: height / 2,
+          y: height * 0.2,
           radius: circleRadius,
         },
         {
           x: width / 2 - squareSizePadded,
-          y: height / 2,
+          y: height / 1.2,
           radius: circleRadius,
         },
         {
@@ -54,29 +56,31 @@
         },
         {
           x: width / 2 + squareSizePadded,
-          y: height / 2,
+          y: height * 0.2,
           radius: circleRadius,
         },
         {
           x: width / 2 + squareSizePadded + 100,
-          y: height / 2,
+          y: height * 0.8,
           radius: circleRadius,
         },
         {
-          x: width / 2 + squareSizePadded + 200,
-          y: height / 2,
+          x: width / 2 + squareSizePadded + 600,
+          y: height / 1.2,
           radius: circleRadius,
         },
       ],
       //With recursion
       getPointInSplineRecursive: function (t) {},
       // With hard-coded equation
-      getPointInSplineEquation: function (T) {
+      // https://www.youtube.com/watch?v=9_aJGUTePYo&t=1085s
+      getPointInSplineEquation1: function (T) {
         const p0 = Math.floor(T);
         const p1 = p0 + 1;
         const p2 = p1 + 1;
         const p3 = p2 + 1;
 
+        // Get only the decimals
         const t = T % 1;
 
         const tt = t * t;
@@ -99,6 +103,41 @@
           this.points[p3].y * q4;
 
         return { x: tx * 0.5, y: ty * 0.5 };
+      },
+      // With hard-coded equation
+      getPointInSplineEquation2: function (T) {
+        const initialPoint = Math.floor(T);
+        const p0 = this.points[initialPoint];
+        const p1 = this.points[initialPoint + 1];
+        const p2 = this.points[initialPoint + 2];
+        const p3 = this.points[initialPoint + 3];
+
+        // Get only the decimals
+        const t = T % 1;
+
+        const tt = t * t;
+        const ttt = tt * t;
+
+        // https://en.wikipedia.org/wiki/Cubic_Hermite_spline#Catmull%E2%80%93Rom_spline
+        // https://www.paulinternet.nl/?page=bicubic
+        const a = (p0, p1, p2, p3) =>
+          (-1 / 2) * p0 + (3 / 2) * p1 - (3 / 2) * p2 + (1 / 2) * p3;
+        const b = (p0, p1, p2, p3) => p0 - (5 / 2) * p1 + 2 * p2 - (1 / 2) * p3;
+        const c = (p0, p1, p2, p3) => (-1 / 2) * p0 + (1 / 2) * p2;
+        const d = (p1) => p1;
+
+        return {
+          x:
+            a(p0.x, p1.x, p2.x, p3.x) * ttt +
+            b(p0.x, p1.x, p2.x, p3.x) * tt +
+            c(p0.x, p1.x, p2.x, p3.x) * t +
+            d(p1.x),
+          y:
+            a(p0.y, p1.y, p2.y, p3.y) * ttt +
+            b(p0.y, p1.y, p2.y, p3.y) * tt +
+            c(p0.y, p1.y, p2.y, p3.y) * t +
+            d(p1.y),
+        };
       },
     };
 
@@ -156,7 +195,7 @@
 
       // Draw the spline
       for (let t = 0; t < spline.points.length - 3; t += 0.005) {
-        const { x, y } = spline.getPointInSplineEquation(t);
+        const { x, y } = spline.getPointInSplineEquation2(t);
 
         ctx.fillStyle = "white";
         ctx.beginPath();
