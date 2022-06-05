@@ -1,5 +1,6 @@
 <!-- The formulas are basically just a catmull rom spline, whereas for catmull rom centripital spline,  -->
 <!-- we need to calculate the point t recrusively. -->
+<!-- TODO move point along the spline -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -70,9 +71,68 @@
           radius: circleRadius,
         },
       ],
-      //With recursion
-      getPointInSplineRecursive: function (t) {},
+
+      _dist: function (p0, p1) {
+        return Math.sqrt(Math.pow(p1.x - p0.x, 2) + Math.pow(p1.y - p0.y, 2));
+      },
+
+      //TODO not yet working.
+      //https://stackoverflow.com/a/23980479/12524961
+      _initNonUniformCatmullRom: function (x0, x1, x2, x3, dt0, dt1, dt2, t) {
+        let t1 = (x1 - x0) / dt0 - (x2 - x0) / (dt0 + dt1) + (x2 - x1) / dt1;
+        let t2 = (x2 - x1) / dt1 - (x3 - x1) / (dt1 + dt2) + (x3 - x2) / dt2;
+
+        // rescale tangents for parametrization in [0,1]
+        t1 *= dt1;
+        t2 *= dt1;
+
+        const c0 = x1;
+        const c1 = x2;
+        const c2 = -3 * x1 + 3 * x2 - 2 * t1 - t2;
+        const c3 = 2 * x1 - 2 * x2 + t1 + t2;
+
+        const tt = t * t;
+        const ttt = t * t * t;
+
+        return c0 + c1 * t + c2 * tt + c3 * ttt;
+      },
+
+      getPointInSplineCatmull: function (t, alpha = 0.5) {
+        const initialPoint = Math.floor(t);
+        const p0 = this.points[initialPoint];
+        const p1 = this.points[initialPoint + 1];
+        const p2 = this.points[initialPoint + 2];
+        const p3 = this.points[initialPoint + 3];
+
+        const t01 = Math.pow(this._dist(p0, p1), alpha);
+        const t12 = Math.pow(this._dist(p1, p2), alpha);
+        const t23 = Math.pow(this._dist(p2, p3), alpha);
+
+        return {
+          x: this._initNonUniformCatmullRom(
+            p0.x,
+            p1.x,
+            p2.x,
+            p3.x,
+            t01,
+            t12,
+            t23,
+            t
+          ),
+          y: this._initNonUniformCatmullRom(
+            p0.y,
+            p1.y,
+            p2.y,
+            p3.y,
+            t01,
+            t12,
+            t23,
+            t
+          ),
+        };
+      },
       // With hard-coded equation
+      // This is just a spline, not catmull-rom
       // https://www.youtube.com/watch?v=9_aJGUTePYo&t=1085s
       getPointInSplineEquation1: function (T) {
         const p0 = Math.floor(T);
@@ -105,6 +165,7 @@
         return { x: tx * 0.5, y: ty * 0.5 };
       },
       // With hard-coded equation
+      // This is just a spline, not catmull-rom
       getPointInSplineEquation2: function (T) {
         const initialPoint = Math.floor(T);
         const p0 = this.points[initialPoint];
@@ -195,7 +256,7 @@
 
       // Draw the spline
       for (let t = 0; t < spline.points.length - 3; t += 0.005) {
-        const { x, y } = spline.getPointInSplineEquation2(t);
+        const { x, y } = spline.getPointInSplineCatmull(t);
 
         ctx.fillStyle = "white";
         ctx.beginPath();
