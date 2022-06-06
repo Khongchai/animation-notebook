@@ -1,0 +1,121 @@
+<!-- TODO do this too https://www.youtube.com/watch?v=ih20l3pJoeU -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      html,
+      body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <div><canvas id="canvas"></canvas></div>
+  </body>
+  <script>
+    function project(fl, points) {
+      points.forEach((p) => {
+        const scale = fl / (fl - p.z);
+        p.sx = p.x * scale;
+        p.sy = p.y * scale;
+      });
+    }
+
+    function translateModel(points, x, y, z) {
+      for (var i = 0; i < points.length; i++) {
+        points[i].x += x;
+        points[i].y += y;
+        points[i].z += z;
+      }
+      needsUpdate = true;
+    }
+  </script>
+  <script>
+    let canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+    const fl = 100;
+    const points = [];
+    let needsUpdate = true;
+
+    function drawLine(ctx, points, indices) {
+      ctx.strokeStyle = "white";
+      ctx.beginPath();
+      ctx.moveTo(points[indices[0]].sx, points[indices[0]].sy);
+      for (let i = 1; i < indices.length; i++) {
+        ctx.lineTo(points[indices[i]].sx, points[indices[i]].sy);
+        ctx.stroke();
+      }
+    }
+
+    points[0] = { x: -500, y: -500, z: 1000 };
+    points[1] = { x: 500, y: -500, z: 1000 };
+    points[2] = { x: 500, y: -500, z: 500 };
+    points[3] = { x: -500, y: -500, z: 500 };
+    points[4] = { x: -500, y: 500, z: 1000 };
+    points[5] = { x: 500, y: 500, z: 1000 };
+    points[6] = { x: 500, y: 500, z: 500 };
+    points[7] = { x: -500, y: 500, z: 500 };
+
+    ctx.translate(width / 2, height / 2);
+
+    document.body.addEventListener("keydown", function (event) {
+      switch (event.keyCode) {
+        case 37: // left
+          translateModel(points, -20, 0, 0);
+          break;
+        case 39: // right
+          translateModel(points, 20, 0, 0);
+          break;
+        case 38: // up
+          if (event.shiftKey) {
+            translateModel(points, 0, 0, 20);
+          } else {
+            translateModel(points, 0, -20, 0);
+          }
+          break;
+        case 40: // down
+          if (event.shiftKey) {
+            translateModel(points, 0, 0, -20);
+          } else {
+            translateModel(points, 0, 20, 0);
+          }
+          break;
+      }
+    });
+
+    function update() {
+      if (needsUpdate) {
+        ctx.fillStyle = "black";
+        ctx.fillRect(-width / 2, -height / 2, width, height);
+        ctx.strokeStyle = "white";
+
+        project(fl, points);
+
+        drawLine(ctx, points, [0, 1, 2, 3, 0]);
+        drawLine(ctx, points, [4, 5, 6, 7, 4]);
+        drawLine(ctx, points, [0, 4]);
+        drawLine(ctx, points, [1, 5]);
+        drawLine(ctx, points, [2, 6]);
+        drawLine(ctx, points, [3, 7]);
+
+        needsUpdate = false;
+      }
+      requestAnimationFrame(update);
+    }
+
+    update();
+  </script>
+</html>
