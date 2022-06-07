@@ -23,11 +23,42 @@
   </body>
   <script>
     function project(fl, points) {
-      points.forEach((p) => {
-        const scale = fl / (fl - p.z);
+      points.forEach((p, i) => {
+        const scale = fl / (fl + p.z + centerZ);
+        i === 0 && console.log(scale);
         p.sx = p.x * scale;
         p.sy = p.y * scale;
       });
+    }
+
+    function rotateX(points, angle) {
+      points.forEach((p) => {
+        const y = p.y;
+        const z = p.z;
+        p.y = y * Math.cos(angle) - z * Math.sin(angle);
+        p.z = y * Math.sin(angle) + z * Math.cos(angle);
+      });
+      needsUpdate = true;
+    }
+
+    function rotateY(points, angle) {
+      points.forEach((p) => {
+        const x = p.x;
+        const z = p.z;
+        p.x = x * Math.cos(angle) + z * Math.sin(angle);
+        p.z = -x * Math.sin(angle) + z * Math.cos(angle);
+      });
+      needsUpdate = true;
+    }
+
+    function rotateZ(points, angle) {
+      points.forEach((p) => {
+        const x = p.x;
+        const y = p.y;
+        p.x = x * Math.cos(angle) - y * Math.sin(angle);
+        p.y = x * Math.sin(angle) + y * Math.cos(angle);
+      });
+      needsUpdate = true;
     }
 
     function translateModel(points, x, y, z) {
@@ -47,6 +78,7 @@
     canvas.width = width;
     canvas.height = height;
     const fl = 100;
+    const centerZ = 1500;
     const points = [];
     let needsUpdate = true;
 
@@ -60,28 +92,38 @@
       }
     }
 
-    points[0] = { x: -500, y: -500, z: 1000 };
-    points[1] = { x: 500, y: -500, z: 1000 };
-    points[2] = { x: 500, y: -500, z: 500 };
-    points[3] = { x: -500, y: -500, z: 500 };
-    points[4] = { x: -500, y: 500, z: 1000 };
-    points[5] = { x: 500, y: 500, z: 1000 };
-    points[6] = { x: 500, y: 500, z: 500 };
-    points[7] = { x: -500, y: 500, z: 500 };
+    points[0] = { x: -500, y: -500, z: 500 };
+    points[1] = { x: 500, y: -500, z: 500 };
+    points[2] = { x: 500, y: -500, z: -500 };
+    points[3] = { x: -500, y: -500, z: -500 };
+    points[4] = { x: -500, y: 500, z: 500 };
+    points[5] = { x: 500, y: 500, z: 500 };
+    points[6] = { x: 500, y: 500, z: -500 };
+    points[7] = { x: -500, y: 500, z: -500 };
 
     ctx.translate(width / 2, height / 2);
 
     document.body.addEventListener("keydown", function (event) {
       switch (event.keyCode) {
         case 37: // left
-          translateModel(points, -20, 0, 0);
+          if (event.ctrlKey) {
+            rotateY(points, 0.05);
+          } else {
+            translateModel(points, -20, 0, 0);
+          }
           break;
         case 39: // right
-          translateModel(points, 20, 0, 0);
+          if (event.ctrlKey) {
+            rotateY(points, -0.05);
+          } else {
+            translateModel(points, 20, 0, 0);
+          }
           break;
         case 38: // up
           if (event.shiftKey) {
             translateModel(points, 0, 0, 20);
+          } else if (event.ctrlKey) {
+            rotateX(points, 0.05);
           } else {
             translateModel(points, 0, -20, 0);
           }
@@ -89,6 +131,8 @@
         case 40: // down
           if (event.shiftKey) {
             translateModel(points, 0, 0, -20);
+          } else if (event.ctrlKey) {
+            rotateX(points, -0.05);
           } else {
             translateModel(points, 0, 20, 0);
           }
