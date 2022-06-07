@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      html,
+      body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body onload="draw();">
+    <div><canvas id="canvas"></canvas></div>
+  </body>
+  <script>
+    window.onload = function () {
+      var canvas = document.getElementById("canvas"),
+        context = canvas.getContext("2d"),
+        width = (canvas.width = window.innerWidth),
+        height = (canvas.height = window.innerHeight),
+        target = {
+          x: width,
+          y: Math.random() * height,
+        },
+        position = {
+          x: 0,
+          y: Math.random() * height,
+        },
+        ease = 0.1;
+      let easing = true;
+      update();
+
+      document.body.addEventListener("mousemove", function (event) {
+        target.x = event.clientX;
+        target.y = event.clientY;
+      });
+
+      function update() {
+        context.clearRect(0, 0, width, height);
+
+        context.beginPath();
+        context.arc(position.x, position.y, 10, 0, Math.PI * 2, false);
+        context.fill();
+
+        const dx = target.x - position.x;
+        const dy = target.y - position.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 0.1) easing = false;
+
+        position.x = position.x + dx * ease;
+        position.y = position.y + dy * ease;
+
+        easing && requestAnimationFrame(update);
+      }
+    };
+  </script>
+</html>

@@ -49,8 +49,8 @@
         Hookes law is linear interpolation with extra steps.
       */
       //This is just gonna keep going up and up and up until delayedMouse.x returns a negative value
-      delayedMouse.vX += hookesLaw(delayedMouse.x, mouse.x, k);
-      delayedMouse.vY += hookesLaw(delayedMouse.y, mouse.y, k);
+      delayedMouse.vX = delayedMouse.vX + (mouse.x - delayedMouse.x) * k;
+      delayedMouse.vY = delayedMouse.vY + (mouse.y - delayedMouse.y) * k;
       //This gonna be like, hey there, slow down
       delayedMouse.vY *= 0.7; // friction
       delayedMouse.vX *= 0.7; // friction
