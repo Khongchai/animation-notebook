@@ -25,29 +25,97 @@
 
   <script>
     const tweener = {
-      linearTween: (beginPos, endPos, duration, callback) => {
+      tween: function (beginPos, endPos, duration, tweenType, callback) {
         const beginningTime = performance.now();
         const diffX = endPos.x - beginPos.x;
         const diffY = endPos.y - beginPos.y;
         const initialPos = { ...beginPos };
 
-        function _beginLinearTween() {
-          const currentDuration = performance.now() - beginningTime;
-          if (currentDuration <= duration) {
-            beginPos.x = initialPos.x + (currentDuration / duration) * diffX;
-            beginPos.y = initialPos.y + (currentDuration / duration) * diffY;
+        const func = this._tweenTypeResolver(
+          tweenType,
+          beginningTime,
+          diffX,
+          diffY,
+          initialPos,
+          duration,
+          beginPos,
+          callback
+        );
 
-            callback?.();
+        cancelAnimationFrame(func);
 
-            requestAnimationFrame(_beginLinearTween);
-          } else {
-            // beginPos.x = endPos.x;
-            // beginPos.y = endPos.y;
-            console.log(beginPos, endPos);
-          }
+        func();
+      },
+
+      _tweenTypeResolver: (
+        tweenType,
+        beginningTime,
+        diffX,
+        diffY,
+        initialPos,
+        duration,
+        beginPos,
+        callback
+      ) => {
+        // https://www.desmos.com/calculator/lskstuoipd
+        switch (tweenType) {
+          case "linear":
+            return function _beginLinearTween() {
+              const currentDuration = performance.now() - beginningTime;
+              if (currentDuration <= duration) {
+                beginPos.x =
+                  initialPos.x + (currentDuration / duration) * diffX;
+                beginPos.y =
+                  initialPos.y + (currentDuration / duration) * diffY;
+
+                callback?.();
+
+                requestAnimationFrame(_beginLinearTween);
+              }
+            };
+          // basically 1 to the power of 2
+          case "easeInQuad":
+            return function _beginEaseInQuadTween() {
+              const currentDuration = performance.now() - beginningTime;
+              if (currentDuration <= duration) {
+                const x = Math.pow(currentDuration / duration, 2);
+                beginPos.x = initialPos.x + x * diffX;
+                beginPos.y = initialPos.y + x * diffY;
+
+                callback?.();
+
+                requestAnimationFrame(_beginEaseInQuadTween);
+              }
+            };
+          case "easeOutQuad":
+            return function _beginEaseOutQuadTween() {
+              const currentDuration = performance.now() - beginningTime;
+              if (currentDuration <= duration) {
+                const x = 1 - Math.pow(1 - currentDuration / duration, 2);
+                beginPos.x = initialPos.x + x * diffX;
+                beginPos.y = initialPos.y + x * diffY;
+
+                callback?.();
+
+                requestAnimationFrame(_beginEaseOutQuadTween);
+              }
+            };
+          case "easeInOutQuad":
+            return function _beginEaseInOutQuadTween() {
+              const currentDuration = performance.now() - beginningTime;
+              const x =
+                (Math.sin(Math.PI * (currentDuration / duration - 0.5)) + 1) /
+                2;
+              if (currentDuration <= duration) {
+                beginPos.x = initialPos.x + x * diffX;
+                beginPos.y = initialPos.y + x * diffY;
+
+                callback?.();
+
+                requestAnimationFrame(_beginEaseInOutQuadTween);
+              }
+            };
         }
-
-        _beginLinearTween();
       },
     };
 
@@ -81,7 +149,7 @@
         y: e.clientY,
       };
 
-      tweener.linearTween(circlePos, target, 500, () => {
+      tweener.tween(circlePos, target, 500, "easeInOutQuad", () => {
         ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
 
         drawCircle(circlePos.x, circlePos.y);
