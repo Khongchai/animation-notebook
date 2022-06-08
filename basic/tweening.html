@@ -1,4 +1,5 @@
 <!-- Exercise: making a click-based carousel for some object that tweens between each of its object. -->
+<!--https://www.youtube.com/watch?v=VBLJ9hzW5fY&t=26s -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -18,9 +19,49 @@
       }
     </style>
   </head>
-  <body onload="draw();">
+  <body>
     <div><canvas id="canvas"></canvas></div>
   </body>
+
+  <script>
+    const tweener = {
+      linearTween: (beginPos, endPos, duration, callback) => {
+        const beginningTime = performance.now();
+        const diffX = endPos.x - beginPos.x;
+        const diffY = endPos.y - beginPos.y;
+        const initialPos = { ...beginPos };
+
+        function _beginLinearTween() {
+          const currentDuration = performance.now() - beginningTime;
+          if (currentDuration <= duration) {
+            beginPos.x = initialPos.x + (currentDuration / duration) * diffX;
+            beginPos.y = initialPos.y + (currentDuration / duration) * diffY;
+
+            callback?.();
+
+            requestAnimationFrame(_beginLinearTween);
+          } else {
+            // beginPos.x = endPos.x;
+            // beginPos.y = endPos.y;
+            console.log(beginPos, endPos);
+          }
+        }
+
+        _beginLinearTween();
+      },
+    };
+
+    function lerp(start, end, amt) {
+      return start + (end - start) * amt;
+    }
+
+    function drawCircle(x, y) {
+      ctx.beginPath();
+      ctx.arc(x, y, 20, 0, Math.PI * 2);
+      ctx.fillStyle = "red";
+      ctx.fill();
+    }
+  </script>
   <script>
     let canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
@@ -28,12 +69,25 @@
     var height = window.innerHeight;
     canvas.width = width;
     canvas.height = height;
-    const draw = () => {
-      ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
-      //if you see this, canvas is working
-      ctx.arc(width / 2, height / 2, 100, 0, 2 * Math.PI);
-      ctx.stroke();
-      requestAnimationFrame(draw);
+
+    const circlePos = {
+      x: width / 2,
+      y: height / 2,
     };
+
+    document.addEventListener("click", function (e) {
+      const target = {
+        x: e.clientX,
+        y: e.clientY,
+      };
+
+      tweener.linearTween(circlePos, target, 500, () => {
+        ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+
+        drawCircle(circlePos.x, circlePos.y);
+      });
+    });
+
+    drawCircle(circlePos.x, circlePos.y);
   </script>
 </html>
