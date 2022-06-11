@@ -6,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title></title>
     <style>
-      html,
       body {
         border: 0;
         padding: 0;
@@ -15,7 +14,7 @@
         --y: 0;
         --gradient-color-0: #ff9800;
         --gradient-color-1: #3c3c3c;
-        --stop: 100%;
+        --stop: 0%;
         background: radial-gradient(
           circle at var(--x) var(--y),
           var(--gradient-color-0) var(--stop),
@@ -35,7 +34,8 @@
         text-align: center;
         cursor: pointer;
         content: "Click Me!";
-        filter: invert(1) grayscale(1) contrast(3);
+        filter: invert(1) grayscale(3) contrast(3);
+        mix-blend-mode: difference;
       }
     </style>
   </head>
@@ -48,8 +48,14 @@
     let requestAnimationFrameId;
     const style = document.body.style;
 
-    //TODO continue
-    //https://codepen.io/thebabydino/pen/qXPaKy?editors=1111
+    document.addEventListener("click", (e) => {
+      if (!requestAnimationFrameId) {
+        style.setProperty("--x", `${e.x}px`);
+        style.setProperty("--y", `${e.y}px`);
+        update();
+      }
+    });
+
     function update() {
       time.current += 16;
       style.setProperty("--stop", (time.current / time.duration) * 100 + "%");
@@ -57,9 +63,23 @@
       const timeLimitReached = time.current >= time.duration;
       if (timeLimitReached) {
         cancelAnimationFrame(requestAnimationFrameId);
-        requestAnimationFrame = null;
+
+        const gradientColor0 = window
+          .getComputedStyle(document.body)
+          .getPropertyValue("--gradient-color-0");
+        const gradientColor1 = window
+          .getComputedStyle(document.body)
+          .getPropertyValue("--gradient-color-1");
+        style.setProperty("--gradient-color-0", gradientColor1);
+        style.setProperty("--gradient-color-1", gradientColor0);
+
+        style.setProperty("--stop", "0%");
+        requestAnimationFrameId = null;
         time.current = 0;
+        return;
       }
+
+      requestAnimationFrameId = requestAnimationFrame(update);
     }
   </script>
 </html>
