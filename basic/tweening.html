@@ -115,6 +115,28 @@
                 requestAnimationFrame(_beginEaseInOutQuadTween);
               }
             };
+          case "bounce1":
+            return function _beginBounce1() {
+              const currentDuration = performance.now() - beginningTime;
+              const dx = currentDuration / duration;
+              // For a sin function, we want to be able to just say,
+              // I want the curve from pi to pi2 to be how my function
+              // behaves und so was.
+
+              // (all angles in radians)
+              // Example: _beginBounce({beginAngle: -0.872, endAngle: Math.PI * 5 / 2, time: 1000}) // this is a bit bouncy
+              const x = Math.sin(Math.PI * dx);
+              if (currentDuration <= duration) {
+                beginPos.x = initialPos.x + x * diffX;
+                beginPos.y = initialPos.y + x * diffY;
+
+                callback?.();
+
+                requestAnimationFrame(_beginBounce1);
+              }
+            };
+          default:
+            throw new Error("Unknown tween type");
         }
       },
     };
@@ -149,7 +171,7 @@
         y: e.clientY,
       };
 
-      tweener.tween(circlePos, target, 500, "easeInOutQuad", () => {
+      tweener.tween(circlePos, target, 500, "bounce1", () => {
         ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
 
         drawCircle(circlePos.x, circlePos.y);
