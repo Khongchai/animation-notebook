@@ -17,18 +17,10 @@
       canvas {
         display: block;
       }
-      img {
-        object-fit: contain;
-        background-image: url("https://wallpaperaccess.com/full/109666.jpg");
-        width: 100%;
-        height: 100%;
-      }
     </style>
   </head>
   <body>
-    <!-- Comment either one out to compare the javascript img scaling and css's -->
     <canvas id="canvas" onload="scaleImage();"></canvas>
-    <!-- <img id="img-container" /> -->
   </body>
   <script>
     const canvas = document.getElementById("canvas");
@@ -150,7 +142,7 @@
         canvas.height = height;
         ctx.clearRect(0, 0, width, height);
 
-        imgDrawer.drawContain(imgWidth, imgHeight, width, height);
+        imgDrawer.drawCover(imgWidth, imgHeight, width, height);
 
         requestAnimationFrame(() => draw(imgWidth, imgHeight));
       };
