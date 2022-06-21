@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      html,
+      body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+      }
+      canvas {
+        display: block;
+      }
+      img {
+        object-fit: contain;
+        background-image: url("https://wallpaperaccess.com/full/109666.jpg");
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Comment either one out to compare the javascript img scaling and css's -->
+    <canvas id="canvas" onload="scaleImage();"></canvas>
+    <!-- <img id="img-container" /> -->
+  </body>
+  <script>
+    const canvas = document.getElementById("canvas");
+    if (canvas) {
+      const ctx = canvas.getContext("2d");
+
+      const img = document.createElement("img");
+      img.src = "https://wallpaperaccess.com/full/109666.jpg";
+      img.addEventListener("load", onImageLoad);
+
+      function onImageLoad() {
+        const imgWidth = img.width;
+        const imgHeight = img.height;
+        draw(imgWidth, imgHeight);
+      }
+
+      const imgDrawer = {
+        drawFitWidthHeight: function (sWidth, sHeight, dWidth, dHeight) {
+          ctx.drawImage(img, 0, 0, sWidth, sHeight, 0, 0, dWidth, dHeight);
+        },
+        drawFitHeight: function (sWidth, sHeight, dWidth, dHeight) {
+          const aspectRatio = sWidth / sHeight; //actual image aspect ratio, un-tampered.
+          const _sHeight = dHeight;
+          const _sWidth = _sHeight * aspectRatio;
+
+          const centerX = (dWidth - _sWidth) / 2;
+          ctx.drawImage(
+            img,
+            0,
+            0,
+            sWidth,
+            sHeight,
+            centerX,
+            0,
+            _sWidth,
+            _sHeight
+          );
+        },
+        drawFitWidth: function (sWidth, sHeight, dWidth, dHeight) {
+          const aspectRatio = sWidth / sHeight; //actual image aspect ratio, un-tampered.
+          const _sWidth = sWidth;
+          const _sHeight = _sWidth / aspectRatio;
+
+          const centerY = (dHeight - sHeight) / 2;
+          ctx.drawImage(
+            img,
+            0,
+            0,
+            sWidth,
+            sHeight,
+            0,
+            centerY,
+            _sWidth,
+            _sHeight
+          );
+        },
+        /**
+         * From: https://www.w3schools.com/css/css3_object-fit.asp
+         * The image keeps its aspect ratio and fills the given dimension.
+         * The image will be clipped to fit
+         */
+        drawCover: function (sWidth, sHeight, dWidth, dHeight) {
+          const imageAspectRatio = sWidth / sHeight; //actual image aspect ratio, un-tampered.
+          const containerAspectRatio = dWidth / dHeight;
+
+          const widthFirst = imageAspectRatio > containerAspectRatio;
+          const _sWidth = !widthFirst ? dWidth : dHeight * imageAspectRatio;
+          const _sHeight = !widthFirst ? _sWidth / imageAspectRatio : dHeight;
+
+          const centerX = !widthFirst ? 0 : (dWidth - _sWidth) / 2;
+          const centerY = !widthFirst ? (dHeight - _sHeight) / 2 : 0;
+
+          ctx.drawImage(
+            img,
+            0,
+            0,
+            sWidth,
+            sHeight,
+            centerX,
+            centerY,
+            _sWidth,
+            _sHeight
+          );
+        },
+        /**
+         * From: https://www.w3schools.com/css/css3_object-fit.asp
+         * If we use object-fit: contain; the image keeps its aspect ratio,
+         * but is resized to fit within the given dimension.
+         */
+        drawContain: function (sWidth, sHeight, dWidth, dHeight) {
+          const imageAspectRatio = sWidth / sHeight; //actual image aspect ratio, un-tampered.
+          const containerAspectRatio = dWidth / dHeight;
+
+          const widthFirst = imageAspectRatio > containerAspectRatio;
+          const _sWidth = widthFirst ? dWidth : dHeight * imageAspectRatio;
+          const _sHeight = widthFirst ? _sWidth / imageAspectRatio : dHeight;
+
+          const centerX = widthFirst ? 0 : (dWidth - _sWidth) / 2;
+          const centerY = widthFirst ? (dHeight - _sHeight) / 2 : 0;
+
+          ctx.drawImage(
+            img,
+            0,
+            0,
+            sWidth,
+            sHeight,
+            centerX,
+            centerY,
+            _sWidth,
+            _sHeight
+          );
+        },
+      };
+
+      const draw = (imgWidth, imgHeight) => {
+        var width = window.innerWidth;
+        var height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+        ctx.clearRect(0, 0, width, height);
+
+        imgDrawer.drawContain(imgWidth, imgHeight, width, height);
+
+        requestAnimationFrame(() => draw(imgWidth, imgHeight));
+      };
+    }
+  </script>
+</html>

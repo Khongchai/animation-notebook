@@ -138,9 +138,12 @@
               const begin = (3 * Math.PI) / 2;
               const end = 8.2;
               const baseTrig = (x) => Math.sin(Math.sin(Math.sin(x)));
+              // a more fun type of function
+              const baseTrig2 = (x) =>
+                Math.sin(2 * Math.sin(2 * Math.sin(Math.sin(Math.sin(x)))));
               const x =
-                (baseTrig(dx * (end - begin) + begin) - baseTrig(begin)) /
-                (baseTrig(end) - baseTrig(begin));
+                (baseTrig2(dx * (end - begin) + begin) - baseTrig2(begin)) /
+                (baseTrig2(end) - baseTrig2(begin));
               if (currentDuration <= duration) {
                 beginPos.x = initialPos.x + x * diffX;
                 beginPos.y = initialPos.y + x * diffY;
