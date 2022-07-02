@@ -140,6 +140,7 @@
               // will always go from 0 to 1 based on the given curve of a function.
 
               const baseFunc = (x) => Math.cos(Math.atan(x)) ** 2 * Math.E;
+              const baseFuncY = (x) => Math.cos(Math.atan(x)) ** 1 * Math.E;
               const begin = 0;
               const end = 35;
               // const begin = (3 * Math.PI) / 2;
@@ -149,9 +150,12 @@
               const x =
                 (baseFunc(dx * (end - begin) + begin) - baseFunc(begin)) /
                 (baseFunc(end) - baseFunc(begin));
+              const y =
+                (baseFuncY(dx * (end - begin) + begin) - baseFuncY(begin)) /
+                (baseFuncY(end) - baseFuncY(begin));
               if (currentDuration <= duration) {
                 beginPos.x = initialPos.x + x * diffX;
-                beginPos.y = initialPos.y + x * diffY;
+                beginPos.y = initialPos.y + y * diffY;
 
                 callback?.();
 
