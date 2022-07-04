@@ -1,0 +1,146 @@
+<style>
+	@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@100;300;400;500;600;700;800;900&display=swap");
+	header,
+	main {
+	 margin: 4rem;
+	 color: #373239;
+	 box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
+	 background-color: #fff;
+	 border-radius: 10px;
+	}
+	body {
+	 margin: 0;
+	 padding: 0;
+	 display: flex;
+	 flex-direction: column;
+	 height: 100vh;
+	 font-family: "Nunito";
+	 background: #e6e6e6;
+	 min-height: 100vh;
+	}
+
+	/* Animation-related */
+	.animate {
+	 transition: all 0.3s ease-in-out;
+	}
+
+
+	main {
+	 position: relative;
+	 flex-grow: 1;
+	 margin-top: 0;
+	}
+
+	header {
+	 height: 100px;
+	 padding: 2rem;
+	}
+
+	.box {
+	 background: darkOrchid;
+	 cursor: pointer;
+	 box-sizing: border-box;
+	 transform-origin: 0 0;
+	 z-index: 999;
+	}
+
+	header .box {
+	 position: relative;
+	 width: 100px;
+	 height: 100px;
+	}
+
+	main .box {
+	 position: absolute;
+	 top: 20%;
+	 left: 20%;
+	 width: 60%;
+	 height: 60%;
+	}
+
+	.animate {
+	 transition: all 1s ease-in-out;
+	}
+
+	.purple {
+	 border-color: darkOrchid;
+	}
+
+	.blue {
+	 border-color: #32b2cc;
+	}
+
+	.pink {
+	 border-color: #d133aa;
+	}
+
+</style>
+<body>
+	<header>
+	 <div class="box"></div>
+	</header>
+
+	<main>
+
+	</main>
+
+</body>
+<script>
+class Flip {
+ state;
+ 
+ first(el) {
+  this.state = el.getBoundingClientRect();
+ }
+
+ invert(el) {
+  const first = this.state;
+  const last = el.getBoundingClientRect();
+
+  let delta = {
+   x: (first.left - last.left),
+   y: (first.top - last.top),
+   scaleX: first.width / last.width,
+   scaleY: first.height / last.height
+  };
+
+  console.log(delta);
+
+  el.style.transform = `translate(${delta.x}px, ${delta.y}px) scale(${delta.scaleX}, ${delta.scaleY})`;
+ }
+
+ play(el) {
+  // Wait 1 frame to start the animation, otherwise everything
+  // is going to happen instantly.
+  requestAnimationFrame(function () {
+   el.classList.add("animate");
+   el.style.transform = "none";
+  });
+ }
+}
+
+const flip = new Flip();
+
+const box = document.querySelector(".box");
+const main = document.querySelector("main");
+const header = document.querySelector("header");
+
+let inHeader = true;
+
+box.addEventListener("click", (e) => {
+ flip.first(e.target);
+
+ inHeader ? main.appendChild(box) : header.appendChild(box);
+
+ flip.invert(e.target);
+ flip.play(e.target);
+
+ inHeader = !inHeader;
+});
+
+box.addEventListener("transitionend", (e) => {
+ console.log("end");
+ e.target.classList.remove("animate");
+});
+
+</script>
