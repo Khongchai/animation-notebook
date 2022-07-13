@@ -28,40 +28,130 @@
     canvas.width = width;
     canvas.height = height;
 
+    const ArmBuilder = {
+      arm: null,
+
+      init: function () {
+        this.arm = Object.create(Arm);
+        return this;
+      },
+
+      setX(x) {
+        this.arm.x = x;
+        return this;
+      },
+
+      setY(y) {
+        this.arm.y = y;
+        return this;
+      },
+
+      setParent(parent) {
+        this.arm.parent = parent;
+        return this;
+      },
+
+      setLength(length) {
+        this.arm.length = length;
+        return this;
+      },
+
+      setAngle(angle) {
+        this.arm.angle = angle;
+        return this;
+      },
+
+      build() {
+        return this.arm;
+      },
+    };
+
     const Arm = {
       x: 0,
       y: 0,
       length: 100,
       angle: 0,
+      _angleChange: 0,
+      parent: null,
 
-      constructor: function (x, y, length, angle) {
-        const object = Object.create(this);
-        Object.assign(object, { x, y, length, angle });
-        return object;
+      builder: () => {
+        return ArmBuilder.init();
       },
 
-      getEndX: function () {
-        return this.x + Math.cos(this.angle) * this.length;
+      get end() {
+        let parent = this.parent;
+        let angle = this.angle;
+        while (parent) {
+          angle += parent.angle;
+          parent = parent.parent;
+        }
+
+        return {
+          x: this.x + Math.cos(angle) * this.length,
+          y: this.y + Math.sin(angle) * this.length,
+        };
       },
 
-      getEndY: function () {
-        return this.y + Math.sin(this.angle) * this.length;
+      animate: function (context, intervalScale, amplitudeScale, x, y) {
+        this.x = x || this.x;
+        this.y = y || this.y;
+
+        const isBaseArm = !this.parent;
+        if (isBaseArm) {
+          this.angle =
+            Math.sin(this._angleChange * intervalScale) * amplitudeScale;
+          this._angleChange += 0.05;
+        } else {
+          this.angle =
+            Math.cos(this._angleChange * intervalScale) * amplitudeScale;
+          this._angleChange += 0.05;
+        }
+
+        this._render(context);
       },
 
-      render: function (context) {
+      _render: function (context) {
         context.strokeStyle = "black";
         context.lineWidth = 5;
 
         context.beginPath();
         context.moveTo(this.x, this.y);
-        const endX = this.getEndX();
-        const endY = this.getEndY();
-        context.lineTo(endX, endY);
+        context.lineTo(this.end.x, this.end.y);
         context.stroke();
       },
     };
 
-    const arm = Arm.constructor(width / 2, height / 2, 100, 0.1);
-    arm.render(ctx);
+    const arm = Arm.builder()
+      .setX(width / 2)
+      .setY(height / 2)
+      .setLength(100)
+      .setAngle(0.1)
+      .build();
+    const arm1End = arm.end;
+    const arm2 = Arm.builder()
+      .setX(arm1End.x)
+      .setY(arm1End.y)
+      .setLength(100)
+      .setAngle(1.3)
+      .setParent(arm)
+      .build();
+    const arm2End = arm2.end;
+    const arm3 = Arm.builder()
+      .setX(arm2End.x)
+      .setY(arm2End.y)
+      .setLength(100)
+      .setAngle(1.3)
+      .setParent(arm2)
+      .build();
+
+    function animate() {
+      ctx.clearRect(0, 0, width, height);
+      arm.animate(ctx, 1, 1.2);
+      arm2.animate(ctx, 0.7, 1, arm.end.x, arm.end.y);
+      arm3.animate(ctx, 0.5, 1.2, arm2.end.x, arm2.end.y);
+      requestAnimationFrame(animate);
+    }
+
+    animate();
   </script>
 </html>
