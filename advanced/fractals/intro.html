@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      html,
+      body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body onload="draw();">
+    <div><canvas id="canvas"></canvas></div>
+  </body>
+  <script>
+    let canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+    ctx.translate(width / 2, height / 2);
+
+    const p0 = {
+      x: 0,
+      y: -321,
+    };
+    const p1 = {
+      x: 278,
+      y: 160,
+    };
+    const p2 = {
+      x: -278,
+      y: 160,
+    };
+
+    function drawTriangle(p0, p1, p2) {
+      ctx.beginPath();
+      ctx.moveTo(p0.x, p0.y);
+      ctx.lineTo(p1.x, p1.y);
+      ctx.lineTo(p2.x, p2.y);
+      ctx.fill();
+    }
+
+    function sierpinsky({ p0, p1, p2 }) {
+      const pc = {
+        x: (p2.x + p0.x) / 2,
+        y: (p2.y + p0.y) / 2,
+      };
+      const pb = {
+        x: (p1.x + p2.x) / 2,
+        y: (p1.y + p2.y) / 2,
+      };
+      const pa = {
+        x: (p0.x + p1.x) / 2,
+        y: (p0.y + p1.y) / 2,
+      };
+
+      drawTriangle(p2, pc, pb);
+      drawTriangle(pb, pa, p1);
+      drawTriangle(pc, p0, pa);
+    }
+
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+
+      sierpinsky({ p0, p1, p2 });
+
+      requestAnimationFrame(draw);
+    };
+  </script>
+</html>
