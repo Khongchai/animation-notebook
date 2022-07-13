@@ -28,6 +28,7 @@
     canvas.width = width;
     canvas.height = height;
     ctx.translate(width / 2, height / 2);
+    ctx.scale(2, 2);
 
     const p0 = {
       x: 0,
@@ -50,7 +51,7 @@
       ctx.fill();
     }
 
-    function sierpinsky({ p0, p1, p2 }) {
+    function sierpinsky(p0, p1, p2, limit) {
       const pc = {
         x: (p2.x + p0.x) / 2,
         y: (p2.y + p0.y) / 2,
@@ -63,16 +64,22 @@
         x: (p0.x + p1.x) / 2,
         y: (p0.y + p1.y) / 2,
       };
-
-      drawTriangle(p2, pc, pb);
-      drawTriangle(pb, pa, p1);
-      drawTriangle(pc, p0, pa);
+      if (limit < 0) {
+        drawTriangle(p2, pc, pb);
+        drawTriangle(pb, pa, p1);
+        drawTriangle(pc, p0, pa);
+      } else {
+        const nextLimit = limit - 1;
+        sierpinsky(p2, pc, pb, nextLimit);
+        sierpinsky(pb, pa, p1, nextLimit);
+        sierpinsky(pc, p0, pa, nextLimit);
+      }
     }
 
     const draw = () => {
       ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
 
-      sierpinsky({ p0, p1, p2 });
+      sierpinsky(p0, p1, p2, 5);
 
       requestAnimationFrame(draw);
     };

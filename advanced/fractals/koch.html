@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      html,
+      body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <div><canvas id="canvas"></canvas></div>
+  </body>
+  <script>
+    let canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+
+    const p0 = {
+      x: 100,
+      y: height * 0.75,
+    };
+    const p1 = {
+      x: width - 100,
+      y: height * 0.75,
+    };
+    koch(p0, p1, ctx, 4);
+
+    function koch(p0, p1, ctx, currentLevel) {
+      const dx = p1.x - p0.x;
+      const dy = p1.y - p0.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      const unit = dist / 3;
+
+      const pA = {
+        x: p0.x + dx / 3,
+        y: p0.y + dy / 3,
+      };
+      const pC = {
+        x: p1.x - dx / 3,
+        y: p1.y - dy / 3,
+      };
+      const lineAngle = Math.atan2(dy, dx);
+      const pB = {
+        x: pA.x + Math.cos(lineAngle - Math.PI / 3) * unit,
+        y: pA.y + Math.sin(lineAngle - Math.PI / 3) * unit,
+      };
+
+      if (currentLevel < 0) {
+        ctx.beginPath();
+        ctx.moveTo(p0.x, p0.y);
+        ctx.lineTo(pA.x, pA.y);
+        ctx.lineTo(pB.x, pB.y);
+        ctx.lineTo(pC.x, pC.y);
+        ctx.lineTo(p1.x, p1.y);
+        ctx.stroke();
+      } else {
+        const newLevel = currentLevel - 1;
+        koch(p0, pA, ctx, newLevel);
+        koch(pA, pB, ctx, newLevel);
+        koch(pB, pC, ctx, newLevel);
+        koch(pC, p1, ctx, newLevel);
+      }
+    }
+  </script>
+</html>
