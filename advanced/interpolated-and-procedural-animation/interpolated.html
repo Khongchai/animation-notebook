@@ -197,7 +197,7 @@
 
                 callback?.();
 
-                requestAnimationFrame(_beginBounce1);
+                requestAnimationFrame(_beginBounce2);
               }
             };
 
@@ -242,7 +242,7 @@
         y: e.clientY,
       };
 
-      tweener.tween(circlePos, target, 500, "bounce1", () => {
+      tweener.tween(circlePos, target, 5000, "bounce2", () => {
         ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
 
         drawCircle(circlePos.x, circlePos.y);
