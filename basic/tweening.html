@@ -1,5 +1,5 @@
 <!-- Exercise: making a click-based carousel for some object that tweens between each of its object. -->
-<!--https://www.youtube.com/watch?v=VBLJ9hzW5fY&t=26s -->
+<!-- https://en.wikipedia.org/wiki/Smoothstep Smooth step for clamping -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -119,6 +119,7 @@
            * animateBounce(beginPos, endPos, duration, angleFrom: someBeginningAngle, to: someEndAngle, onAnimationEnd: someCallback)
            */
           case "bounce1":
+            //Recommended duration:500
             return function _beginBounce1() {
               const currentDuration = performance.now() - beginningTime;
               const dx = currentDuration / duration;
@@ -139,10 +140,19 @@
               // any function as the baseFunc and give it the constraint, and our point
               // will always go from 0 to 1 based on the given curve of a function.
 
-              const baseFunc = (x) => Math.cos(Math.atan(x)) ** 2 * Math.E;
-              const baseFuncY = (x) => Math.cos(Math.atan(x)) ** 1 * Math.E;
-              const begin = 0;
-              const end = 35;
+              //const baseFunc = (x) => Math.cos(Math.atan(x)) ** 2 * Math.E;
+              //const baseFuncY = (x) => Math.cos(Math.atan(x)) ** 1 * Math.E;
+              const baseFunc = (x) =>
+                Math.pow(Math.E, -1.8 * x) *
+                (Math.cos(3.8 * x + -1.8) + Math.sin(3.8 * x + -1.8));
+
+              const baseFuncY = baseFunc;
+              // const begin = 0;
+              // const end = 35;
+
+              const begin = 1.3;
+              const end = 3.8;
+
               // const begin = (3 * Math.PI) / 2;
               //const end = 8.2;
               //const baseFunc = (x) =>
@@ -162,6 +172,35 @@
                 requestAnimationFrame(_beginBounce1);
               }
             };
+
+          //Recommended duration: 3000
+          case "bounce2":
+            return function _beginBounce2() {
+              const currentDuration = performance.now() - beginningTime;
+              const dx = currentDuration / duration;
+              const baseFunc = (x) =>
+                Math.pow(Math.E, -1.8 * x) *
+                (Math.cos(3.8 * x + -1.8) + Math.sin(3.8 * x + -1.8));
+
+              const baseFuncY = baseFunc;
+              const begin = 0;
+              const end = 35;
+              const x =
+                (baseFunc(dx * (end - begin) + begin) - baseFunc(begin)) /
+                (baseFunc(end) - baseFunc(begin));
+              const y =
+                (baseFuncY(dx * (end - begin) + begin) - baseFuncY(begin)) /
+                (baseFuncY(end) - baseFuncY(begin));
+              if (currentDuration <= duration) {
+                beginPos.x = initialPos.x + x * diffX;
+                beginPos.y = initialPos.y + y * diffY;
+
+                callback?.();
+
+                requestAnimationFrame(_beginBounce1);
+              }
+            };
+
           default:
             throw new Error("Unknown tween type");
         }
