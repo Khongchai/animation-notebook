@@ -45,11 +45,11 @@
     //More traditional hooke's law
     const delayedMouse2 = new Particle(0, 0, 0, 0);
 
-    const k = 0.5;
+    const k = 0.8;
     const f = 0.7;
 
     const draw = () => {
-      springTo1(delayedMouse1, mouse, k, f);
+      springTo2(delayedMouse1, mouse, k, f);
 
       /*
         Linear interpolation
@@ -77,14 +77,9 @@
       const dx = t.x - o.x;
       const dy = t.y - o.y;
 
-      const springForceX = dx * k;
-      const springForceY = dy * k;
-
-      o.vX += springForceX;
-      o.vY += springForceY;
-
-      o.vX *= f;
-      o.vY *= f;
+      // Hooke's law = F = -kx
+      o.vX = (o.vX + dx) * k;
+      o.vY = (o.vY + dy) * k;
 
       o.x += o.vX;
       o.y += o.vY;

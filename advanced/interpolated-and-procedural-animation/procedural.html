@@ -1,6 +1,8 @@
 <!-- https://www.sciencedirect.com/topics/engineering/second-order-system#:~:text=Second%2Dorder%20system%20with%20voltage%20step%20input.&text=For%20instance%2C%20for%20a%20damping,time%20of%20the%20ring%20envelope. -->
 
 <!-- https://www.calculushowto.com/calculus-definitions/damped-sine-wave/#:~:text=Formula%20for%20a%20Damped%20Sine%20Wave&text=Exponential%20damping%20y(t)%20%3D,decay%20curve%20shown%20in%20red. -->
+
+<!-- https://www.youtube.com/watch?v=KPoeNZZ6H4s&t=2s -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -22,15 +24,6 @@
   </body>
   <script></script>
   <script>
-    /**
-     * This is a POC for a physics-based spring UI components
-     * For time-based, view tweening.html
-     *
-     * Possible UI components that can be used with this:
-     *
-     * Something that expands like an action button.
-     *
-     */
     let canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
     var width = window.innerWidth;
@@ -39,26 +32,30 @@
     canvas.height = height;
 
     document.addEventListener("mousemove", (e) => {
-      obj.updateTargetPosition(e.clientX, e.clientY);
+      obj.updatePosition(e.clientX, e.clientY);
     });
 
     const obj = {
-      currentPosition: { x: 0, y: 0 },
-      targetPosition: { x: 0, y: 0 },
+      previousPosition: { x: 0, y: 0 },
+      newPosition: { x: 0, y: 0 },
       ctx,
-      updateTargetPosition: function (x, y) {
-        this.targetPosition.x = x;
-        this.targetPosition.y = y;
+      updatePosition: function (x, y) {
+        const velocity = {
+          x: x - this.previousPosition.x,
+          y: y - this.previousPosition.y,
+        };
+        this.newPosition.x = veloctiy.x;
+        this.newPosition.y = velocity.y;
       },
       moveToTarget: function () {
-        const { x, y } = this.targetPosition;
-        this.currentPosition.x = x;
-        this.currentPosition.y = y;
+        const { x, y } = this.newPosition;
+        this.previousPosition.x = x;
+        this.previousPosition.y = y;
       },
       draw: function () {
         ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
         ctx.beginPath();
-        const { x, y } = this.currentPosition;
+        const { x, y } = this.previousPosition;
         ctx.arc(x, y, 10, 0, Math.PI * 2, false);
         ctx.fill();
       },
