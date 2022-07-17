@@ -35,7 +35,6 @@
       mouse.y = e.y;
     };
 
-    //Lerp-based formula
     const delayedMouse1 = {
       x: 0,
       y: 0,
@@ -45,17 +44,11 @@
     //More traditional hooke's law
     const delayedMouse2 = new Particle(0, 0, 0, 0);
 
-    const k = 0.8;
-    const f = 0.7;
+    const k = 0.6;
 
     const draw = () => {
-      springTo2(delayedMouse1, mouse, k, f);
+      springTo2(delayedMouse1, mouse, k, 0.5, 300);
 
-      /*
-        Linear interpolation
-      */
-      //   delayedMouse.y = lerp(delayedMouse.y, mouse.y, 0.1);
-      //   delayedMouse.x = lerp(delayedMouse.x, mouse.x, 0.1);
       ctx.fillStyle = "rgba(0, 0, 0, 1)";
       ctx.fillRect(0, 0, width, height);
 
@@ -72,8 +65,8 @@
         t is the target
         k is the spring constant
     */
-    function springTo1(o, t, k, f) {
-      //Grab distance
+    function springTo1(o, t, k) {
+      // Grab the change
       const dx = t.x - o.x;
       const dy = t.y - o.y;
 
@@ -85,18 +78,20 @@
       o.y += o.vY;
     }
 
-    //Same as above, but more robust and can add length
-    function springTo2(o, t, k, f) {
+    // Same as above but can add length
+
+    function springTo2(o, t, k, length) {
       const dx = t.x - o.x;
       const dy = t.y - o.y;
+
       const distance = Math.sqrt(dx * dx + dy * dy) - length;
-
       const springForce = distance * k;
-      o.vX += (dx / distance) * springForce;
-      o.vY += (dy / distance) * springForce;
 
-      o.vX *= f;
-      o.vY *= f;
+      o.vX += (dx / (distance + 1)) * springForce;
+      o.vY += (dy / (distance + 1)) * springForce;
+
+      o.vX = o.vX * k;
+      o.vY = o.vY * k;
 
       o.x += o.vX;
       o.y += o.vY;

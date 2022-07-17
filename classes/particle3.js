@@ -54,13 +54,13 @@ class Particle {
   }
 
   update() {
+    this.handleSprings();
+    this.handleGravitation();
     this.vx = this.vx * this.friction;
     //this optimization limits gravity to the y axis.
     this.vy = this.vy * this.friction + this.gravity;
     this.x += this.vx;
     this.y += this.vy;
-    this.handleSprings();
-    this.handleGravitation();
   }
 
   angleTo(p) {
