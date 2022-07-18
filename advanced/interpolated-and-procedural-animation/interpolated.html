@@ -26,8 +26,8 @@
     const tweener = {
       /**
        * @param {{
-        beginValue: {}, 
-        endValue: {}, 
+        beginValue: {},
+        endValue: {},
         propertiesToTween: string[],
         duration: number,
         tweenType: string,
@@ -83,17 +83,21 @@
         beginValue,
         callback
       ) => {
+        const keys = Object.keys(differenceMap);
+        const updateProperties = (x) => {
+          keys.forEach((key) => {
+            beginValue[key] = initialValue[key] + x * differenceMap[key];
+          });
+        };
+
         // https://www.desmos.com/calculator/lskstuoipd
         switch (tweenType) {
           case "linear":
             return function _beginLinearTween() {
               const currentDuration = performance.now() - beginningTime;
               if (currentDuration <= duration) {
-                Object.keys(differenceMap).forEach((key) => {
-                  beginValue[key] =
-                    initialValue[key] +
-                    (currentDuration / duration) * differenceMap[key];
-                });
+                const x = currentDuration / duration;
+                updateProperties(x);
 
                 callback?.();
 
@@ -106,9 +110,7 @@
               const currentDuration = performance.now() - beginningTime;
               if (currentDuration <= duration) {
                 const x = Math.pow(currentDuration / duration, 2);
-                Object.keys(differenceMap).forEach((key) => {
-                  beginValue[key] = initialValue[key] + x * differenceMap[key];
-                });
+                updateProperties(x);
 
                 callback?.();
 
@@ -120,8 +122,7 @@
               const currentDuration = performance.now() - beginningTime;
               if (currentDuration <= duration) {
                 const x = 1 - Math.pow(1 - currentDuration / duration, 2);
-                beginValue.x = initialValue.x + x * diffX;
-                beginValue.y = initialValue.y + x * diffY;
+                updateProperties(x);
 
                 callback?.();
 
@@ -131,12 +132,11 @@
           case "easeInOutQuad":
             return function _beginEaseInOutQuadTween() {
               const currentDuration = performance.now() - beginningTime;
-              const x =
-                (Math.sin(Math.PI * (currentDuration / duration - 0.5)) + 1) /
-                2;
               if (currentDuration <= duration) {
-                beginValue.x = initialValue.x + x * diffX;
-                beginValue.y = initialValue.y + x * diffY;
+                const x =
+                  (Math.sin(Math.PI * (currentDuration / duration - 0.5)) + 1) /
+                  2;
+                updateProperties(x);
 
                 callback?.();
 
@@ -168,32 +168,18 @@
               // any function as the baseFunc and give it the constraint, and our point
               // will always go from 0 to 1 based on the given curve of a function.
 
-              //const baseFunc = (x) => Math.cos(Math.atan(x)) ** 2 * Math.E;
-              //const baseFuncY = (x) => Math.cos(Math.atan(x)) ** 1 * Math.E;
               const baseFunc = (x) =>
                 Math.pow(Math.E, -1.8 * x) *
                 (Math.cos(3.8 * x + -1.8) + Math.sin(3.8 * x + -1.8));
 
-              const baseFuncY = baseFunc;
-              // const begin = 0;
-              // const end = 35;
-
               const begin = 1.3;
               const end = 3.8;
 
-              // const begin = (3 * Math.PI) / 2;
-              //const end = 8.2;
-              //const baseFunc = (x) =>
-              // Math.sin(2 * Math.sin(2 * Math.sin(Math.sin(Math.sin(x)))));
               const x =
                 (baseFunc(dx * (end - begin) + begin) - baseFunc(begin)) /
                 (baseFunc(end) - baseFunc(begin));
-              const y =
-                (baseFuncY(dx * (end - begin) + begin) - baseFuncY(begin)) /
-                (baseFuncY(end) - baseFuncY(begin));
               if (currentDuration <= duration) {
-                beginValue.x = initialValue.x + x * diffX;
-                beginValue.y = initialValue.y + y * diffY;
+                updateProperties(x);
 
                 callback?.();
 
@@ -210,18 +196,13 @@
                 Math.pow(Math.E, -1.8 * x) *
                 (Math.cos(3.8 * x + -1.8) + Math.sin(3.8 * x + -1.8));
 
-              const baseFuncY = baseFunc;
               const begin = 0;
               const end = 35;
               const x =
                 (baseFunc(dx * (end - begin) + begin) - baseFunc(begin)) /
                 (baseFunc(end) - baseFunc(begin));
-              const y =
-                (baseFuncY(dx * (end - begin) + begin) - baseFuncY(begin)) /
-                (baseFuncY(end) - baseFuncY(begin));
               if (currentDuration <= duration) {
-                beginValue.x = initialValue.x + x * diffX;
-                beginValue.y = initialValue.y + y * diffY;
+                updateProperties(x);
 
                 callback?.();
 
@@ -244,9 +225,10 @@
       return x * fact(x - 1);
     }
 
-    function drawCircle(x, y) {
+    function drawCircle(x, y, radius) {
       ctx.beginPath();
-      ctx.arc(x, y, 20, 0, Math.PI * 2);
+      // max prevents negative radius when the radius "bounces".
+      ctx.arc(x, y, Math.max(radius, 0), 0, Math.PI * 2);
       ctx.fillStyle = "red";
       ctx.fill();
     }
@@ -262,25 +244,28 @@
     const circlePos = {
       x: width / 2,
       y: height / 2,
+      radius: 20,
     };
 
     document.addEventListener("click", function (e) {
+      const randomTargetRadius = 10 + Math.random() * 100;
       const target = {
         x: e.clientX,
         y: e.clientY,
+        radius: randomTargetRadius,
       };
 
       // can even be more advanced, like each property has its own tweenType
       tweener.tween({
         beginValue: circlePos,
         endValue: target,
-        propertiesToTween: ["x", "y"],
-        duration: 300,
-        tweenType: "easeInQuad",
+        propertiesToTween: ["radius", "y", "x"],
+        duration: 5000,
+        tweenType: "bounce2",
         callback: () => {
           ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
 
-          drawCircle(circlePos.x, circlePos.y);
+          drawCircle(circlePos.x, circlePos.y, circlePos.radius);
         },
       });
     });
