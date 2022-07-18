@@ -38,8 +38,8 @@
     const delayedMouse1 = {
       x: 0,
       y: 0,
-      vX: 0,
-      vY: 0,
+      vx: 0,
+      vy: 0,
     };
     //More traditional hooke's law
     const delayedMouse2 = new Particle(0, 0, 0, 0);
@@ -47,7 +47,7 @@
     const k = 0.6;
 
     const draw = () => {
-      springTo2(delayedMouse1, mouse, k, 0.5, 300);
+      springTo2(delayedMouse1, mouse, k, 300, 0.7);
 
       ctx.fillStyle = "rgba(0, 0, 0, 1)";
       ctx.fillRect(0, 0, width, height);
@@ -71,30 +71,32 @@
       const dy = t.y - o.y;
 
       // Hooke's law = F = -kx
-      o.vX = (o.vX + dx) * k;
-      o.vY = (o.vY + dy) * k;
+      o.vx = (o.vx + dx) * k;
+      o.vy = (o.vy + dy) * k;
 
-      o.x += o.vX;
-      o.y += o.vY;
+      o.x += o.vx;
+      o.y += o.vy;
     }
 
     // Same as above but can add length
 
-    function springTo2(o, t, k, length) {
+    function springTo2(o, t, k, length, friction) {
       const dx = t.x - o.x;
       const dy = t.y - o.y;
 
-      const distance = Math.sqrt(dx * dx + dy * dy) - length;
-      const springForce = distance * k;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      const springForce = (distance - length) * k;
 
-      o.vX += (dx / (distance + 1)) * springForce;
-      o.vY += (dy / (distance + 1)) * springForce;
+      const ax = (dx / (distance + 1)) * springForce;
+      const ay = (dy / (distance + 1)) * springForce;
 
-      o.vX = o.vX * k;
-      o.vY = o.vY * k;
+      o.vx = o.vx * friction;
+      o.vy = o.vy * friction;
+      o.vx += ax;
+      o.vy += ay;
 
-      o.x += o.vX;
-      o.y += o.vY;
+      o.x += o.vx;
+      o.y += o.vy;
     }
 
     function hookesLaw(x, y, k) {
