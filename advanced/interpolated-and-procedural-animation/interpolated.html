@@ -106,8 +106,9 @@
               const currentDuration = performance.now() - beginningTime;
               if (currentDuration <= duration) {
                 const x = Math.pow(currentDuration / duration, 2);
-                beginValue.x = initialValue.x + x * diffX;
-                beginValue.y = initialValue.y + x * diffY;
+                Object.keys(differenceMap).forEach((key) => {
+                  beginValue[key] = initialValue[key] + x * differenceMap[key];
+                });
 
                 callback?.();
 
@@ -269,12 +270,13 @@
         y: e.clientY,
       };
 
+      // can even be more advanced, like each property has its own tweenType
       tweener.tween({
         beginValue: circlePos,
         endValue: target,
         propertiesToTween: ["x", "y"],
         duration: 300,
-        tweenType: "linear",
+        tweenType: "easeInQuad",
         callback: () => {
           ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
 
