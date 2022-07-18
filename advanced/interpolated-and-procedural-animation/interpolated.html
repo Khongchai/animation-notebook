@@ -22,23 +22,44 @@
   <body>
     <div><canvas id="canvas"></canvas></div>
   </body>
-
   <script>
     const tweener = {
-      tween: function (beginPos, endPos, duration, tweenType, callback) {
+      /**
+       * @param {{
+        beginValue: {}, 
+        endValue: {}, 
+        propertiesToTween: string[],
+        duration: number,
+        tweenType: string,
+        callback: VoidFunction
+      }} firstNamedArgument
+       */
+      tween: function ({
+        beginValue,
+        endValue,
+        propertiesToTween,
+        duration,
+        tweenType,
+        callback,
+      }) {
+        // A map between the property and the difference corresponding to each of the properties.
+        const differenceMap = {};
+        propertiesToTween.forEach(
+          (property) =>
+            (differenceMap[property] =
+              endValue[property] - beginValue[property])
+        );
+
         const beginningTime = performance.now();
-        const diffX = endPos.x - beginPos.x;
-        const diffY = endPos.y - beginPos.y;
-        const initialPos = { ...beginPos };
+        const initialValue = Object.seal({ ...beginValue });
 
         const func = this._tweenTypeResolver(
           tweenType,
           beginningTime,
-          diffX,
-          diffY,
-          initialPos,
+          differenceMap,
+          initialValue,
           duration,
-          beginPos,
+          beginValue,
           callback
         );
 
@@ -50,11 +71,16 @@
       _tweenTypeResolver: (
         tweenType,
         beginningTime,
-        diffX,
-        diffY,
-        initialPos,
+        differenceMap,
+        /**
+         * This is the immutable object used as reference when we interpolate.
+         */
+        initialValue,
         duration,
-        beginPos,
+        /**
+         * This is the object to be interpolated to the next point.
+         */
+        beginValue,
         callback
       ) => {
         // https://www.desmos.com/calculator/lskstuoipd
@@ -63,10 +89,11 @@
             return function _beginLinearTween() {
               const currentDuration = performance.now() - beginningTime;
               if (currentDuration <= duration) {
-                beginPos.x =
-                  initialPos.x + (currentDuration / duration) * diffX;
-                beginPos.y =
-                  initialPos.y + (currentDuration / duration) * diffY;
+                Object.keys(differenceMap).forEach((key) => {
+                  beginValue[key] =
+                    initialValue[key] +
+                    (currentDuration / duration) * differenceMap[key];
+                });
 
                 callback?.();
 
@@ -79,8 +106,8 @@
               const currentDuration = performance.now() - beginningTime;
               if (currentDuration <= duration) {
                 const x = Math.pow(currentDuration / duration, 2);
-                beginPos.x = initialPos.x + x * diffX;
-                beginPos.y = initialPos.y + x * diffY;
+                beginValue.x = initialValue.x + x * diffX;
+                beginValue.y = initialValue.y + x * diffY;
 
                 callback?.();
 
@@ -92,8 +119,8 @@
               const currentDuration = performance.now() - beginningTime;
               if (currentDuration <= duration) {
                 const x = 1 - Math.pow(1 - currentDuration / duration, 2);
-                beginPos.x = initialPos.x + x * diffX;
-                beginPos.y = initialPos.y + x * diffY;
+                beginValue.x = initialValue.x + x * diffX;
+                beginValue.y = initialValue.y + x * diffY;
 
                 callback?.();
 
@@ -107,8 +134,8 @@
                 (Math.sin(Math.PI * (currentDuration / duration - 0.5)) + 1) /
                 2;
               if (currentDuration <= duration) {
-                beginPos.x = initialPos.x + x * diffX;
-                beginPos.y = initialPos.y + x * diffY;
+                beginValue.x = initialValue.x + x * diffX;
+                beginValue.y = initialValue.y + x * diffY;
 
                 callback?.();
 
@@ -116,7 +143,7 @@
               }
             };
           /**
-           * animateBounce(beginPos, endPos, duration, angleFrom: someBeginningAngle, to: someEndAngle, onAnimationEnd: someCallback)
+           * animateBounce(beginValue, endValue, duration, angleFrom: someBeginningAngle, to: someEndAngle, onAnimationEnd: someCallback)
            */
           case "bounce1":
             //Recommended duration:500
@@ -127,7 +154,7 @@
               // I want the curve from pi to pi2 to be how my function
               // behaves und so was.
               // Example of the desired API
-              // animateTween(beginPos, endPos, duration, angleFrom: 0, angleTo: Math.PI)
+              // animateTween(beginValue, endValue, duration, angleFrom: 0, angleTo: Math.PI)
               // Should also check that the angleFrom is less than the angleTo, or have a strict mode where if true,
               // throws an error, else just convert by adding pi to both angleTo and angleFrom.
 
@@ -164,8 +191,8 @@
                 (baseFuncY(dx * (end - begin) + begin) - baseFuncY(begin)) /
                 (baseFuncY(end) - baseFuncY(begin));
               if (currentDuration <= duration) {
-                beginPos.x = initialPos.x + x * diffX;
-                beginPos.y = initialPos.y + y * diffY;
+                beginValue.x = initialValue.x + x * diffX;
+                beginValue.y = initialValue.y + y * diffY;
 
                 callback?.();
 
@@ -192,8 +219,8 @@
                 (baseFuncY(dx * (end - begin) + begin) - baseFuncY(begin)) /
                 (baseFuncY(end) - baseFuncY(begin));
               if (currentDuration <= duration) {
-                beginPos.x = initialPos.x + x * diffX;
-                beginPos.y = initialPos.y + y * diffY;
+                beginValue.x = initialValue.x + x * diffX;
+                beginValue.y = initialValue.y + y * diffY;
 
                 callback?.();
 
@@ -242,10 +269,17 @@
         y: e.clientY,
       };
 
-      tweener.tween(circlePos, target, 5000, "bounce2", () => {
-        ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+      tweener.tween({
+        beginValue: circlePos,
+        endValue: target,
+        propertiesToTween: ["x", "y"],
+        duration: 300,
+        tweenType: "linear",
+        callback: () => {
+          ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
 
-        drawCircle(circlePos.x, circlePos.y);
+          drawCircle(circlePos.x, circlePos.y);
+        },
       });
     });
 
