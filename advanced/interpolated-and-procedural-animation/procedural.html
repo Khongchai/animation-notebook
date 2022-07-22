@@ -22,7 +22,43 @@
   <body onload="draw();">
     <div><canvas id="canvas"></canvas></div>
   </body>
-  <script></script>
+  <script>
+    class SecondOrderDynamics {
+      // Previous input
+      xp;
+      // State variables
+      position;
+      velocity;
+
+      // Dynamic constants
+      k1;
+      k2;
+      k3;
+
+      constructor(f, ζ, r, x0) {
+        const π = Math.PI;
+        // Compute constants
+        this.k1 = ζ / (π * f);
+        this.k2 = 1 / Math.pow(2 * π * f, 2);
+        this.k3 = (r * ζ) / (2 * π * f);
+
+        // Initialize variables
+        this.xp = x0;
+        this.position = x0;
+        this.velocity = 0;
+      }
+
+      update = (T, x, xd) => {
+        if (xd == null) {
+          xd = (x - xp) / T;
+          xp = x;
+        }
+        y = y + T * yd;
+        yd = yd + (T * (x + k3 * xd - y - k1 * yd)) / k2;
+        return y;
+      };
+    }
+  </script>
   <script>
     let canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
@@ -34,6 +70,8 @@
     document.addEventListener("mousemove", (e) => {
       obj.updatePosition(e.clientX, e.clientY);
     });
+
+    const dynamics = new SecondOrderDynamics(1, 0.41, 0, 0);
 
     const obj = {
       previousPosition: { x: 0, y: 0 },
