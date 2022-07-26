@@ -146,9 +146,9 @@
           /**
            * animateBounce(beginValue, endValue, duration, angleFrom: someBeginningAngle, to: someEndAngle, onAnimationEnd: someCallback)
            */
-          case "bounce1":
+          case "spring1":
             //Recommended duration:500
-            return function _beginBounce1() {
+            return function _beginSpring1() {
               const currentDuration = performance.now() - beginningTime;
               const dx = currentDuration / duration;
               // For a sin function, we want to be able to just say,
@@ -183,13 +183,13 @@
 
                 callback?.();
 
-                requestAnimationFrame(_beginBounce1);
+                requestAnimationFrame(_beginSpring1);
               }
             };
 
           //Recommended duration: 3000
-          case "bounce2":
-            return function _beginBounce2() {
+          case "spring2":
+            return function _beginSpring2() {
               const currentDuration = performance.now() - beginningTime;
               const dx = currentDuration / duration;
               const baseFunc = (x) =>
@@ -206,7 +206,35 @@
 
                 callback?.();
 
-                requestAnimationFrame(_beginBounce2);
+                requestAnimationFrame(_beginSpring2);
+              }
+            };
+
+          case "bounce1":
+            return function _beginBounce1() {
+              const currentDuration = performance.now() - beginningTime;
+              const dx = currentDuration / duration;
+              const ω = -0.7;
+              const λ = 0.2;
+              const A = 3.5;
+              const Φ = 2.36;
+              const baseFunc = (x) =>
+                A *
+                Math.pow(Math.E, -λ * x) *
+                (Math.cos(ω * x + Φ) + Math.sin(ω * x + Φ));
+
+              const begin = 0.0054;
+              const end = 22.445;
+              const x = dx * (end - begin) + begin;
+              (baseFunc(dx * (end - begin) + begin) - baseFunc(begin)) /
+                (baseFunc(end) - baseFunc(begin));
+              console.log(x);
+              if (currentDuration <= duration) {
+                updateProperties(x);
+
+                callback?.();
+
+                requestAnimationFrame(_beginBounce1);
               }
             };
 
@@ -261,7 +289,7 @@
         endValue: target,
         propertiesToTween: ["radius", "y", "x"],
         duration: 5000,
-        tweenType: "bounce2",
+        tweenType: "bounce1",
         callback: () => {
           ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
 
