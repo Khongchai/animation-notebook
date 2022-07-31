@@ -210,25 +210,45 @@
               }
             };
 
+          // Bounce with abs(theSpringFunction())
           case "bounce1":
             return function _beginBounce1() {
               const currentDuration = performance.now() - beginningTime;
               const dx = currentDuration / duration;
-              const ω = -0.7;
-              const λ = 0.2;
-              const A = 3.5;
-              const Φ = 2.36;
               const baseFunc = (x) =>
-                A *
-                Math.pow(Math.E, -λ * x) *
-                (Math.cos(ω * x + Φ) + Math.sin(ω * x + Φ));
+                Math.abs(Math.pow(Math.E, -0.8 * x) * Math.cos(1.9 * x + -6));
 
-              const begin = 0.0054;
-              const end = 22.445;
-              const x = dx * (end - begin) + begin;
-              (baseFunc(dx * (end - begin) + begin) - baseFunc(begin)) /
+              const begin = -5.2;
+              const end = 7.8;
+              const x =
+                (baseFunc(dx * (end - begin) + begin) - baseFunc(begin)) /
                 (baseFunc(end) - baseFunc(begin));
-              console.log(x);
+              if (currentDuration <= duration) {
+                updateProperties(x);
+
+                callback?.();
+
+                requestAnimationFrame(_beginBounce1);
+              }
+            };
+
+          // Bounce with abs(theLinearSweepFunction(theSpringEquation()))
+          case "bounce2":
+            return function _beginBounce1() {
+              const currentDuration = performance.now() - beginningTime;
+              const dx = currentDuration / duration;
+              const baseFunc = (x) =>
+                Math.abs(
+                  Math.pow(Math.E, -0.8 * x) *
+                    Math.cos(1.74 * x + (3.44 - 1.74) / 1.75) *
+                    (x ** 2 / 4)
+                );
+
+              const begin = -4;
+              const end = 7.8;
+              const x =
+                (baseFunc(dx * (end - begin) + begin) - baseFunc(begin)) /
+                (baseFunc(end) - baseFunc(begin));
               if (currentDuration <= duration) {
                 updateProperties(x);
 
@@ -287,8 +307,8 @@
       tweener.tween({
         beginValue: circlePos,
         endValue: target,
-        propertiesToTween: ["radius", "y", "x"],
-        duration: 5000,
+        propertiesToTween: ["y", "x"],
+        duration: 1000,
         tweenType: "bounce1",
         callback: () => {
           ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
