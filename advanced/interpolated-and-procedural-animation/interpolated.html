@@ -233,6 +233,7 @@
             };
 
           // Bounce with abs(theLinearSweepFunction(theSpringEquation()))
+          // These default values are not actually that great, actualy need some tweakings.
           case "bounce2":
             return function _beginBounce1() {
               const currentDuration = performance.now() - beginningTime;
@@ -309,7 +310,7 @@
         endValue: target,
         propertiesToTween: ["y", "x"],
         duration: 1000,
-        tweenType: "bounce1",
+        tweenType: "bounce2",
         callback: () => {
           ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
 
