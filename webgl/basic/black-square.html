@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <style>
+    canvas {
+      display: block;
+      border: 0;
+      margin: 0;
+      padding: 0;
+    }
+  </style>
+  <body>
+    <canvas id="glCanvas" width="1000" height="1000"> </canvas>
+  </body>
+  <script>
+    function main() {
+      const canvas = document.querySelector("#glCanvas");
+      const gl = canvas.getContext("webgl");
+
+      if (gl === null) {
+        alert("WebGL not supported");
+        return;
+      }
+
+      gl.clearColor(0.0, 0.0, 0.0, 1.0);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+    }
+  </script>
+  <script>
+    window.onload = main;
+  </script>
+</html>

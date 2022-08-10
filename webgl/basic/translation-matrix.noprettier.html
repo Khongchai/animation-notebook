@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .transformable{
+            background: chocolate;
+            width: 400px;
+            height: 400px;
+        }
+        html, body{
+            height: 100%;
+            width: 100%;
+        }
+        body{
+            display: grid;
+            place-items: center;
+        }
+    </style>
+</head>
+<body>
+   <div id="move-me" class="transformable" 
+   >
+   </div> 
+</body>
+<script>
+    const x = 200;
+    const y = 100;
+    const z = 10;
+
+    const scaleX = 1
+    const scaleY = 1
+    const scaleZ = 1
+
+
+    // Note that this is column-major order.
+    /**
+    * That's why the translation is at the bottomest row.
+    *
+    * The traditional row-major order.
+    *    1, 0, dx
+    *    0, 1, dy
+    *    0, 0, 1
+    *
+    * This is the matrix above but in column-major order.
+    *    1, 0, 0
+    *    0, 1, 0
+    *    dx, dy, 1
+    */
+    let translationMatrix = [
+        scaleX,    0,        0,        0,
+        0,         scaleY,   0,        0,
+        0,         0,        scaleZ,   0,
+        x,         y,        z,        1
+    ];
+
+
+    function matrixArrayToCssMatrix(array) {
+        return `matrix3d(${array.join(',')})`;
+    }
+
+    const moveMe = document.querySelector('#move-me');
+
+    const matrix3dRule = matrixArrayToCssMatrix(translationMatrix);
+
+    moveMe.style.transform = matrix3dRule;
+</script>
+</html>
