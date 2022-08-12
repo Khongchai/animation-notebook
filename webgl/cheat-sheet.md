@@ -19,3 +19,11 @@ If x′=ax+by and y′=cx+dy, and x′′=a′x′+b′y′ and y′′=c′x′
 x′′=a′x′+b′y′=a′(ax+by)+b′(cx+dy)=(a′a+b′c)x+(a′b+b′d)y
 and
 y′′=c′x′+d′y′=c′(ax+by)+d′(cx+dy)=(c′a+d′c)x+(c′b+d′d)y.
+
+# Attributes and Buffer
+
+Buffers are arrays of binary data you upload to the GPU. Usually buffers contain things like positions, normals, texture coordinates, vertex colors, etc although you're free to put anything you want in them.
+
+https://webglfundamentals.org/webgl/lessons/webgl-fundamentals.html
+
+# Remember to read theory after having learned the practice.

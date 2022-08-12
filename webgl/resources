@@ -12,3 +12,11 @@ Additional:
 https://registry.khronos.org/OpenGL/specs/es/3.2/GLSL_ES_Specification_3.20.pdf
 
 https://ia902808.us.archive.org/0/items/philtrans05474612/05474612.pdf
+
+https://webglfundamentals.org/webgl/lessons/resources/webgl-state-diagram.html?exampleId=draw-cubes#no-help
+
+https://blog.scottlogic.com/2019/05/28/drawing-2d-charts-with-webgl.html
+
+try re-creating the barnes-hut algo playground in pure webGL.
+
+look at Google's proxx webGL source code
