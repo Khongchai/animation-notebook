@@ -8,8 +8,58 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <style>
+        .transformable{
+            background: chocolate;
+            width: 400px;
+            height: 400px;
+        }
+        html, body{
+            height: 100%;
+            width: 100%;
+        }
+        body{
+            display: grid;
+            place-items: center;
+        }
+    </style>
 </head>
 <body>
-    
+   <div id="move-me" class="transformable" 
+   >
+   </div> 
 </body>
+<script>
+    const sin = Math.sin;
+    const cos = Math.cos;
+
+    let theta = Math.PI * 0.4;
+
+
+    function matrixArrayToCssMatrix(array) {
+        return `matrix3d(${array.join(',')})`;
+    }
+
+    // The rotation matrix is in column-major order.
+    function getRotationMatrix(theta){
+        return [
+        cos(theta), -sin(theta), 0, 0,
+        sin(theta), cos(theta), 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1
+        ];
+    }
+
+    const moveMe = document.querySelector('#move-me');
+
+    const animateRotation = () => {
+        theta += 0.01;
+        const matrix3dRule = matrixArrayToCssMatrix(getRotationMatrix(theta));
+        moveMe.style.transform = matrix3dRule;
+        requestAnimationFrame(animateRotation);
+
+    }
+
+    animateRotation();
+</script>
 </html>
