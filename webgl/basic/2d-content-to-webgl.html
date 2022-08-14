@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>WebGL Demo</title>
+    <link rel="stylesheet" href="./webgl.css" type="text/css" />
+  </head>
+  <body>
+    <canvas id="glcanvas" width="640" height="480"></canvas>
+  </body>
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.8.1/gl-matrix-min.js"
+    integrity="sha512-zhHQR0/H5SEBL3Wn6yYSaTTZej12z0hVZKOv3TwCUXT1z5qeqGcXJLLrbERYRScEDDpYIJhPC1fk31gqR783iQ=="
+    crossorigin="anonymous"
+  ></script>
+  <script>
+    main();
+
+    function main() {
+      const canvas = document.getElementById("glcanvas");
+      const gl = canvas.getContext("webgl");
+
+      if (!gl) {
+        console.log("webGL not supported");
+        return;
+      }
+
+      const vsSource = `
+            attribute vec4 aVertexPosition;
+
+            uniform mat4 uModelViewMatrix;
+            uniform mat4 uProjectionMatrix;
+
+            void main() {
+                gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
+            }
+        `;
+
+      const fSource = `
+            void main() {
+                gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+            }
+        `;
+
+      // This is also where the lighting for the vertices is established.
+      const shaderProgram = initShaderProgram(gl, vsSource, fSource);
+
+      const programInfo = {
+        program: shaderProgram,
+        attribLocations: {
+          vertexPosition: gl.getAttribLocation(
+            shaderProgram,
+            "aVertexPosition"
+          ),
+        },
+        uniformLocations: {
+          projectionMatrix: gl.getUniformLocation(
+            shaderProgram,
+            "uProjectionMatrix"
+          ),
+          modelViewMatrix: gl.getUniformLocation(
+            shaderProgram,
+            "uModelViewMatrix"
+          ),
+        },
+      };
+
+      const buffers = initPositionBuffers(gl);
+
+      drawScene(gl, programInfo, buffers);
+    }
+
+    function initPositionBuffers(gl) {
+      // Create and bind positionBuffer as the buffer we will use.
+      const positionBuffer = gl.createBuffer();
+
+      // Select the positionBuffer as the one to apply buffer operations to from here on out.
+      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+
+      //prettier-ignore
+      const positions = [
+        1.0,  1.0,
+        1.0, -1.0,
+       -1.0,  1.0,
+       -1.0, -1.0
+      ];
+
+      // Pass the list of positions into webGL to build the shape.
+      gl.bufferData(
+        gl.ARRAY_BUFFER,
+        new Float32Array(positions),
+        gl.STATIC_DRAW
+      );
+
+      return {
+        position: positionBuffer,
+      };
+    }
+
+    function drawScene(gl, programInfo, buffers) {
+      gl.clearColor(0.0, 0.0, 0.0, 1.0);
+      gl.clearDepth;
+      gl.enable(gl.DEPTH_TEST); // Enable depth testing
+      gl.depthFunc(gl.LEQUAL); // Near things obscure far things
+
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+      // Create a perspective matrix, a special matrix that is
+      // used to simulate the distortion of perspective in a camera.
+      // Our field of view is 45 degrees, with a width/height
+      // ratio that matches the display size of the canvas
+      // and we only want to see objects between 0.1 units
+      // and 100 units away from the camera.
+      const fov = Math.PI / 4;
+      const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
+      const zNear = 0.1;
+      const zFar = 100.0;
+      const projectionMatrix = mat4.create();
+
+      // note: glmatrix.js always has the first argument
+      // as the destination to receive the result.
+      mat4.perspective(projectionMatrix, fov, aspect, zNear, zFar);
+
+      // Set the drawing position to the "identity" point, which is
+      // the center ofthe scene.
+      const modelViewMatrix = mat4.create();
+
+      // mat4.translate definition
+      /**
+       * Translate a mat4 by the given vector
+       *
+       * @param {mat4} out the receiving matrix
+       * @param {ReadonlyMat4} a the matrix to translate
+       * @param {ReadonlyVec3} v vector to translate by
+       * @returns {mat4} out
+       *
+       * We offset the modelViewMatrix away from the camedra by 6 units.
+       */
+      mat4.translate(modelViewMatrix, modelViewMatrix, [-0.0, 0.0, -6.0]);
+
+      // Tell WebGL how to pull out the positions from the position
+      // buffer into the vertexPosition attribute.
+      {
+        const numComponents = 2;
+        const type = gl.FLOAT;
+        const normalize = false;
+        const stride = 0;
+        const offset = 0;
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position); // TODO this line might not be necessary.
+        gl.vertexAttribPointer(
+          programInfo.attribLocations.vertexPosition,
+          numComponents,
+          type,
+          normalize,
+          stride,
+          offset
+        );
+        gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
+      }
+
+      gl.useProgram(programInfo.program);
+
+      gl.uniformMatrix4fv(
+        programInfo.uniformLocations.projectionMatrix,
+        false,
+        projectionMatrix
+      );
+      gl.uniformMatrix4fv(
+        programInfo.uniformLocations.modelViewMatrix,
+        false,
+        modelViewMatrix
+      );
+
+      {
+        const offset = 0;
+        const vertexCount = 4;
+        gl.drawArrays(gl.TRIANGLE_STRIP, offset, vertexCount);
+      }
+    }
+
+    // Boilerplate below is similar to the boilerplate in the webgl-boilerplate.js file.
+    //
+    // Initialize a shader program, so WebGL knows how to draw our data
+    //
+    function initShaderProgram(gl, vsSource, fsSource) {
+      const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vsSource);
+      const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fsSource);
+
+      // Create the shader program
+
+      const shaderProgram = gl.createProgram();
+      gl.attachShader(shaderProgram, vertexShader);
+      gl.attachShader(shaderProgram, fragmentShader);
+      gl.linkProgram(shaderProgram);
+
+      // If creating the shader program failed, alert
+
+      if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+        alert(
+          "Unable to initialize the shader program: " +
+            gl.getProgramInfoLog(shaderProgram)
+        );
+        return null;
+      }
+
+      return shaderProgram;
+    }
+
+    //
+    // creates a shader of the given type, uploads the source and
+    // compiles it.
+    //
+    function loadShader(gl, type, source) {
+      const shader = gl.createShader(type);
+
+      // Send the source to the shader object
+
+      gl.shaderSource(shader, source);
+
+      // Compile the shader program
+
+      gl.compileShader(shader);
+
+      // See if it compiled successfully
+
+      if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+        alert(
+          "An error occurred compiling the shaders: " +
+            gl.getShaderInfoLog(shader)
+        );
+        gl.deleteShader(shader);
+        return null;
+      }
+
+      return shader;
+    }
+  </script>
+</html>

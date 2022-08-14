@@ -136,8 +136,7 @@ for webgl-utils, m3, m4, and webgl-lessons-ui.
       // Turn on the attribute
       gl.enableVertexAttribArray(positionAttributeLocation);
 
-      // Bind the position buffer.
-      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer); // this line is not really doing anything...
 
       // Tell the attribute how to get data out of positionBuffer (ARRAY_BUFFER)
       var size = 2; // 2 components per iteration
