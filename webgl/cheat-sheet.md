@@ -26,4 +26,6 @@ Buffers are arrays of binary data you upload to the GPU. Usually buffers contain
 
 https://webglfundamentals.org/webgl/lessons/webgl-fundamentals.html
 
+https://stackoverflow.com/questions/27148273/what-is-the-logic-of-binding-buffers-in-webgl
+
 # Remember to read theory after having learned the practice.
