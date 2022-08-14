@@ -45,6 +45,7 @@
       // This is also where the lighting for the vertices is established.
       const shaderProgram = initShaderProgram(gl, vsSource, fSource);
 
+      // Again attribLocations and uniformLocations keys are pre-defined in the shader code above.
       const programInfo = {
         program: shaderProgram,
         attribLocations: {
@@ -52,6 +53,13 @@
             shaderProgram,
             "aVertexPosition"
           ),
+          // Adding this will throw
+          // "WebGL: INVALID_VALUE: vertexAttribPointer: index out of range" error;
+          // The variable was not defined in the shader code above.
+          // vertexPosition: gl.getAttribLocation(
+          //shaderProgram,
+          //"slkjflkdsaVertexPosition"
+          //),
         },
         uniformLocations: {
           projectionMatrix: gl.getUniformLocation(
@@ -65,9 +73,9 @@
         },
       };
 
-      const buffers = initPositionBuffers(gl);
+      initPositionBuffers(gl);
 
-      drawScene(gl, programInfo, buffers);
+      drawScene(gl, programInfo);
     }
 
     function initPositionBuffers(gl) {
@@ -91,13 +99,9 @@
         new Float32Array(positions),
         gl.STATIC_DRAW
       );
-
-      return {
-        position: positionBuffer,
-      };
     }
 
-    function drawScene(gl, programInfo, buffers) {
+    function drawScene(gl, programInfo) {
       gl.clearColor(0.0, 0.0, 0.0, 1.0);
       gl.clearDepth;
       gl.enable(gl.DEPTH_TEST); // Enable depth testing
@@ -146,7 +150,6 @@
         const normalize = false;
         const stride = 0;
         const offset = 0;
-        gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position); // TODO this line might not be necessary.
         gl.vertexAttribPointer(
           programInfo.attribLocations.vertexPosition,
           numComponents,
