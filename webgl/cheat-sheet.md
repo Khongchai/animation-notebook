@@ -1,5 +1,7 @@
 # WebGL Model View Projection
 
+TODO
+
 # Texel
 
 A "texture pixel" - a single pixel within a texture, just like how a pixel is to an image. Instead of being mapped directly to screen pixels, a texel's data is mapped to a location in the coordiante space of the 3D object being modeled.
