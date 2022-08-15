@@ -1,4 +1,3 @@
-<!-- To be continued. -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -72,15 +71,21 @@
         },
       };
 
-      initBuffers(gl);
+      const { positionBuffer, colorBuffer } = initBuffers(gl);
 
-      drawScene(gl, programInfo);
+      drawScene(gl, programInfo, positionBuffer, colorBuffer);
     }
 
     function initBuffers(gl) {
       const positionBuffer = gl.createBuffer();
       gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-      const positions = [1.0, 1.0, 1.0, -1.0, -1.0, 1.0, -1.0, -1.0];
+      // prettier-ignore
+      const positions = [
+        1.0,  1.0, 
+        1.0, -1.0,
+       -1.0,  1.0,
+       -1.0, -1.0
+      ];
       gl.bufferData(
         gl.ARRAY_BUFFER,
         new Float32Array(positions),
@@ -98,9 +103,14 @@
             0.0,  0.0,  1.0,  1.0,    // blue
           ];
       gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
+
+      return {
+        positionBuffer,
+        colorBuffer,
+      };
     }
 
-    function drawScene(gl, programInfo) {
+    function drawScene(gl, programInfo, positionBuffer, colorBuffer) {
       gl.clearColor(0.0, 0.0, 0.0, 1.0);
       gl.clearDepth;
       gl.enable(gl.DEPTH_TEST);
@@ -125,6 +135,7 @@
         const normalize = false;
         const stride = 0;
         const offset = 0;
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
         gl.vertexAttribPointer(
           programInfo.attribLocations.vertexPosition,
           numComponents,
@@ -142,6 +153,7 @@
         const normalize = false;
         const stride = 0;
         const offset = 0;
+        gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
         gl.vertexAttribPointer(
           programInfo.attribLocations.vertexColor,
           numComponents,
