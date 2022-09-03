@@ -58,13 +58,19 @@
 
     ctx.strokeStyle = "black";
 
+    // The number of points required to complete 1 circle. This is chosen arbitrarily. Points calculations
+    // will be based off of this.
+    // 
+    // For now, circle of all sizes will have the same base step. This means that larger ones will have less
+    // resolutions. This could be countered by {TODO}
+    const baseStepRequiredForACircle = 300;
     // Speed scale of 1 means the inner cycloid will cover the same distance regardless of its radius.
-    // Corresponds to global animation speed
-    // These two variables controls how far the points are distributed from one another
+    // Controls for how far the points are distributed from one another
+    // step = Math.PI * 2 / 60 means it only takes 60 + 1 points to draw a full circle of any radius.
+    // + 1 because 1 we need to close the final loop.
     const timeStepScalar = 1;
-    const step = timeStepScalar * ((Math.PI * 2) / 60);
+    const step = timeStepScalar * ((Math.PI * 2) / baseStepRequiredForACircle);
 
-    const points = 3000;
 
     let previousPoints = null;
 
@@ -74,20 +80,26 @@
     };
 
     const r0 = 300;
-    const r1 = 150;
+    const r1 = 400;
     const rotationDirection = "clockwise";
-    const rodLengthScale = 1.1;
+    const rodLengthScale = 1;
     const rodLength = rodLengthScale * r1;
     const moveOutsideOfParent = false;
+
+    const betaScale = 1.1;
+    // The number of points to be drawn is based on some ratios between the betaScale and the baseStepRequiredForACircle.
+    // We have to look at the least common multiple between beta and alpha and do baseStepRequiredForACircle * (lcmResult/beta)
+    const complexityScale = betaScale % 1;
+    
+    const points = (baseStepRequiredForACircle  * 10) + 1;
   </script>
   <script>
     const draw = () => {
       ctx.clearRect(-width / 2, -height / 2, width, height);
       let theta = 0;
       // Corresponds to the local cycloid speed scale
-      // It is alpha because when you adjust the cycloidSPeedScale,
+      // It is beta because when you adjust the cycloidSPeedScale,
       // you are moving the cycloid around the circle faster,
-      const betaScale = 0.43; // beta is going to be equals to this times theta
 
       for (let _ = 0; _ < points; _++) {
         theta += step;
