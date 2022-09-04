@@ -45,6 +45,20 @@
           h * Math.sin(beta),
       };
     }
+
+    function lcm(a, b) {
+      return a * b / gcd(a, b);
+    }
+
+    function gcd(a, b) {
+      while(b) {
+        const tmp = b;
+        b = a % b;
+        a = tmp;
+      }
+
+      return a;
+    }
   </script>
   <script>
     let canvas = document.getElementById("canvas");
@@ -86,12 +100,14 @@
     const rodLength = rodLengthScale * r1;
     const moveOutsideOfParent = false;
 
-    const betaScale = 1.1;
+    const alphaScale = 1; 
+    const betaScale = 3.44;
     // The number of points to be drawn is based on some ratios between the betaScale and the baseStepRequiredForACircle.
     // We have to look at the least common multiple between beta and alpha and do baseStepRequiredForACircle * (lcmResult/beta)
-    const complexityScale = betaScale % 1;
-    
-    const points = (baseStepRequiredForACircle  * 10) + 1;
+    // TODO lcm algo is still wrong.
+    const betaAlphaLcm = lcm(alphaScale, betaScale);
+    console.log(betaAlphaLcm);
+    const points = (baseStepRequiredForACircle * (betaAlphaLcm / betaScale)) + 1;
   </script>
   <script>
     const draw = () => {
@@ -109,7 +125,7 @@
           r1,
           rodLength,
           theta * betaScale,
-          theta,
+          theta * alphaScale,
           rotationDirection,
           moveOutsideOfParent
         );
@@ -127,6 +143,6 @@
       }
     };
 
-    draw();
+    // draw();
   </script>
 </html>
