@@ -103,14 +103,12 @@
     // 
     // For now, circle of all sizes will have the same base step. This means that larger ones will have less
     // resolutions. This could be countered by {TODO}
-    const baseStepRequiredForACircle = 300;
+    const baseStepsRequiredForACircle = 300;
     // Speed scale of 1 means the inner cycloid will cover the same distance regardless of its radius.
     // Controls for how far the points are distributed from one another
     // step = Math.PI * 2 / 60 means it only takes 60 + 1 points to draw a full circle of any radius.
     // + 1 because 1 we need to close the final loop.
-    const timeStepScalar = 1;
-    const step = timeStepScalar * ((Math.PI * 2) / baseStepRequiredForACircle);
-
+    const step = ((Math.PI * 2) / baseStepsRequiredForACircle);
 
     let previousPoints = null;
 
@@ -127,13 +125,13 @@
     const moveOutsideOfParent = true;
 
     const maxPoints = 30000; // To prevent the thread from freezing up.
-    const alphaScale = 1.22; 
+    const alphaScale = 1;
     const betaScale = 1.3;
     // The number of points to be drawn is based on some ratios between the betaScale and the baseStepRequiredForACircle.
     // We have to look at the least common multiple between beta and alpha and do baseStepRequiredForACircle * (lcmResult/beta)
     // TODO find a way to test this draw algorithm.
     const betaAlphaLcm = lcm(betaScale, alphaScale);
-    const points = Math.min((baseStepRequiredForACircle * (betaAlphaLcm / betaScale)), maxPoints);
+    const points = Math.floor(Math.min((baseStepsRequiredForACircle * (betaAlphaLcm / betaScale)), maxPoints)) + 1;
   </script>
   <script>
     const draw = () => {
