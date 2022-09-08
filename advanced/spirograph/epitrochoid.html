@@ -53,24 +53,22 @@
       const targetDecimal = Math.pow(10, maxDecimalPlaces);
 
       const calculate = (a, b) => {
-        return a * b / gcd(a, b);
-      }
+        return (a * b) / gcd(a, b);
+      };
 
-      if (targetDecimal){
+      if (targetDecimal) {
         a *= targetDecimal;
         b *= targetDecimal;
 
         const res = calculate(a, b);
 
         return res / targetDecimal;
-
       }
       return calculate(a, b);
-  }
-
+    }
 
     function gcd(a, b) {
-      while(b) {
+      while (b) {
         const tmp = b;
         b = a % b;
         a = tmp;
@@ -79,12 +77,12 @@
       return a;
     }
 
-    function countDecimals(value) { 
-      if ((value % 1) != 0) {
-        return value.toString().split(".")[1].length;  
+    function countDecimals(value) {
+      if (value % 1 != 0) {
+        return value.toString().split(".")[1].length;
       }
       return 0;
-    };
+    }
   </script>
   <script>
     let canvas = document.getElementById("canvas");
@@ -94,13 +92,13 @@
     canvas.width = width;
     canvas.height = height;
     ctx.translate(width / 2, height / 2);
-    ctx.scale(0.5, 0.5);
+    ctx.scale(0.7, 0.7);
 
     ctx.strokeStyle = "black";
 
     // The number of points required to complete 1 circle. This is chosen arbitrarily. Points calculations
     // will be based off of this.
-    // 
+    //
     // For now, circle of all sizes will have the same base step. This means that larger ones will have less
     // resolutions. This could be countered by {TODO}
     const baseStepsRequiredForACircle = 300;
@@ -108,7 +106,7 @@
     // Controls for how far the points are distributed from one another
     // step = Math.PI * 2 / 60 means it only takes 60 + 1 points to draw a full circle of any radius.
     // + 1 because 1 we need to close the final loop.
-    const step = ((Math.PI * 2) / baseStepsRequiredForACircle);
+    const step = (Math.PI * 2) / baseStepsRequiredForACircle;
 
     let previousPoints = null;
 
@@ -126,12 +124,20 @@
 
     const maxPoints = 30000; // To prevent the thread from freezing up.
     const alphaScale = 1;
-    const betaScale = 1.3;
+    const betaScale = 0.2;
     // The number of points to be drawn is based on some ratios between the betaScale and the baseStepRequiredForACircle.
     // We have to look at the least common multiple between beta and alpha and do baseStepRequiredForACircle * (lcmResult/beta)
     // TODO find a way to test this draw algorithm.
     const betaAlphaLcm = lcm(betaScale, alphaScale);
-    const points = Math.floor(Math.min((baseStepsRequiredForACircle * (betaAlphaLcm / betaScale)), maxPoints)) + 1;
+    const points =
+      Math.floor(
+        Math.min(
+          baseStepsRequiredForACircle *
+            (lcm(alphaScale, 1) / alphaScale) *
+            (lcm(betaScale, alphaScale) / betaScale),
+          maxPoints
+        )
+      ) + 1;
   </script>
   <script>
     const draw = () => {
