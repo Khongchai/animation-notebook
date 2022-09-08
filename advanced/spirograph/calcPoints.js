@@ -7,15 +7,16 @@
  * @param {number} maxPoints
  * @returns
  *
- * More readable version:
+ * More readable version: TODO(mathmatical notation)
  */
 function calcPoints(baseSteps, cycloidScalars, maxPoints = 30000) {
   return Math.floor(
     Math.min(
       baseSteps *
-        cycloidScalars.reduceWithResult((calcResult, a, b) => {
-          return (lcm(a, b) / b) * calcResult ?? 1;
-        }, 1),
+        cycloidScalars.reduceWithResult(
+          (calcResult, a, b) => (lcm(a, b) / b) * (calcResult ?? 1),
+          1
+        ),
       maxPoints
     ) + 1 // If you remove the +1 and see a tiny space, then the algorithm works.
   );
@@ -39,15 +40,17 @@ function calcPoints(baseSteps, cycloidScalars, maxPoints = 30000) {
  *
  * (k, c) => k + b
  *
- * where k is the sum of a and b.
+ * where k is the sum of a and b (ith and i-1th elements).
  *
- * What we are solving here is retain the reference to b(the i-1 element) so that we can do something like:
+ * What we are trying to do here is to retain the reference to b(the i-1 element) so that we can do something like:
  *
  * (k, b, c) => whatever(k, b, c)
+ *
+ * If it's the first iteration, k will be null.
  */
 Array.prototype.reduceWithResult = function (callback, defaultValue) {
-  let result = defaultValue;
-  for (let i = 0; i < this.length - 1; i++) {
+  let result = null;
+  for (let i = 0; i < this.length; i++) {
     result = callback(result, i === 0 ? defaultValue : this[i - 1], this[i]);
   }
   return result;
