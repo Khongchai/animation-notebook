@@ -67,8 +67,8 @@ function lcm(a, b) {
   };
 
   if (targetDecimal) {
-    a *= targetDecimal;
-    b *= targetDecimal;
+    a = Math.ceil(targetDecimal * a);
+    b = Math.ceil(targetDecimal * b);
 
     const res = calculate(a, b);
 

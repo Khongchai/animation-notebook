@@ -86,8 +86,8 @@
     const moveOutsideOfParent = true;
 
     const maxPoints = 30000; // To prevent the thread from freezing up.
-    const alphaScale = 1;
-    const betaScale = 1.15;
+    const alphaScale = 0.9;
+    const betaScale = 0.7;
     // The number of points to be drawn is based on some ratios between the betaScale and the baseStepRequiredForACircle.
     // We have to look at the least common multiple between beta and alpha and do baseStepRequiredForACircle * (lcmResult/beta)
     // TODO find a way to test this draw algorithm.
@@ -96,13 +96,14 @@
     //   [alphaScale, betaScale],
     //   maxPoints
     // );
-    //TODO there is a bug with your lcm
-    console.log(lcm(1, 1.15));
+    //TODO try to apply this pattern to other higher level epitrochoids first to see if this is a problem only
+    // when alpha != 1.
+    console.log(lcm(0.9, 0.7));
     const points =
       Math.floor(
         Math.min(
           baseStepsRequiredForACircle *
-            // (lcm(alphaScale, 1) / alphaScale) *
+            (lcm(alphaScale, 1) / alphaScale) *
             (lcm(betaScale, alphaScale) / betaScale),
           maxPoints
         )
