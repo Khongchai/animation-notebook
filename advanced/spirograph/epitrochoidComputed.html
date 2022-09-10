@@ -95,7 +95,7 @@
 
     const betaScale = 1.7;
     const gammaScale = 1.16;
-    const deltaScale = 1.35;
+    const deltaScale = 1.3;
 
     const maxPoints = 100000;
     //TODO just make a simple multiple-number lcm that also accounts for the floating point precision error.
@@ -103,10 +103,7 @@
     const lcmRatio = multiLcm(betaScale, gammaScale, deltaScale);
     const baseRatio = betaScale * gammaScale * deltaScale;
     const points = Math.floor(
-      Math.min(
-        baseStepsRequiredForACircle * (lcmRatio / baseRatio),
-        maxPoints
-      ) + 1
+      Math.min(baseStepsRequiredForACircle * 50, maxPoints) + 1
     );
 
     const cycloids = [
@@ -142,6 +139,10 @@
   <script>
     let startingPoint;
     let endingPoint;
+    let endingSameAsFirstCount = 0;
+
+    const kindOfEqual = (num1, num2) =>
+      parseFloat(num1.toFixed(4)) === parseFloat(num2.toFixed(4));
 
     const draw = () => {
       let theta = 0;
@@ -163,6 +164,14 @@
           ctx.strokeStyle = "pink";
           ctx.stroke();
 
+          if (
+            enableDebug &&
+            kindOfEqual(currentPoint.x, startingPoint.x) &&
+            (currentPoint.y, startingPoint.y)
+          ) {
+            endingSameAsFirstCount++;
+          }
+
           previousPoints = currentPoint;
 
           if (i === points - 1) {
@@ -172,15 +181,17 @@
       }
 
       if (enableDebug) {
-        const kindOfEqual = (num1, num2) =>
-          parseFloat(num1.toFixed(4)) === parseFloat(num2.toFixed(4));
+        if (endingSameAsFirstCount > 1) {
+          console.error("Debug: Path repeat count: " + endingSameAsFirstCount);
+        }
+
         if (
           !kindOfEqual(startingPoint.x, endingPoint.x) ||
           !kindOfEqual(startingPoint.y, endingPoint.y)
         ) {
+          console.error("Debug: the path is not closed properly");
           console.error("Debug: Starting point: ", startingPoint);
           console.error("Debug: Ending point: ", endingPoint);
-          throw new Error("Debug: The path is not closed properly");
         } else {
           console.info("Debug: Path closed properly.");
           console.info("Debug: Starting and ending points are the same point.");

@@ -58,7 +58,7 @@ Array.prototype.reduceWithResult = function (callback, defaultValue) {
   return result;
 };
 
-//TODO use webassembly for this migh be less painful...
+//TODO use webassembly for this migh be less annoying
 function multiLcm(...numbers) {
   const maxDecimalCount = numbers.reduce((a, b) =>
     Math.max(countDecimals(a), countDecimals(b))
