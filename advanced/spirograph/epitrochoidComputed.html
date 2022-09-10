@@ -62,10 +62,12 @@
   </script>
   <script src="calcPoints.js"></script>
   <script>
-    let canvas = document.getElementById("canvas");
+    const enableDebug = true;
+
+    const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
-    var width = window.innerWidth;
-    var height = window.innerHeight;
+    const width = window.innerWidth;
+    const height = window.innerHeight;
     canvas.width = width;
     canvas.height = height;
     ctx.translate(width / 2, height / 2);
@@ -91,47 +93,45 @@
     // + 1 because 1 we need to close the final loop.
     const step = (Math.PI * 2) / baseStepsRequiredForACircle;
 
-    const betaScale = 1.91;
-    const gammaScale = 2.5;
-    const deltaScale = 1;
-    // n for normalized
-    // normalize by hand for now :p
-    const nBeta = 0.91;
-    const nGamma = 0.5;
-    const nDelta = 1;
+    const betaScale = 1.7;
+    const gammaScale = 1.16;
+    const deltaScale = 1.35;
 
     const maxPoints = 100000;
+    //TODO just make a simple multiple-number lcm that also accounts for the floating point precision error.
+    // the actual lcm for the 3 scalars above = 266.22 Plugging this number as the lcmRatio will make everything work.
+    const lcmRatio = multiLcm(betaScale, gammaScale, deltaScale);
+    const baseRatio = betaScale * gammaScale * deltaScale;
     const points = Math.floor(
       Math.min(
-        baseStepsRequiredForACircle *
-          (lcm(lcm(nBeta, nGamma), nDelta) / (nBeta * nGamma * nDelta)),
+        baseStepsRequiredForACircle * (lcmRatio / baseRatio),
         maxPoints
-      )
+      ) + 1
     );
 
     const cycloids = [
       // Base Circle
       {
-        radius: 250,
-      },
-      {
-        radius: 200,
-        rotationDirection: "counterClockwise",
-        rodLengthScale: 1,
-        thetaScale: betaScale,
-        isOutsideOfParent: false,
-      },
-      {
         radius: 300,
+      },
+      {
+        radius: 100,
+        rotationDirection: "counterclockwise",
+        rodLengthScale: 0,
+        thetaScale: betaScale,
+        isOutsideOfParent: true,
+      },
+      {
+        radius: 50,
         rotationDirection: "clockwise",
-        rodLengthScale: 1,
+        rodLengthScale: 0,
         thetaScale: gammaScale,
         isOutsideOfParent: true,
       },
       {
-        radius: 200,
+        radius: 25,
         rotationDirection: "clockwise",
-        rodLengthScale: 1,
+        rodLengthScale: 0,
         thetaScale: deltaScale,
         isOutsideOfParent: true,
       },
@@ -140,16 +140,21 @@
     const rodLength = lastCycloid.radius * lastCycloid.rodLengthScale;
   </script>
   <script>
+    let startingPoint;
+    let endingPoint;
+
     const draw = () => {
       let theta = 0;
 
-      for (let _ = 0; _ < points; _++) {
+      for (let i = 0; i < points; i++) {
         theta += step;
 
         const newPoint = computedEpitrochoid(cycloids, theta, rodLength);
 
+        // First point.
         if (!previousPoints) {
           previousPoints = newPoint;
+          startingPoint = newPoint;
         } else {
           currentPoint = newPoint;
           ctx.beginPath();
@@ -159,6 +164,25 @@
           ctx.stroke();
 
           previousPoints = currentPoint;
+
+          if (i === points - 1) {
+            endingPoint = currentPoint;
+          }
+        }
+      }
+
+      if (enableDebug) {
+        const kindOfEqual = (num1, num2) =>
+          parseFloat(num1.toFixed(4)) === parseFloat(num2.toFixed(4));
+        if (
+          !kindOfEqual(startingPoint.x, endingPoint.x) ||
+          !kindOfEqual(startingPoint.y, endingPoint.y)
+        ) {
+          console.error("Debug: Starting point: ", startingPoint);
+          console.error("Debug: Ending point: ", endingPoint);
+          throw new Error("Debug: The line is not closed");
+        } else {
+          console.info("Debug: Starting and ending points are the same point.");
         }
       }
     };

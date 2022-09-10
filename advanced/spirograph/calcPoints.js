@@ -47,6 +47,8 @@ function calcPoints(baseSteps, cycloidScalars, maxPoints = 30000) {
  * (k, b, c) => whatever(k, b, c)
  *
  * If it's the first iteration, k will be null.
+ *
+ * TODO this is wrong. Normal reduce already give you a result, just not the previous number as well.
  */
 Array.prototype.reduceWithResult = function (callback, defaultValue) {
   let result = null;
@@ -56,26 +58,26 @@ Array.prototype.reduceWithResult = function (callback, defaultValue) {
   return result;
 };
 
-function lcm(a, b) {
-  const decimalPlacesFromA = countDecimals(a);
-  const decimalPlacesFromB = countDecimals(b);
-  const maxDecimalPlaces = Math.max(decimalPlacesFromA, decimalPlacesFromB);
-  const targetDecimal = Math.pow(10, maxDecimalPlaces);
+function multiLcm(...numbers) {
+  const maxDecimalCount = numbers.reduce((a, b) =>
+    Math.max(countDecimals(a), countDecimals(b))
+  );
 
-  const calculate = (a, b) => {
-    return (a * b) / gcd(a, b);
-  };
-
-  if (targetDecimal) {
-    a = Math.ceil(targetDecimal * a);
-    b = Math.ceil(targetDecimal * b);
-
-    const res = calculate(a, b);
-
-    return res / targetDecimal;
+  let n = 1;
+  for (let i = 0; i < numbers.length; i++) {
+    const thisNumAsInt = Math.ceil(numbers[i] * Math.pow(10, maxDecimalCount));
+    n = lcm(thisNumAsInt, n);
   }
-  return calculate(a, b);
+
+  // Total decimal can be found by finding the max sum of the adjacent number pair.
+  let totalDecimal = 0;
+
+  return n / Math.pow(10, totalDecimal);
 }
+
+const lcm = (a, b) => {
+  return (a * b) / gcd(a, b);
+};
 
 function gcd(a, b) {
   while (b) {
@@ -92,12 +94,4 @@ function countDecimals(value) {
     return value.toString().split(".")[1].length;
   }
   return 0;
-}
-
-/**
- * 1.2 % 1 would give us 0.19999 something instead of 0.2, so use this method instead.
- */
-function normalizeNumber(value) {
-  if (value % 1 === 0) return value;
-  return parseFloat(`${value}`.split(".")[1]) / 10;
 }
