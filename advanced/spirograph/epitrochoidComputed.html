@@ -180,8 +180,9 @@
         ) {
           console.error("Debug: Starting point: ", startingPoint);
           console.error("Debug: Ending point: ", endingPoint);
-          throw new Error("Debug: The line is not closed");
+          throw new Error("Debug: The path is not closed properly");
         } else {
+          console.info("Debug: Path closed properly.");
           console.info("Debug: Starting and ending points are the same point.");
         }
       }

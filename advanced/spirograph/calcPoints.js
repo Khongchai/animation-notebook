@@ -58,6 +58,7 @@ Array.prototype.reduceWithResult = function (callback, defaultValue) {
   return result;
 };
 
+//TODO use webassembly for this migh be less painful...
 function multiLcm(...numbers) {
   const maxDecimalCount = numbers.reduce((a, b) =>
     Math.max(countDecimals(a), countDecimals(b))
@@ -69,10 +70,14 @@ function multiLcm(...numbers) {
     n = lcm(thisNumAsInt, n);
   }
 
-  // Total decimal can be found by finding the max sum of the adjacent number pair.
-  let totalDecimal = 0;
+  let adjacentMaxDecimal = 0;
+  for (let i = 0; i < numbers.length - 1; i++) {
+    const product = multiplyAsInt(numbers[i], numbers[i + 1]);
+    const curDecimals = countDecimals(product);
+    adjacentMaxDecimal = Math.max(curDecimals, adjacentMaxDecimal);
+  }
 
-  return n / Math.pow(10, totalDecimal);
+  return n / Math.pow(10, 3);
 }
 
 const lcm = (a, b) => {
@@ -87,6 +92,20 @@ function gcd(a, b) {
   }
 
   return a;
+}
+
+function multiplyAsInt(num1, num2) {
+  const maxDecimalPlaces = Math.pow(
+    10,
+    Math.max(countDecimals(num1), countDecimals(num2))
+  );
+  const sumDecimalPlaces = maxDecimalPlaces * 2;
+  const int1 = Math.ceil(num1 * maxDecimalPlaces);
+  const int2 = Math.ceil(num2 * maxDecimalPlaces);
+  console.log(int1 * int2);
+
+  const result = (int1 * int2) / sumDecimalPlaces;
+  return result;
 }
 
 function countDecimals(value) {
