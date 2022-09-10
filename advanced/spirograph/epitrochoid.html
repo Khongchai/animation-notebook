@@ -81,31 +81,27 @@
     const r0 = 300;
     const r1 = 350;
     const rotationDirection = "clockwise";
-    const rodLengthScale = 0.5;
+    const rodLengthScale = 0.9;
     const rodLength = rodLengthScale * r1;
     const moveOutsideOfParent = true;
 
     const maxPoints = 30000; // To prevent the thread from freezing up.
-    const alphaScale = 0.9;
-    const betaScale = 0.5;
+    const alphaScale = 1.2;
+    const betaScale = 1.2;
     // The number of points to be drawn is based on some ratios between the betaScale and the baseStepRequiredForACircle.
     // We have to look at the least common multiple between beta and alpha and do baseStepRequiredForACircle * (lcmResult/beta)
-    // TODO find a way to test this draw algorithm.
-    // TODO apply change to calcPoint.js
     // const points = calcPoints(
     //   baseStepsRequiredForACircle,
     //   [alphaScale, betaScale],
     //   maxPoints
     // );
-    const points =
-      Math.floor(
-        Math.min(
-          baseStepsRequiredForACircle *
-            (lcm(betaScale, alphaScale) / (betaScale * alphaScale)),
-          maxPoints
-        )
-      ) + 1;
-    console.log(points);
+    const points = Math.floor(
+      Math.min(
+        baseStepsRequiredForACircle *
+          (lcm(betaScale, alphaScale) / (betaScale * alphaScale)),
+        maxPoints
+      )
+    );
   </script>
   <script>
     const draw = () => {

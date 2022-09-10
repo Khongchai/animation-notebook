@@ -93,3 +93,11 @@ function countDecimals(value) {
   }
   return 0;
 }
+
+/**
+ * 1.2 % 1 would give us 0.19999 something instead of 0.2, so use this method instead.
+ */
+function normalizeNumber(value) {
+  if (value % 1 === 0) return value;
+  return parseFloat(`${value}`.split(".")[1]) / 10;
+}

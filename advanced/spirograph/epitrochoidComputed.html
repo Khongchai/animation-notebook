@@ -60,6 +60,7 @@
       };
     }
   </script>
+  <script src="calcPoints.js"></script>
   <script>
     let canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
@@ -69,15 +70,7 @@
     canvas.height = height;
     ctx.translate(width / 2, height / 2);
     ctx.fillRect(-width / 2, -height / 2, width, height);
-    ctx.scale(0.25, 0.25);
-
-    // Speed scale of 1 means the inner cycloid will cover the same distance regardless of its radius.
-    // Corresponds to global animation speed
-    // These two variables controls how far the points are distributed from one another
-    const timeStepScalar = 0.5;
-    const step = timeStepScalar * ((Math.PI * 2) / 60);
-
-    const points = 100000;
+    ctx.scale(0.7, 0.7);
 
     let previousPoints = null;
 
@@ -85,6 +78,33 @@
       x: 0,
       y: 0,
     };
+
+    // The number of points required to complete 1 circle. This is chosen arbitrarily. Points calculations
+    // will be based off of this.
+    //
+    // For now, circle of all sizes will have the same base step. This means that larger ones will have less
+    // resolutions. This could be countered by {TODO}
+    const baseStepsRequiredForACircle = 300;
+    // Speed scale of 1 means the inner cycloid will cover the same distance regardless of its radius.
+    // Controls for how far the points are distributed from one another
+    // step = Math.PI * 2 / 60 means it only takes 60 + 1 points to draw a full circle of any radius.
+    // + 1 because 1 we need to close the final loop.
+    const step = (Math.PI * 2) / baseStepsRequiredForACircle;
+
+    const betaScale = 1.91;
+    const gammaScale = 2.5;
+    // n for normalized
+    // normalize by hand for now :p
+    const nBeta = 0.91;
+    const nGamma = 0.5;
+
+    const maxPoints = 100000;
+    const points = Math.floor(
+      Math.min(
+        baseStepsRequiredForACircle * (lcm(nBeta, nGamma) / (nBeta * nGamma)),
+        maxPoints
+      )
+    );
 
     const cycloids = [
       // Base Circle
@@ -95,36 +115,15 @@
         radius: 200,
         rotationDirection: "counterClockwise",
         rodLengthScale: 1,
-        thetaScale: 1,
+        thetaScale: betaScale,
         isOutsideOfParent: false,
       },
       {
         radius: 300,
         rotationDirection: "clockwise",
         rodLengthScale: 1,
-        thetaScale: 1.07,
+        thetaScale: gammaScale,
         isOutsideOfParent: false,
-      },
-      {
-        radius: 200,
-        rotationDirection: "counterClockwise",
-        rodLengthScale: 2,
-        thetaScale: 1.07,
-        isOutsideOfParent: true,
-      },
-      {
-        radius: 100,
-        rotationDirection: "clockwise",
-        rodLengthScale: 1,
-        thetaScale: 1.07,
-        isOutsideOfParent: false,
-      },
-      {
-        radius: 300,
-        rotationDirection: "clockwise",
-        rodLengthScale: 3,
-        thetaScale: 1.9308,
-        isOutsideOfParent: true,
       },
     ];
     const lastCycloid = cycloids[cycloids.length - 1];
