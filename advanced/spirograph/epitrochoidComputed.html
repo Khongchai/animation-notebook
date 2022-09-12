@@ -182,7 +182,8 @@
 
       if (enableDebug) {
         if (endingSameAsFirstCount > 1) {
-          console.error("Debug: Path repeat count: " + endingSameAsFirstCount);
+          // This does not always mean that the path repeats itself.
+          console.warn("Debug: Beginning repeat count: " + endingSameAsFirstCount);
         }
 
         if (
