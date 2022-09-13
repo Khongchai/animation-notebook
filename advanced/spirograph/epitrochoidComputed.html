@@ -93,18 +93,26 @@
     // + 1 because 1 we need to close the final loop.
     const step = (Math.PI * 2) / baseStepsRequiredForACircle;
 
-    const betaScale = 0.725;
-    const gammaScale = 0.16;
-    const deltaScale = 0.32;
+    // Keep the shapes you found as we can use them as our test cases.
+
+    // Cool shape
+    // const betaScale = 0.725;
+    // const gammaScale = 0.16;
+    // const deltaScale = 0.32;
+    // ans
+
+    const betaScale = 2;
+    const gammaScale = 1.28;
+    const deltaScale = 1.2;
     
     const maxPoints = 1000000;
     //TODO just make a simple multiple-number lcm that also accounts for the floating point precision error.
     // the actual lcm for the 3 scalars above = 266.22 Plugging this number as the lcmRatio will make everything work.
     // const lcmRatio = lcm(betaScale, gammaScale, deltaScale);
     // const baseRatio = betaScale * gammaScale * deltaScale;
+    const maxWhole = Math.floor(betaScale, gammaScale, deltaScale);
     const points = Math.floor(
-      Math.min(baseStepsRequiredForACircle * 200, maxPoints) + 1
-    );
+      Math.min(baseStepsRequiredForACircle * 25), maxPoints) + 1
 
     const cycloids = [
       // Base Circle
