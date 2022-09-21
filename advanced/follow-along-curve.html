@@ -5,27 +5,19 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title></title>
-    <style>
-      html,
-      body {
-        border: 0;
-        padding: 0;
-        margin: 0;
-      }
-      canvas {
-        display: block;
-      }
-    </style>
   </head>
   <body onload="draw();">
     <div>
-      <canvas id="canvas" style="border: 1px solid black"></canvas>
+      <canvas
+        id="canvas"
+        style="border: 1px solid black"
+        width="500px"
+        height="500px"
+      ></canvas>
     </div>
   </body>
   <script>
-    const canvas = document.getElementById("canvas");
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    let canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
     const draw = () => {
       ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);

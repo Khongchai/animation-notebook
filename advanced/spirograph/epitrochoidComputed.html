@@ -72,7 +72,7 @@
     canvas.height = height;
     ctx.translate(width / 2, height / 2);
     ctx.fillRect(-width / 2, -height / 2, width, height);
-    ctx.scale(0.5, 0.5);
+    ctx.scale(1, 1);
 
     let previousPoints = null;
 
@@ -92,27 +92,28 @@
     // step = Math.PI * 2 / 60 means it only takes 60 + 1 points to draw a full circle of any radius.
     // + 1 because 1 we need to close the final loop.
     const step = (Math.PI * 2) / baseStepsRequiredForACircle;
+    //TODO has to be 2pi divided by something k and then use that k like baseStepsRequiredForACircle * k;
 
     // Keep the shapes you found as we can use them as our test cases.
 
     // Cool shape
-    // const betaScale = 0.725;
-    // const gammaScale = 0.16;
-    // const deltaScale = 0.32;
+    const betaScale = 0.70;
+    const gammaScale = 0.316;
+    const deltaScale = 0.132;
     // ans
 
-    const betaScale = 2;
-    const gammaScale = 1.28;
-    const deltaScale = 1.2;
+    // const betaScale = 4;
+    // const gammaScale = 2.2;
+    // const deltaScale = 5.0;
     
     const maxPoints = 1000000;
     //TODO just make a simple multiple-number lcm that also accounts for the floating point precision error.
     // the actual lcm for the 3 scalars above = 266.22 Plugging this number as the lcmRatio will make everything work.
-    // const lcmRatio = lcm(betaScale, gammaScale, deltaScale);
-    // const baseRatio = betaScale * gammaScale * deltaScale;
-    const maxWhole = Math.floor(betaScale, gammaScale, deltaScale);
-    const points = Math.floor(
-      Math.min(baseStepsRequiredForACircle * 25), maxPoints) + 1
+    const lcmRatio = lcm(betaScale, gammaScale, deltaScale);
+    const baseRatio = betaScale * gammaScale * deltaScale;
+    const points = baseStepsRequiredForACircle * 1000/gcd(700, 316, 132) + 1
+    // const points = Math.floor(
+    //   Math.min(baseStepsRequiredForACircle * lcmRatio), maxPoints) + 1
 
     const cycloids = [
       // Base Circle
