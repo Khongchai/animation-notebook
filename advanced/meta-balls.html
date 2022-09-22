@@ -32,18 +32,18 @@
     }
 
     /**
-     *  @param {(x: number, y: number) => void} colorFunction
-     * 
+     *  @param {(x: number, y: number) => {r: number, g: number, b: number}} colorFunction
+     *
      *  Simplify the access to each of the pixel on the screen.
-     * 
+     *
      *  This makes it much easier to treat each color as a function
      *  of x and y.
      */
-    function forEachPixel(colorFunction) {
+    function forEachPixel(pixels, colorFunction) {
       let x = 0;
       let y = 0;
 
-      for (let i = 0; i < data.length; i += 4) {
+      for (let i = 0; i < pixels.length; i += 4) {
         x = (x + 1) % canvas.width;
         if (x === 0) {
           y = (y + 1) % canvas.height;
@@ -52,25 +52,52 @@
         const cy = (y / canvas.height) * 255;
         const cx = (x / canvas.width) * 255;
 
-        const {r, g, b}= colorFunction(cx, cy);
+        const { r, g, b } = colorFunction(cx, cy);
 
-        color(data, i, r, g, b, 255);
+        color(pixels, i, r, g, b, 255);
       }
+    }
+
+    /**
+     *  @param {number} px
+     *  @param {number} py
+     *  @param {number} cx
+     *  @param {number} cy
+     */
+    function dist(px, py, cx, cy) {
+      //TODO make it a cirlce...
+      const normalizedCX = 255 * (cx / h);
+      const normalizedCY = 255 * (cy / h);
+      const d = Math.sqrt(
+        Math.pow((px) - normalizedCX, 2) + Math.pow(py - normalizedCY, 2)
+      );
+      return d;
     }
   </script>
   <script>
     const canvas = document.getElementById("canvas");
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const maxSide = Math.max(w, h);
+    canvas.width = w;
+    canvas.height = h;
     const ctx = canvas.getContext("2d");
+    const blob = {
+      x: w * 0.2,
+      y: h * 0.4,
+      radius: 60,
+    };
 
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const data = imageData.data;
-
-    forEachPixel((x, y) => 
-      ({r: x, g: 0, b: y})
-    );
-
+    const imageData = ctx.getImageData(0, 0, w, h);
+    const pixels = imageData.data;
+    forEachPixel(pixels, (x, y) => {
+      const d = dist(x, y, blob.x, blob.y);
+      return { r: d, g: d, b: d };
+    });
     ctx.putImageData(imageData, 0, 0);
+
+    ctx.strokeStyle = "pink";
+    ctx.arc(blob.x, blob.y, blob.radius, 0, Math.PI * 2, false);
+    ctx.stroke();
   </script>
 </html>
