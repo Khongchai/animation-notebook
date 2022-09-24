@@ -65,39 +65,110 @@
      *  @param {number} cy
      */
     function dist(px, py, cx, cy) {
-      //TODO make it a cirlce...
-      const normalizedCX = 255 * (cx / h);
-      const normalizedCY = 255 * (cy / h);
-      const d = Math.sqrt(
-        Math.pow((px) - normalizedCX, 2) + Math.pow(py - normalizedCY, 2)
-      );
+      let d;
+      if (w > h) {
+        const normalizedCX = 255 * (cx / w);
+        const normalizedCY = 255 * (cy / w);
+        d = Math.sqrt(
+          Math.pow(px - normalizedCX, 2) +
+            Math.pow(py * (h / w) - normalizedCY, 2)
+        );
+      } else {
+        const normalizedCX = 255 * (cx / h);
+        const normalizedCY = 255 * (cy / h);
+        d = Math.sqrt(
+          Math.pow(px * (w / h)- normalizedCX, 2) +
+            Math.pow(py  - normalizedCY, 2)
+        );
+      }
+
       return d;
+    }
+
+    function draw(callback) {
+      callback();
+
+      requestAnimationFrame(() => draw(callback));
     }
   </script>
   <script>
     const canvas = document.getElementById("canvas");
     const w = window.innerWidth;
     const h = window.innerHeight;
-    const maxSide = Math.max(w, h);
     canvas.width = w;
     canvas.height = h;
     const ctx = canvas.getContext("2d");
-    const blob = {
-      x: w * 0.2,
-      y: h * 0.4,
-      radius: 60,
+    const mousePos = {
+      x: 0,
+      y: 0,
+    };
+    const movingPos = {
+      x: 0,
+      y: 0,
+      vx: Math.random() * 50,
+      vy: Math.random() * 70,
+      update: function () {
+        if (this.x < 0 || this.x > w) {
+          this.vx *= -1;
+        }
+        if (this.y < 0 || this.y > h) {
+          this.vy *= -1;
+        }
+        this.x += this.vx;
+        this.y += this.vy;
+      },
     };
 
-    const imageData = ctx.getImageData(0, 0, w, h);
-    const pixels = imageData.data;
-    forEachPixel(pixels, (x, y) => {
-      const d = dist(x, y, blob.x, blob.y);
-      return { r: d, g: d, b: d };
-    });
-    ctx.putImageData(imageData, 0, 0);
+    const blobFactory = {
+      genBlobs: (amount) => {
+        const blobs = [];
+        for (let i = 0; i < amount; i++) {
+          blobs.push({
+            x: mousePos.x,
+            y: mousePos.y,
+            // Assume new position is the position relative to the size of the window.
+            // not the size relative to the canvas's size.
+            updatePos: function (newPos) {
+              this.x = newPos.x;
+              this.y = newPos.y;
+            },
+            radius: 30,
+            draw: function (ctx) {
+              ctx.beginPath();
+              ctx.strokeStyle = "pink";
+              ctx.arc(this.x, this.y, this.radius, -1, Math.PI * 2, false);
+              ctx.stroke();
+            },
+          });
+        }
+        return blobs;
+      },
+    };
+    const blobs = blobFactory.genBlobs(2);
 
-    ctx.strokeStyle = "pink";
-    ctx.arc(blob.x, blob.y, blob.radius, 0, Math.PI * 2, false);
-    ctx.stroke();
+    window.addEventListener("mousemove", (e) => {
+      mousePos.x = e.x;
+      mousePos.y = e.y;
+    });
+  </script>
+  <script>
+    draw(() => {
+      movingPos.update();
+
+      blobs[0].updatePos(mousePos);
+      blobs[1].updatePos(movingPos);
+
+      const imageData = ctx.getImageData(-1, 0, w, h);
+      const pixels = imageData.data;
+      forEachPixel(pixels, (x, y) => {
+        const d = dist(x, y, blobs[0].x, blobs[0].y);
+        const color = (blobs[0].radius * 199) / d;
+        return { r: color, g: color, b: color };
+      });
+      ctx.putImageData(imageData, -1, 0);
+
+      blobs[0].draw(ctx);
+      blobs[1].draw(ctx);
+    });
   </script>
 </html>
