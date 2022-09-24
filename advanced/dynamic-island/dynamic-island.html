@@ -22,6 +22,7 @@
       <canvas id="canvas"></canvas>
     </div>
   </body>
+  <script src="../interpolated-and-procedural-animation/interpolated-tween.js"></script>
   <script>
     let tick = 0;
     function draw(callback) {
@@ -38,19 +39,27 @@
     canvas.width = w;
     canvas.height = h;
     const ctx = canvas.getContext("2d");
+    const circleStart = {
+      radius: 10,
+    };
+    const circleEnd = {
+      radius: 270,
+    };
   </script>
   <script>
-    draw((tick) => {
-      // You should see a simple circle.
-      ctx.beginPath();
-      ctx.arc(
-        w / 2,
-        h / 2,
-        Math.max(Math.sin(tick * 0.02) * 200, 0),
-        0,
-        Math.PI * 2
-      );
-      ctx.fill();
-    });
+      tweener.tween({
+        beginValue: circleStart,
+        endValue: circleEnd,
+        propertiesToTween: ["radius"],
+        duration: 3000,
+        tweenType: "bounce2",
+        callback: () => {
+          ctx.clearRect(0, 0, w, h);
+          ctx.beginPath();
+          ctx.arc(w / 2, h / 2, circleStart.radius, 0, Math.PI * 2);
+
+          ctx.fill();
+        },
+      });
   </script>
 </html>

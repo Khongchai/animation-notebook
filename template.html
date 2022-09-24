@@ -17,20 +17,49 @@
       }
     </style>
   </head>
-  <body onload="draw();">
+  <body>
     <div>
-      <canvas id="canvas" style="border: 1px solid black"></canvas>
+      <canvas id="canvas"></canvas>
     </div>
   </body>
+  <script src="advanced/interpolated-and-procedural-animation/interpolated-tween.js"></script>
+  <script>
+    let tick = 0;
+    function draw(callback) {
+      callback(tick);
+
+      tick++;
+      requestAnimationFrame(() => draw(callback));
+    }
+  </script>
   <script>
     const canvas = document.getElementById("canvas");
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    canvas.width = w;
+    canvas.height = h;
     const ctx = canvas.getContext("2d");
-    const draw = () => {
-      ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
-
-      requestAnimationFrame(draw);
+    const circleStart = {
+      radius: 10,
     };
+    const circleEnd = {
+      radius: 270,
+    };
+  </script>
+  <script>
+      tweener.tween({
+        beginValue: circleStart,
+        endValue: circleEnd,
+        propertiesToTween: ["radius"],
+        duration: 3000,
+        tweenType: "bounce2",
+        callback: () => {
+          ctx.clearRect(0, 0, w, h);
+          ctx.beginPath();
+          ctx.arc(w / 2, h / 2, circleStart.radius, 0, Math.PI * 2);
+
+          ctx.fill();
+        },
+      });
   </script>
 </html>
