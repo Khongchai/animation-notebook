@@ -24,6 +24,7 @@
   </body>
   <script src="../interpolated-and-procedural-animation/interpolated-tween.js"></script>
   <script>
+    // Not used in the example below.
     let tick = 0;
     function draw(callback) {
       callback(tick);
@@ -53,6 +54,7 @@
         propertiesToTween: ["radius"],
         duration: 3000,
         tweenType: "bounce2",
+        animationFrame: false,
         callback: () => {
           ctx.clearRect(0, 0, w, h);
           ctx.beginPath();
