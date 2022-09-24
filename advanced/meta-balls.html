@@ -77,8 +77,8 @@
         const normalizedCX = 255 * (cx / h);
         const normalizedCY = 255 * (cy / h);
         d = Math.sqrt(
-          Math.pow(px * (w / h)- normalizedCX, 2) +
-            Math.pow(py  - normalizedCY, 2)
+          Math.pow(px * (w / h) - normalizedCX, 2) +
+            Math.pow(py - normalizedCY, 2)
         );
       }
 
@@ -126,13 +126,11 @@
           blobs.push({
             x: mousePos.x,
             y: mousePos.y,
-            // Assume new position is the position relative to the size of the window.
-            // not the size relative to the canvas's size.
             updatePos: function (newPos) {
               this.x = newPos.x;
               this.y = newPos.y;
             },
-            radius: 30,
+            radius: 10,
             draw: function (ctx) {
               ctx.beginPath();
               ctx.strokeStyle = "pink";
@@ -161,9 +159,15 @@
       const imageData = ctx.getImageData(-1, 0, w, h);
       const pixels = imageData.data;
       forEachPixel(pixels, (x, y) => {
-        const d = dist(x, y, blobs[0].x, blobs[0].y);
-        const color = (blobs[0].radius * 199) / d;
-        return { r: color, g: color, b: color };
+        let sum = 0;
+        for (let i = 0; i < blobs.length; i++) {
+          const d = dist(x, y, blobs[i].x, blobs[i].y);
+          sum += (blobs[i].radius * 199) / d;
+        }
+        // Add either one to show only the whitest part.
+        // sum = 255 % Math.max(255, sum);
+        // sum = sum >= 255 ? 255 : 0;
+        return { r: sum, g: sum, b: sum };
       });
       ctx.putImageData(imageData, -1, 0);
 
