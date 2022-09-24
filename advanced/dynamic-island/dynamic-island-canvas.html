@@ -24,7 +24,7 @@
         justify-content: center;
       }
 
-      .animation-toggle {
+      button {
         padding: 2rem 3rem;
         background: rgb(14, 234, 208);
         font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
@@ -36,11 +36,14 @@
         border-bottom: 10px black solid;
         height: 120px;
       }
-      .animation-toggle:active {
+      button:active {
         border-bottom: 2px black solid;
         height: 112px;
         top: 8px;
         position: relative;
+      }
+      .split-toggle {
+        background: cornflowerblue;
       }
     </style>
   </head>
@@ -51,6 +54,7 @@
         <button class="animation-toggle">square</button>
         <button class="animation-toggle">rectS</button>
         <button class="animation-toggle">rectL</button>
+        <button class="split-toggle">split</button>
       </div>
     </div>
   </body>
@@ -84,6 +88,7 @@
     const h = window.innerHeight;
     canvas.width = w;
     canvas.height = h;
+    let splitFlag = false;
     const ctx = canvas.getContext("2d");
 
     const boxTemplates = {
@@ -98,7 +103,7 @@
         borderRadius: 30,
       },
       rectL: {
-        sideX: w * 0.98,
+        sideX: w * 0.9,
         sideY: 300,
         borderRadius: 100,
       },
@@ -124,27 +129,50 @@
     // The jelly-splitting fx
     // Split middle and move the two boxes away from one another
 
-    const buttons = document.getElementsByClassName("animation-toggle");
-    for (let i = 0; i < buttons.length; i++) {
-      buttons[i].onclick = (e) => {
+    const splitToggle = document.getElementsByClassName("split-toggle")[0];
+    splitToggle.onclick = (e) => {
+      splitFlag = !splitFlag;
+    };
+
+    const animationToggles =
+      document.getElementsByClassName("animation-toggle");
+    for (let i = 0; i < animationToggles.length; i++) {
+      animationToggles[i].onclick = (e) => {
         boxEnd = boxTemplates[e.target.innerHTML];
         tweener.tween({
           beginValue: boxStart,
           endValue: boxEnd,
           propertiesToTween: ["sideX", "sideY", "borderRadius"],
-          duration: 1000,
-          tweenType: "easeInOutBack",
+          duration: 300,
+          tweenType: "easeOutBack",
           callback: () => {
             ctx.clearRect(0, 0, w, h);
-            ctx.beginPath();
-            ctx.roundedRect(
-              w / 2 - boxStart.sideX / 2,
-              h / 10 - boxStart.sideY / 2,
-              boxStart.sideX,
-              boxStart.sideY,
-              Math.max(0, boxStart.borderRadius)
-            );
-            ctx.fill();
+            // We'll do split middle for now.
+            if (splitFlag) {
+                // We use 0.25 of the animated left 
+                // side as the middle of our splitted box.
+                const leftX = boxStart.sideX * 0.25;
+                ctx.beginPath();
+                ctx.roundedRect();
+                ctx.fill();
+
+                // We use the animated left side as the middle 
+                // of our splitted box.
+                const rightX = boxStart.sideX * 0.75;
+                ctx.beginPath();
+                ctx.roundedRect();
+                ctx.fill();
+            } else {
+              ctx.beginPath();
+              ctx.roundedRect(
+                w / 2 - boxStart.sideX / 2,
+                h / 10 - boxStart.sideY / 2,
+                boxStart.sideX,
+                boxStart.sideY,
+                Math.max(0, boxStart.borderRadius)
+              );
+              ctx.fill();
+            }
           },
         });
       };
