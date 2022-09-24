@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      html,
+      body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+      <canvas id="canvas"></canvas>
+    </div>
+  </body>
+  <script>
+    let tick = 0;
+    function draw(callback) {
+      callback(tick);
+
+      tick++;
+      requestAnimationFrame(() => draw(callback));
+    }
+  </script>
+  <script>
+    const canvas = document.getElementById("canvas");
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+  </script>
+  <script>
+    draw((tick) => {
+      // You should see a simple circle.
+      ctx.beginPath();
+      ctx.arc(
+        w / 2,
+        h / 2,
+        Math.max(Math.sin(tick * 0.02) * 200, 0),
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
+    });
+  </script>
+</html>
