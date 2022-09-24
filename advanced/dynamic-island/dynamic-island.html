@@ -15,16 +15,47 @@
       canvas {
         display: block;
       }
+      .button-container {
+        position: absolute;
+        bottom: min(10%, 3rem);
+        width: 100%;
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+      }
+
+      .animation-toggle {
+        padding: 2rem 3rem;
+        background: rgb(14, 234, 208);
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue",
+          sans-serif;
+        font-size: 2rem;
+        border-radius: 25px;
+        border: 2px black solid;
+        border-bottom: 10px black solid;
+        height: 120px;
+      }
+      .animation-toggle:active {
+        border-bottom: 2px black solid;
+        height: 112px;
+        top: 8px;
+        position: relative;
+      }
     </style>
   </head>
   <body>
     <div>
       <canvas id="canvas"></canvas>
+      <div class="button-container">
+        <button class="animation-toggle">square</button>
+        <button class="animation-toggle">rectS</button>
+        <button class="animation-toggle">rectL</button>
+      </div>
     </div>
   </body>
   <script src="../interpolated-and-procedural-animation/interpolated-tween.js"></script>
   <script>
-    // Not used in the example below.
     let tick = 0;
     function draw(callback) {
       callback(tick);
@@ -32,6 +63,20 @@
       tick++;
       requestAnimationFrame(() => draw(callback));
     }
+
+    CanvasRenderingContext2D.prototype.roundedRect = function (
+      x,
+      y,
+      width,
+      height,
+      radius
+    ) {
+      this.moveTo(x, y + radius);
+      this.arcTo(x, y + height, x + radius, y + height, radius);
+      this.arcTo(x + width, y + height, x + width, y + height - radius, radius);
+      this.arcTo(x + width, y, x + width - radius, y, radius);
+      this.arcTo(x, y, x, y + radius, radius);
+    };
   </script>
   <script>
     const canvas = document.getElementById("canvas");
@@ -40,28 +85,69 @@
     canvas.width = w;
     canvas.height = h;
     const ctx = canvas.getContext("2d");
-    const circleStart = {
-      radius: 10,
+
+    const boxTemplates = {
+      square: {
+        sideX: 150,
+        sideY: 150,
+        borderRadius: 30,
+      },
+      rectS: {
+        sideX: 300,
+        sideY: 150,
+        borderRadius: 30,
+      },
+      rectL: {
+        sideX: w * 0.98,
+        sideY: 300,
+        borderRadius: 100,
+      },
     };
-    const circleEnd = {
-      radius: 270,
+
+    let boxStart = {
+      sideX: 0,
+      sideY: 0,
+      borderRadius: 0,
+    };
+    let boxEnd = {
+      sideX: 300,
+      sideY: 300,
+      borderRadius: 30,
     };
   </script>
   <script>
-      tweener.tween({
-        beginValue: circleStart,
-        endValue: circleEnd,
-        propertiesToTween: ["radius"],
-        duration: 3000,
-        tweenType: "bounce2",
-        animationFrame: false,
-        callback: () => {
-          ctx.clearRect(0, 0, w, h);
-          ctx.beginPath();
-          ctx.arc(w / 2, h / 2, circleStart.radius, 0, Math.PI * 2);
+    // The main FX
+    // Draw a black box
+    // Add a border-radius
+    // Animate between different sizes.
 
-          ctx.fill();
-        },
-      });
+    // The jelly-splitting fx
+    // Split middle and move the two boxes away from one another
+
+    const buttons = document.getElementsByClassName("animation-toggle");
+    for (let i = 0; i < buttons.length; i++) {
+      buttons[i].onclick = (e) => {
+        boxEnd = boxTemplates[e.target.innerHTML];
+        tweener.tween({
+          beginValue: boxStart,
+          endValue: boxEnd,
+          propertiesToTween: ["sideX", "sideY", "borderRadius"],
+          duration: 1000,
+          tweenType: "easeInOutBack",
+          callback: () => {
+            ctx.clearRect(0, 0, w, h);
+            ctx.beginPath();
+            ctx.roundedRect(
+              w / 2 - boxStart.sideX / 2,
+              h / 10 - boxStart.sideY / 2,
+              boxStart.sideX,
+              boxStart.sideY,
+              Math.max(0, boxStart.borderRadius)
+            );
+            ctx.fill();
+          },
+        });
+      };
+    }
   </script>
 </html>

@@ -183,6 +183,30 @@ const tweener = {
           }
         };
 
+      case "easeInOutBack":
+        return function _beginEaseInOutBack() {
+          const currentDuration = performance.now() - beginningTime;
+          const dx = currentDuration / duration;
+
+          const baseFunc = (t, b, c, d, s) => {
+            if (s == undefined) s = 1.70158;
+            if ((t /= d / 2) < 1)
+              return (c / 2) * (t * t * (((s *= 1.525) + 1) * t - s)) + b;
+            return (
+              (c / 2) * ((t -= 2) * t * (((s *= 1.525) + 1) * t + s) + 2) + b
+            );
+          };
+          const x = dx;
+
+          if (currentDuration <= duration) {
+            updateProperties(x);
+
+            callback?.();
+
+            requestAnimationFrame(_beginEaseInOutBack);
+          }
+        };
+
       // Bounce with abs(theSpringFunction())
       case "bounce1":
         return function _beginBounce1() {
