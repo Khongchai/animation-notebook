@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      html,
+      body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+      <canvas id="canvas"></canvas>
+    </div>
+  </body>
+  <script src="interpolated-and-procedural-animation/interpolated-tween.js"></script>
+  <script>
+    // Not used in the example below.
+    let tick = 0;
+    function draw(callback) {
+      callback(tick);
+
+      tick++;
+      requestAnimationFrame(() => draw(callback));
+    }
+
+    function drawRuler(ctx, w, h) {
+      ctx.strokeStyle = "black";
+      const steps = Math.ceil(h / 100);
+      for (let i = 0; i < steps; i++) {
+        ctx.moveTo(0, i * 100);
+        ctx.lineTo(40, i * 100);
+        ctx.stroke();
+
+        ctx.font = "16px serif";
+        ctx.fillText(i * 100 - Math.ceil(steps / 2) * 100, 60, i * 100 + 2);
+      }
+    }
+  </script>
+  <script>
+    // A POC for controlling an arctangent path with a few parameters.
+    // d: distance between the two points, if 0, the point stops moving.
+    // h: the height of the curves, if 0, the point moves in a straight line horizontally.
+    // s: the curve's steepness, also controls how fast it reaches h.
+
+    const canvas = document.getElementById("canvas");
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+
+    const params = {
+      h: 700,
+      d: 300,
+      s: 30,
+    };
+  </script>
+  <script>
+    draw((tick) => {
+      ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
+      ctx.fillRect(0, 0, width, height);
+
+      const t = tick * 0.05;
+      const x = Math.sin(t) * params.d + width / 2;
+      ctx.beginPath();
+      ctx.arc(
+        x,
+        //prettier-ignore
+        Math.atan(Math.sin(t) * params.s) * (params.h / Math.PI) + height / 2 + 20,
+        20,
+        0,
+        Math.PI * 2,
+        false
+      );
+      ctx.fillStyle = "black";
+      ctx.fill();
+
+      drawRuler(ctx, width, height);
+    });
+  </script>
+</html>
