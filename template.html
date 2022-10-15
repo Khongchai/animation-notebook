@@ -25,12 +25,25 @@
   <script src="advanced/interpolated-and-procedural-animation/interpolated-tween.js"></script>
   <script>
     // Not used in the example below.
-    let tick = 0;
-    function draw(callback) {
-      callback(tick);
 
-      tick++;
-      requestAnimationFrame(() => draw(callback));
+    // Usage:
+    // draw((delta) => doSomething(delta, whatever));
+    // or 
+    // draw(doSomething2);
+    function draw(callback) {
+      let then = 0;
+
+      function _draw(now) {
+        now *= 0.001;
+        const deltaTime = now - then;
+        then = now;
+
+        callback(deltaTime);
+
+        requestAnimationFrame(_draw);
+      }
+
+      requestAnimationFrame(_draw);
     }
   </script>
   <script>
@@ -48,19 +61,19 @@
     };
   </script>
   <script>
-      tweener.tween({
-        beginValue: circleStart,
-        endValue: circleEnd,
-        propertiesToTween: ["radius"],
-        duration: 3000,
-        tweenType: "bounce2",
-        callback: () => {
-          ctx.clearRect(0, 0, w, h);
-          ctx.beginPath();
-          ctx.arc(w / 2, h / 2, circleStart.radius, 0, Math.PI * 2);
+    tweener.tween({
+      beginValue: circleStart,
+      endValue: circleEnd,
+      propertiesToTween: ["radius"],
+      duration: 3000,
+      tweenType: "bounce2",
+      callback: () => {
+        ctx.clearRect(0, 0, w, h);
+        ctx.beginPath();
+        ctx.arc(w / 2, h / 2, circleStart.radius, 0, Math.PI * 2);
 
-          ctx.fill();
-        },
-      });
+        ctx.fill();
+      },
+    });
   </script>
 </html>
