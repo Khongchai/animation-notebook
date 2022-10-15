@@ -114,5 +114,6 @@ function createProgramFromScripts(gl, vertexShaderId, fragmentShaderId) {
     fragmentShaderId,
     gl.FRAGMENT_SHADER
   );
+
   return createProgram(gl, vertexShader, fragmentShader);
 }
