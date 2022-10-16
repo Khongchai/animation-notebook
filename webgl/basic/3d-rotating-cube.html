@@ -14,6 +14,8 @@
       }
       canvas {
         display: block;
+        width: 100%;
+        height: 100%;
       }
     </style>
   </head>
@@ -21,13 +23,13 @@
     src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.8.1/gl-matrix-min.js"
     integrity="sha512-zhHQR0/H5SEBL3Wn6yYSaTTZej12z0hVZKOv3TwCUXT1z5qeqGcXJLLrbERYRScEDDpYIJhPC1fk31gqR783iQ=="
     crossorigin="anonymous"
-    defer
   ></script>
   <body>
     <div>
       <canvas id="glcanvas"></canvas>
     </div>
   </body>
+
   <script>
     function draw(callback) {
       let then = 0;
@@ -42,7 +44,7 @@
         requestAnimationFrame(_draw);
       }
 
-      requestAnimationFrame(_draw());
+      requestAnimationFrame(_draw);
     }
   </script>
   <script>
@@ -76,8 +78,9 @@
       gl.attachShader(program, glFragment);
 
       gl.linkProgram(program);
+      gl.useProgram(program);
 
-      return gl.createProgram(gl, glVertex, glFragment);
+      return program;
     }
 
     /**
@@ -131,13 +134,13 @@
 
       gl.bufferData(
         gl.ARRAY_BUFFER,
-        new FLoat32Array(positions),
+        new Float32Array(positions),
         gl.STATIC_DRAW
       );
 
       // prettier-ignore
       const faceColors = [
-        [1.0, 1.0, 1.0, 1.0], // Front face: white
+        [.5, 1.0, 0.5, 1.0], // Front: light green
         [1.0, 0.0, 0.0, 1.0], // Back face: red
         [0.0, 1.0, 0.0, 1.0], // Top face: green
         [0.0, 0.0, 1.0, 1.0], // Bottom face: blue
@@ -145,7 +148,7 @@
         [1.0, 0.0, 1.0, 1.0], // Left face: purple
     ];
 
-      const colors = [];
+      let colors = [];
 
       for (let i = 0; i < faceColors.length; ++i) {
         const c = faceColors[i];
@@ -155,10 +158,10 @@
 
       const colorBuffer = gl.createBuffer();
       gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-      gl.bufferData(gl.ARRAY_BUFFER, new FLoat32Array(colors), gl.STATIC_DRAW);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
 
       const indexBuffer = gl.createBuffer();
-      gl.bindbuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
 
       function* indicesGenerator() {
         let i = 0;
@@ -270,8 +273,6 @@
 
       gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices);
 
-      gl.useProgram(programInfo.program);
-
       gl.uniformMatrix4fv(
         programInfo.uniformLocations.projectionMatrix,
         false,
@@ -290,6 +291,13 @@
         gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
       }
     }
+
+    function resize(canvas) {
+      // set canvas buffer size to canvas's CSS size.
+      canvas.width = canvas.clientWidth;
+      canvas.height = canvas.clientHeight;
+      gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+    }
   </script>
   <script>
     const canvas = document.getElementById("glcanvas");
@@ -298,6 +306,8 @@
     const h = window.innerHeight;
     canvas.width = w;
     canvas.height = h;
+
+    let cubeRotation = 0;
 
     const vertex = `
         attribute vec4 aVertexPosition;
@@ -342,7 +352,14 @@
       },
     };
 
-    initBuffers(gl);
+    const buffers = initBuffers(gl);
+
+    
+    window.addEventListener("resize", (e) => {
+      resize(canvas);
+    });
+
+    resize(canvas);
 
     draw((delta) => {
       renderScene(gl, programInfo, buffers, delta);
