@@ -1,10 +1,9 @@
+<!-- full-screen square -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>WebGL meta balls</title>
+    <meta charset="utf-8" />
+    <title>Meta balls</title>
     <style>
       html,
       body {
@@ -23,46 +22,190 @@
   <body>
     <canvas id="glcanvas"></canvas>
   </body>
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.8.1/gl-matrix-min.js"
+    integrity="sha512-zhHQR0/H5SEBL3Wn6yYSaTTZej12z0hVZKOv3TwCUXT1z5qeqGcXJLLrbERYRScEDDpYIJhPC1fk31gqR783iQ=="
+    crossorigin="anonymous"
+  ></script>
   <script>
+    function draw(callback) {
+      let then = 0;
 
+      function _draw(now) {
+        now *= 0.001;
+        const deltaTime = now - then;
+        then = now;
+
+        callback(deltaTime);
+
+        requestAnimationFrame(_draw);
+      }
+
+      requestAnimationFrame(_draw);
+    }
   </script>
   <script>
-    const canvas = document.getELementById("glcanvas") ;
+    function initBuffers(gl) {
+      const positionBuffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+      // prettier-ignore
+      const positions = [
+        1.0,  1.0, 
+        1.0, -1.0,
+       -1.0,  1.0,
+       -1.0, -1.0
+      ];
+      gl.bufferData(
+        gl.ARRAY_BUFFER,
+        new Float32Array(positions),
+        gl.STATIC_DRAW
+      );
+
+      // We'll create a gradient in which each corner of the square is a different color.
+      const colorBuffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+      // prettier-ignore
+      const colors = [
+            1.0,  1.0,  1.0,  1.0,    // white
+            1.0,  0.0,  0.0,  1.0,    // red
+            0.0,  1.0,  0.0,  1.0,    // green
+            0.0,  0.0,  1.0,  1.0,    // blue
+          ];
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
+
+      return {
+        positionBuffer,
+        colorBuffer,
+      };
+    }
+
+    function drawScene(gl, programInfo, positionBuffer, colorBuffer, delta) {
+      gl.clearColor(0.0, 0.0, 0.0, 1.0);
+      gl.clearDepth;
+      gl.enable(gl.DEPTH_TEST);
+      gl.depthFunc(gl.LEQUAL);
+
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+      {
+        const numComponents = 2;
+        const type = gl.FLOAT;
+        const normalize = false;
+        const stride = 0;
+        const offset = 0;
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+        gl.vertexAttribPointer(
+          programInfo.attribLocations.vertexPosition,
+          numComponents,
+          type,
+          normalize,
+          stride,
+          offset
+        );
+        gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
+      }
+
+      {
+        const numComponents = 4;
+        const type = gl.FLOAT;
+        const normalize = false;
+        const stride = 0;
+        const offset = 0;
+        gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+        gl.vertexAttribPointer(
+          programInfo.attribLocations.vertexColor,
+          numComponents,
+          type,
+          normalize,
+          stride,
+          offset
+        );
+        gl.enableVertexAttribArray(programInfo.attribLocations.vertexColor);
+      }
+
+      gl.useProgram(programInfo.program);
+
+      {
+        const offset = 0;
+        const vertexCount = 4;
+        gl.drawArrays(gl.TRIANGLE_STRIP, offset, vertexCount);
+      }
+    }
+
+    function initShaderProgram(gl, vsSource, fsSource) {
+      const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vsSource);
+      const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fsSource);
+      const shaderProgram = gl.createProgram();
+      gl.attachShader(shaderProgram, vertexShader);
+      gl.attachShader(shaderProgram, fragmentShader);
+      gl.linkProgram(shaderProgram);
+
+      return shaderProgram;
+    }
+
+    function loadShader(gl, type, source) {
+      const shader = gl.createShader(type);
+      gl.shaderSource(shader, source);
+      gl.compileShader(shader);
+      return shader;
+    }
+  </script>
+  <script>
+    function resize(canvas) {
+      // set canvas buffer size to canvas's CSS size.
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+    }
+  </script>
+  <script>
+    const canvas = document.getElementById("glcanvas");
     const gl = canvas.getContext("webgl");
-    const w = window.innerWidth;
-    const h = window.innerHeight;
-    canvas.width = w;
-    canvas.height = h;
     const dpr = Math.min(devicePixelRatio, 2);
-    const vertexShader = `
-        // in pixels
-        attribute vec2 a_position;
 
-        uniform vec2 u_resolution;
+    window.addEventListener("resize", (e) => {
+      resize(canvas);
+    });
 
-        void main() {
-            vec2 clipSpace = ((a_position / u_resolution) * 2.0) - 1.0;
-            gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);
-        }
-    `;
-    const fragmentShader = `
-        precision mediump float;
-        uniform vec4 u_color;
+    resize(canvas);
 
-        void main() {
-            gl_FragColor = u_color;
-        }
-    `;
+    const vsSource = `
+            attribute vec4 aVertexPosition;
+            attribute vec4 aVertexColor;
 
-    const renderer = new webGL2dRenderer();
+            varying lowp vec4 vColor;
 
-    // calling render should setup requestAnimationFrameCall
-    renderer.render({
-        devicePixelRatio: dpr,
-        vertexShader,
-        fragmentShader,
-        // For resizing
-        canvas,
-    })
+            void main() {
+                gl_Position = aVertexPosition;
+                vColor = aVertexColor;
+            }
+        `;
+
+    const fSource = `
+            varying lowp vec4 vColor;
+
+            void main() {
+                gl_FragColor = vColor;
+            }
+        `;
+
+    const shaderProgram = initShaderProgram(gl, vsSource, fSource);
+
+    const programInfo = {
+      program: shaderProgram,
+      attribLocations: {
+        vertexPosition: gl.getAttribLocation(shaderProgram, "aVertexPosition"),
+        vertexColor: gl.getAttribLocation(shaderProgram, "aVertexColor"),
+      },
+      uniformLocations: {
+      },
+    };
+
+    const { positionBuffer, colorBuffer } = initBuffers(gl);
+
+    draw((delta) => {
+        drawScene(gl, programInfo, positionBuffer, colorBuffer, delta);
+    });
   </script>
 </html>
