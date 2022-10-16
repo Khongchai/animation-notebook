@@ -196,14 +196,8 @@
                     1.0, 0.0,
                     0.0, -1.0
                 );
-                // mat2 translationMatrix = mat2(.0, .0, .0, 1.0);
-                mat3 translationMatrix = mat3(
-                    1.0, 0.0, 0.0,
-                    0.0, 1.0, 0.0,
-                    0.0, 1.0, 1.0
-                );
 
-                float dist = distanceRatioCompensated(uv, (uMousePos * translationMatrix).xy);
+                float dist = distanceRatioCompensated(uv, uMousePos);
 
                 gl_FragColor = vec4(vec3(dist), 1.0);
             }
