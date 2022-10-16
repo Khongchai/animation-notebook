@@ -158,9 +158,19 @@
             // Make sure that we always get a circle regardless of 
             // the aspect ratio.
             float distanceRatioCompensated(vec2 from, vec2 to) {
-                float dist = 0.07 / sqrt(
-                    pow(from.x - to.x, 2.0) + pow(from.y - to.y, 2.0)
-                );
+                float dist;
+                if (uResolution.x > uResolution.y) {
+                    float newToY = (to.y / uResolution.x) * uResolution.y;
+                    float newFromY = (from.y / uResolution.x) * uResolution.y;
+                    dist = 0.07 / sqrt(
+                        pow(from.x - to.x, 2.0) + pow(newFromY - newToY, 2.0));
+                } else {
+                    // normalize to new space
+                    float newToX = (to.x / uResolution.y) * uResolution.x;
+                    float newFromX = (from.x / uResolution.y) * uResolution.x;
+                    dist = 0.07 / sqrt(
+                        pow(newFromX - newToX, 2.0) + pow(from.y - to.y, 2.0));
+                }
                 return dist;
             }
 
