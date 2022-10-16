@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WebGL meta balls</title>
+    <style>
+      html,
+      body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+        height: 100%;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="glcanvas"></canvas>
+  </body>
+  <script>
+
+  </script>
+  <script>
+    const canvas = document.getELementById("glcanvas") ;
+    const gl = canvas.getContext("webgl");
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    canvas.width = w;
+    canvas.height = h;
+    const dpr = Math.min(devicePixelRatio, 2);
+    const vertexShader = `
+        // in pixels
+        attribute vec2 a_position;
+
+        uniform vec2 u_resolution;
+
+        void main() {
+            vec2 clipSpace = ((a_position / u_resolution) * 2.0) - 1.0;
+            gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);
+        }
+    `;
+    const fragmentShader = `
+        precision mediump float;
+        uniform vec4 u_color;
+
+        void main() {
+            gl_FragColor = u_color;
+        }
+    `;
+
+    const renderer = new webGL2dRenderer();
+
+    // calling render should setup requestAnimationFrameCall
+    renderer.render({
+        devicePixelRatio: dpr,
+        vertexShader,
+        fragmentShader,
+        // For resizing
+        canvas,
+    })
+  </script>
+</html>
