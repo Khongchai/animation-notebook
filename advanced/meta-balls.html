@@ -48,6 +48,7 @@
           y = (y + 1) % canvas.height;
         }
 
+        // NOTE: Returning each pixel rangese from 0 to 255, not actual screen coordinate.
         const cy = (y / canvas.height) * 255;
         const cx = (x / canvas.width) * 255;
 
@@ -66,19 +67,34 @@
     function dist(px, py, cx, cy) {
       let d;
       if (w > h) {
+        // Because px and py are from 0 to 255, we have to normalize px and py
+        // to be within the same range.
+        // Here we do cx / w and cy / w because we want to make the desired space
+        // a square. So we normalize with the assumption that the height (the smaller side)
+        // is the same size as the larger side.
         const normalizedCX = 255 * (cx / w);
         const normalizedCY = 255 * (cy / w);
         d = Math.sqrt(
           Math.pow(px - normalizedCX, 2) +
+          // Here, without h/w, py would still be in the old coordinate 
+          // and as a result, it moves slower than the cursor because 
+          // even though on screen, the cursor has already arrived at the top corner,
+          // but with the new scaled height, it is not. 
+          // To counter this, we need to make py smaller by multiplying it by the 
+          // ratio h/w
             Math.pow(py * (h / w) - normalizedCY, 2)
         );
       } else {
         const normalizedCX = 255 * (cx / h);
         const normalizedCY = 255 * (cy / h);
         d = Math.sqrt(
-          Math.pow(px * (w / h) - normalizedCX, 2) +
+          Math.pow(px  * (w / h) - normalizedCX, 2) +
             Math.pow(py - normalizedCY, 2)
         );
+        // d = Math.sqrt(
+        //   Math.pow(px * (w / h) - normalizedCX, 2) +
+        //     Math.pow(py - normalizedCY, 2)
+        // );
       }
 
       return d;
@@ -96,7 +112,9 @@
     const h = window.innerHeight;
     canvas.width = w;
     canvas.height = h;
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext("2d", {
+      willReadFrequently: true,
+    });
     const mousePos = {
       x: 0,
       y: 0,
@@ -104,8 +122,8 @@
     const movingPos = {
       x: 0,
       y: 0,
-      vx: Math.random() * 50,
-      vy: Math.random() * 70,
+      vx: Math.random() * 1,
+      vy: Math.random() * 10,
       update: function () {
         if (this.x < 0 || this.x > w) {
           this.vx *= -1;
@@ -159,7 +177,7 @@
       const pixels = imageData.data;
       forEachPixel(pixels, (x, y) => {
         let sum = 0;
-        for (let i = 0; i < blobs.length; i++) {
+        for (let i = 0; i < blobs.length - 1; i++) {
           const d = dist(x, y, blobs[i].x, blobs[i].y);
           sum += (blobs[i].radius * 199) / d;
         }
@@ -171,7 +189,7 @@
       ctx.putImageData(imageData, -1, 0);
 
       blobs[0].draw(ctx);
-      blobs[1].draw(ctx);
+      // blobs[1].draw(ctx);
     });
   </script>
 </html>

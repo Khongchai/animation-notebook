@@ -61,31 +61,16 @@
         gl.STATIC_DRAW
       );
 
-      // We'll create a gradient in which each corner of the square is a different color.
-      const colorBuffer = gl.createBuffer();
-      gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-      // prettier-ignore
-      const colors = [
-            1.0,  1.0,  1.0,  1.0,    // white
-            1.0,  0.0,  0.0,  1.0,    // red
-            0.0,  1.0,  0.0,  1.0,    // green
-            0.0,  0.0,  1.0,  1.0,    // blue
-          ];
-      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
-
       return {
         positionBuffer,
-        colorBuffer,
       };
     }
 
-    function drawScene(gl, programInfo, positionBuffer, colorBuffer, delta) {
+    function drawScene(gl, programInfo, positionBuffer,  delta) {
       gl.clearColor(0.0, 0.0, 0.0, 1.0);
-      gl.clearDepth;
-      gl.enable(gl.DEPTH_TEST);
-      gl.depthFunc(gl.LEQUAL);
-
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+      gl.useProgram(programInfo.program);
 
       {
         const numComponents = 2;
@@ -106,24 +91,11 @@
       }
 
       {
-        const numComponents = 4;
-        const type = gl.FLOAT;
-        const normalize = false;
-        const stride = 0;
-        const offset = 0;
-        gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-        gl.vertexAttribPointer(
-          programInfo.attribLocations.vertexColor,
-          numComponents,
-          type,
-          normalize,
-          stride,
-          offset
+        gl.uniform2fv(
+            programInfo.uniformLocations.uResolution,
+            new Float32Array([gl.canvas.width, gl.canvas.height]),
         );
-        gl.enableVertexAttribArray(programInfo.attribLocations.vertexColor);
       }
-
-      gl.useProgram(programInfo.program);
 
       {
         const offset = 0;
@@ -172,21 +144,32 @@
 
     const vsSource = `
             attribute vec4 aVertexPosition;
-            attribute vec4 aVertexColor;
-
-            varying lowp vec4 vColor;
 
             void main() {
                 gl_Position = aVertexPosition;
-                vColor = aVertexColor;
             }
         `;
 
     const fSource = `
-            varying lowp vec4 vColor;
+            precision highp float;
 
-            void main() {
-                gl_FragColor = vColor;
+            uniform vec2 uResolution;
+
+            // Make sure that we always get a circle regardless of 
+            // the aspect ratio.
+            float distanceRatioCompensated(vec2 from, vec2 to) {
+                float dist = 0.07 / sqrt(
+                    pow(from.x - to.x, 2.0) + pow(from.y - to.y, 2.0)
+                );
+                return dist;
+            }
+
+            void main() { 
+                vec2 uv = gl_FragCoord.xy / uResolution;
+
+                float dist = distanceRatioCompensated(uv, vec2(0.5, 0.5));
+
+                gl_FragColor = vec4(vec3(dist), 1.0);
             }
         `;
 
@@ -199,13 +182,14 @@
         vertexColor: gl.getAttribLocation(shaderProgram, "aVertexColor"),
       },
       uniformLocations: {
+        uResolution: gl.getUniformLocation(shaderProgram, "uResolution"),
       },
     };
 
-    const { positionBuffer, colorBuffer } = initBuffers(gl);
+    const { positionBuffer } = initBuffers(gl);
 
     draw((delta) => {
-        drawScene(gl, programInfo, positionBuffer, colorBuffer, delta);
+      drawScene(gl, programInfo, positionBuffer, delta);
     });
   </script>
 </html>
