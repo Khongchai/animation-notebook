@@ -66,7 +66,7 @@
       };
     }
 
-    function drawScene(gl, programInfo, positionBuffer,  delta) {
+    function drawScene(gl, programInfo, positionBuffer, delta, mousePos) {
       gl.clearColor(0.0, 0.0, 0.0, 1.0);
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
@@ -92,8 +92,16 @@
 
       {
         gl.uniform2fv(
-            programInfo.uniformLocations.uResolution,
-            new Float32Array([gl.canvas.width, gl.canvas.height]),
+          programInfo.uniformLocations.uResolution,
+          new Float32Array([gl.canvas.width, gl.canvas.height])
+        );
+      }
+
+      if (mousePos)
+      {
+        gl.uniform2fv(
+          programInfo.uniformLocations.uMousePos,
+          new Float32Array([mousePos.x, mousePos.y])
         );
       }
 
@@ -135,12 +143,19 @@
     const canvas = document.getElementById("glcanvas");
     const gl = canvas.getContext("webgl");
     const dpr = Math.min(devicePixelRatio, 2);
+    const mousePos = {x: 0, y: 0};
 
     window.addEventListener("resize", (e) => {
       resize(canvas);
     });
 
+    window.addEventListener("mousemove", (e) => {
+        mousePos.x = e.x / window.innerWidth;
+        mousePos.y = e.y / window.innerHeight;
+    });
+
     resize(canvas);
+
 
     const vsSource = `
             attribute vec4 aVertexPosition;
@@ -154,30 +169,41 @@
             precision highp float;
 
             uniform vec2 uResolution;
+            uniform vec2 uMousePos;
 
-            // Make sure that we always get a circle regardless of 
+            // Make sure that we always get a circle regardless of
             // the aspect ratio.
             float distanceRatioCompensated(vec2 from, vec2 to) {
                 float dist;
                 if (uResolution.x > uResolution.y) {
                     float newToY = (to.y / uResolution.x) * uResolution.y;
                     float newFromY = (from.y / uResolution.x) * uResolution.y;
-                    dist = 0.07 / sqrt(
+                    dist = 0.04 / sqrt(
                         pow(from.x - to.x, 2.0) + pow(newFromY - newToY, 2.0));
                 } else {
                     // normalize to new space
                     float newToX = (to.x / uResolution.y) * uResolution.x;
                     float newFromX = (from.x / uResolution.y) * uResolution.x;
-                    dist = 0.07 / sqrt(
+                    dist = 0.04 / sqrt(
                         pow(newFromX - newToX, 2.0) + pow(from.y - to.y, 2.0));
                 }
                 return dist;
             }
 
-            void main() { 
+            void main() {
                 vec2 uv = gl_FragCoord.xy / uResolution;
+                mat2 flipMatrix = mat2(
+                    1.0, 0.0,
+                    0.0, -1.0
+                );
+                // mat2 translationMatrix = mat2(.0, .0, .0, 1.0);
+                mat3 translationMatrix = mat3(
+                    1.0, 0.0, 0.0,
+                    0.0, 1.0, 0.0,
+                    0.0, 1.0, 1.0
+                );
 
-                float dist = distanceRatioCompensated(uv, vec2(0.5, 0.5));
+                float dist = distanceRatioCompensated(uv, (uMousePos * translationMatrix).xy);
 
                 gl_FragColor = vec4(vec3(dist), 1.0);
             }
@@ -193,13 +219,14 @@
       },
       uniformLocations: {
         uResolution: gl.getUniformLocation(shaderProgram, "uResolution"),
+        uMousePos: gl.getUniformLocation(shaderProgram, "uMousePos"),
       },
     };
 
     const { positionBuffer } = initBuffers(gl);
 
     draw((delta) => {
-      drawScene(gl, programInfo, positionBuffer, delta);
+      drawScene(gl, programInfo, positionBuffer, delta, mousePos);
     });
   </script>
 </html>
