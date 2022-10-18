@@ -66,7 +66,14 @@
       };
     }
 
-    function drawScene(gl, programInfo, positionBuffer, delta, mousePos) {
+    function drawScene(
+      gl,
+      programInfo,
+      positionBuffer,
+      delta,
+      mousePos,
+      randBlobLocation
+    ) {
       gl.clearColor(0.0, 0.0, 0.0, 1.0);
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
@@ -90,20 +97,22 @@
         gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
       }
 
-      {
-        gl.uniform2fv(
-          programInfo.uniformLocations.uResolution,
-          new Float32Array([gl.canvas.width, gl.canvas.height])
-        );
-      }
+      gl.uniform2fv(
+        programInfo.uniformLocations.uResolution,
+        new Float32Array([gl.canvas.width, gl.canvas.height])
+      );
 
-      if (mousePos)
-      {
+      if (mousePos) {
         gl.uniform2fv(
           programInfo.uniformLocations.uMousePos,
           new Float32Array([mousePos.x, mousePos.y])
         );
       }
+
+      gl.uniform2fv(
+        programInfo.uniformLocations.uRandBlobLocation,
+        new Float32Array([randBlobLocation.x, randBlobLocation.y])
+      );
 
       {
         const offset = 0;
@@ -143,19 +152,28 @@
     const canvas = document.getElementById("glcanvas");
     const gl = canvas.getContext("webgl");
     const dpr = Math.min(devicePixelRatio, 2);
-    const mousePos = {x: 0, y: 0};
+    const mousePos = { x: 0, y: 0 };
+    const randBlobLocation = {
+      x: 0,
+      y: 0,
+      dx: 1,
+      dy: 1,
+      updateBlob: function () {
+        this.x += this.dx / window.innerWidth;
+        this.y += this.dy / window.innerHeight;
+      },
+    };
 
     window.addEventListener("resize", (e) => {
       resize(canvas);
     });
 
     window.addEventListener("mousemove", (e) => {
-        mousePos.x = e.x / window.innerWidth;
-        mousePos.y = e.y / window.innerHeight;
+      mousePos.x = e.x / window.innerWidth;
+      mousePos.y = e.y / window.innerHeight;
     });
 
     resize(canvas);
-
 
     const vsSource = `
             attribute vec4 aVertexPosition;
@@ -170,6 +188,7 @@
 
             uniform vec2 uResolution;
             uniform vec2 uMousePos;
+            uniform vec2 uRandBlobLocation;
 
             // Make sure that we always get a circle regardless of
             // the aspect ratio.
@@ -193,16 +212,18 @@
             void main() {
                 vec2 uv = gl_FragCoord.xy / uResolution;
 
-                mat3 mouseTransformMatrix = mat3(
+                mat3 transformCoordMatrix = mat3(
                   1., 0., 0.,
                   0., -1., 0.,
                   0., 1., 1.
                 );
 
-                vec3 newMousePos =  mouseTransformMatrix * vec3(uMousePos, 1.);
-                float dist = distanceRatioCompensated(uv, newMousePos.xy);
+                vec3 newRandBlobPos = transformCoordMatrix * vec3(uRandBlobLocation, 1.);
+                vec3 newMousePos =  transformCoordMatrix * vec3(uMousePos, 1.);
+                float dist1 = distanceRatioCompensated(uv, newMousePos.xy);
+                float dist2 = distanceRatioCompensated(uv, newRandBlobPos.xy);
 
-                gl_FragColor = vec4(vec3(dist), 1.0);
+                gl_FragColor = vec4(vec3(dist1 + dist2), 1.0);
             }
         `;
 
@@ -217,13 +238,25 @@
       uniformLocations: {
         uResolution: gl.getUniformLocation(shaderProgram, "uResolution"),
         uMousePos: gl.getUniformLocation(shaderProgram, "uMousePos"),
+        uRandBlobLocation: gl.getUniformLocation(
+          shaderProgram,
+          "uRandBlobLocation"
+        ),
       },
     };
 
     const { positionBuffer } = initBuffers(gl);
 
     draw((delta) => {
-      drawScene(gl, programInfo, positionBuffer, delta, mousePos);
+      randBlobLocation.updateBlob();
+      drawScene(
+        gl,
+        programInfo,
+        positionBuffer,
+        delta,
+        mousePos,
+        randBlobLocation
+      );
     });
   </script>
 </html>
