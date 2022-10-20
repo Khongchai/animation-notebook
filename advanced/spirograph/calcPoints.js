@@ -58,31 +58,8 @@ Array.prototype.reduceWithResult = function (callback, defaultValue) {
   return result;
 };
 
-//TODO use webassembly for this migh be less annoying
-function multiLcm(...numbers) {
-  const maxDecimalCount = numbers.reduce((a, b) =>
-    Math.max(countDecimals(a), countDecimals(b))
-  );
-
-  let n = 1;
-  for (let i = 0; i < numbers.length; i++) {
-    const thisNumAsInt = Math.ceil(numbers[i] * Math.pow(10, maxDecimalCount));
-    n = lcm(thisNumAsInt, n);
-  }
-
-  let adjacentMaxDecimal = 0;
-  for (let i = 0; i < numbers.length - 1; i++) {
-    const product = multiplyAsInt(numbers[i], numbers[i + 1]);
-    const curDecimals = countDecimals(product);
-    adjacentMaxDecimal = Math.max(curDecimals, adjacentMaxDecimal);
-  }
-
-  return n / Math.pow(10, 3);
+function fractionalLcm(...numbers) {
 }
-
-const lcm = (a, b) => {
-  return (a * b) / gcd(a, b);
-};
 
 function gcd(a, b) {
   while (b) {
