@@ -97,9 +97,13 @@
     // Keep the shapes you found as we can use them as our test cases.
 
     // Cool shape
-    const betaScale = 0.70;
-    const gammaScale = 0.316;
-    const deltaScale = 0.132;
+    // const betaScale = 0.70;
+    // const gammaScale = 0.316;
+    // const deltaScale = 0.132;
+
+    const betaScale = 2.56;
+    const gammaScale = 3.4;
+    const deltaScale = 4.1;
     
     const maxPoints = 1000000;
     // Algorithm: find the lcm of all the scalars, calculate as fractions,
@@ -115,8 +119,8 @@
     // If what we're trying to do is to find the greatest number that all our fractions collide,
     // we have to move in the other direction (because smaller denominator equates to larger values).
     // And moving in the other direction means finding the gcd of all of the demoninators.
-    const lcmResult = lcm(betaScale, gammaScale, deltaScale);
-    const points = baseStepsRequiredForACircle *250 + 1;
+    const lcmResult = fractionalLcm([betaScale, gammaScale, deltaScale]);
+    const points = baseStepsRequiredForACircle * lcmResult + 1;
     // const points = Math.floor(
     //   Math.min(baseStepsRequiredForACircle * lcmRatio), maxPoints) + 1
 
