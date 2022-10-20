@@ -1,22 +1,31 @@
+const max = Math.max;
+const pow = Math.pow;
+const round = Math.round;
+
 function fractionalLcm(numbers) {
-  let longestFractionalPart = 0;
-  let max = Math.max;
+  let longestFractions = 0;
 
   for (let i = 0; i < numbers.length; i++) {
     // Number not a fraction
     if (numbers % 1 == 0) continue;
 
-    max(longestFractionalPart, numbers[i].split(".")[1].length);
+    longestFractions = max(
+      longestFractions,
+      numbers[i].toString().split(".")[1].length
+    );
   }
 
-  return (
-    (1 * longestFractionalPart) /
-    gcd(numbers.map((n) => n * longestFractionalPart))
-  );
+  const powerOfTen = pow(10, longestFractions);
+  const result = 
+    (powerOfTen) /
+    gcd(numbers.map((n) => round(n * powerOfTen)));
+  console.log(result);
+
+  return result;
 }
 
 function gcd(numbers) {
-  let result = 1;
+  let result = numbers[0] ?? 1;
 
   function _gcd(a, b) {
     while (b) {
@@ -28,7 +37,7 @@ function gcd(numbers) {
     return a;
   }
 
-  for (let i = 0; i < numbers.length; i++) {
+  for (let i = 1; i < numbers.length; i++) {
     result = _gcd(result, numbers[i]);
   }
 
