@@ -7,7 +7,7 @@ function fractionalLcm(numbers) {
 
   for (let i = 0; i < numbers.length; i++) {
     // Number not a fraction
-    if (numbers % 1 == 0) continue;
+    if (numbers[i] % 1 == 0) continue;
 
     longestFractions = max(
       longestFractions,
