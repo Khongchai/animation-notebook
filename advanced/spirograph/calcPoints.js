@@ -16,10 +16,7 @@ function fractionalLcm(numbers) {
   }
 
   const powerOfTen = pow(10, longestFractions);
-  const result = 
-    (powerOfTen) /
-    gcd(numbers.map((n) => round(n * powerOfTen)));
-  console.log(result);
+  const result = powerOfTen / gcd(numbers.map((n) => round(n * powerOfTen)));
 
   return result;
 }
