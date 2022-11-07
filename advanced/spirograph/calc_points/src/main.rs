@@ -5,25 +5,29 @@ fn main() {
 }
 
 fn fractional_lcm(numbers: &[f64]) -> f64 {
-    let mut longest_fractions: f64 = 0.0;
+    let mut longest_fractions: u32 = 0;
 
     for i in 0..numbers.len() {
+        // Number not a decimal number.
         if numbers[i] % 1.0 == 0.0 {
             continue;
         };
 
         let num_string: String = numbers[i].to_string();
         let num_string_vec: Vec<&str> = num_string.split(".").collect();
-        let fractions_count: f64 = num_string_vec[1].chars().count() as f64;
+        let fractions_count: u32 = num_string_vec[1].chars().count() as u32;
 
         longest_fractions = longest_fractions.max(fractions_count);
     }
 
-    let power_of_ten: f64 = longest_fractions.powi(10);
+    let power_of_ten = 10_u32.pow(longest_fractions) as f64;
+
+    // TODO This line is where things go wrong.
     let gcd_of_decimal_numbers_as_ints = gcd(&numbers
         .iter()
         .map(|x| x * power_of_ten)
         .collect::<Vec<f64>>());
+
     let result = power_of_ten / gcd_of_decimal_numbers_as_ints;
 
     result
