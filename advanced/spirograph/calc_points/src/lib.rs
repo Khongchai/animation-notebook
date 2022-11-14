@@ -1,10 +1,7 @@
-// https://stackoverflow.com/questions/26643688/how-do-i-split-a-string-in-rust
+use wasm_bindgen::prelude::*;
 
-fn main() {
-    fractional_lcm(&[20.2, 20.3]);
-}
-
-fn fractional_lcm(numbers: &[f64]) -> f64 {
+#[wasm_bindgen]
+pub fn fractional_lcm(numbers: &[f64]) -> f64 {
     let mut longest_fractions: u32 = 0;
 
     for i in 0..numbers.len() {
@@ -22,7 +19,6 @@ fn fractional_lcm(numbers: &[f64]) -> f64 {
 
     let power_of_ten = 10_u32.pow(longest_fractions) as f64;
 
-    // TODO This line is where things go wrong.
     let gcd_of_decimal_numbers_as_ints = gcd(&numbers
         .iter()
         .map(|x| (x * power_of_ten).round())
