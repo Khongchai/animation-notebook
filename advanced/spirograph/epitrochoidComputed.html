@@ -17,6 +17,7 @@
       }
     </style>
   </head>
+  <script src="calcPoints.js"></script>
   <body>
     <div><canvas id="canvas"></canvas></div>
   </body>
@@ -60,193 +61,203 @@
       };
     }
   </script>
-  <script src="calcPoints.js"></script>
-  <script>
-    const enableDebug = true;
+  <script type="module">
+    import init, { fractional_lcm } from "./calc_points/pkg/calc_points.js";
 
-    const canvas = document.getElementById("canvas");
-    const ctx = canvas.getContext("2d");
-    const width = window.innerWidth;
-    const height = window.innerHeight;
-    canvas.width = width;
-    canvas.height = height;
-    ctx.translate(width / 2, height / 2);
-    ctx.fillRect(-width / 2, -height / 2, width, height);
-    ctx.scale(1, 1);
+    async function main() {
+      await init();
 
-    let previousPoints = null;
+      const enableDebug = false;
 
-    let currentPoint = {
-      x: 0,
-      y: 0,
-    };
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      canvas.width = width;
+      canvas.height = height;
+      ctx.translate(width / 2, height / 2);
+      ctx.fillRect(-width / 2, -height / 2, width, height);
+      ctx.scale(1, 1);
 
-    // The number of points required to complete 1 circle. This is chosen arbitrarily. Points calculations
-    // will be based off of this.
-    //
-    // For now, circle of all sizes will have the same base step. This means that larger ones will have less
-    // resolutions. This could be countered by {TODO}
-    const baseStepsRequiredForACircle = 10000;
-    // Speed scale of 1 means the inner cycloid will cover the same distance regardless of its radius.
-    // Controls for how far the points are distributed from one another
-    // step = Math.PI * 2 / 60 means it only takes 60 + 1 points to draw a full circle of any radius.
-    // + 1 because 1 we need to close the final loop.
-    const step = (Math.PI * 2) / baseStepsRequiredForACircle;
-    //TODO has to be 2pi divided by something k and then use that k like baseStepsRequiredForACircle * k;
+      let previousPoints = null;
 
-    // Keep the shapes you found as we can use them as our test cases.
+      let currentPoint = {
+        x: 0,
+        y: 0,
+      };
 
-    // Cool shape
-    // const betaScale = 0.70;
-    // const gammaScale = 0.316;
-    // const deltaScale = 0.132;
+      // The number of points required to complete 1 circle. This is chosen arbitrarily. Points calculations
+      // will be based off of this.
+      //
+      // For now, circle of all sizes will have the same base step. This means that larger ones will have less
+      // resolutions. This could be countered by {TODO}
+      const baseStepsRequiredForACircle = 10000;
+      // Speed scale of 1 means the inner cycloid will cover the same distance regardless of its radius.
+      // Controls for how far the points are distributed from one another
+      // step = Math.PI * 2 / 60 means it only takes 60 + 1 points to draw a full circle of any radius.
+      // + 1 because 1 we need to close the final loop.
+      const step = (Math.PI * 2) / baseStepsRequiredForACircle;
+      //TODO has to be 2pi divided by something k and then use that k like baseStepsRequiredForACircle * k;
 
-    // Cool shape
-    // const betaScale = 2.56;
-    // const gammaScale = 3.41;
-    // const deltaScale = 5.11;
+      // Keep the shapes you found as we can use them as our test cases.
 
-    // 10 million points
-    // const betaScale = 1;
-    // const gammaScale = 2;
-    // const deltaScale = 3.5;
-    // const omegaScale = 3.121;
+      // Cool shape
+      // const betaScale = 0.70;
+      // const gammaScale = 0.316;
+      // const deltaScale = 0.132;
 
-    const betaScale = 2.56;
-    const gammaScale = 3.41;
-    const deltaScale = 5.11;
-    const omegaScale = 2;
+      // Cool shape
+      // const betaScale = 2.56;
+      // const gammaScale = 3.41;
+      // const deltaScale = 5.11;
 
-    // Algorithm: find the lcm of all the scalars, calculate as fractions,
-    // ex: lcm(0.7, 0.316, 0.132) => 1000 / gcd(700, 316, 132);
+      // 10 million points
+      // const betaScale = 1;
+      // const gammaScale = 2;
+      // const deltaScale = 3.5;
+      // const omegaScale = 3.121;
 
-    // Rationale: If we think of the lcm of decimals as lcm of fractions,
-    // we'll see a very easy-to-spot pattern.
-    // Let's imagine an lcm of (0.2, 0.25, 0.3) -- or (1/2, 1/25, 1/3)
-    // Now, the numerator, in our case, at least, will always be the same number 1, 10, 100, 1000, ....
-    // And we have to find out the gcd of the bottom numbers because,
-    // lcm is some number >= the largest number in a group,
-    // gcd is some number <= the smallest number in a group,
-    // If what we're trying to do is to find the greatest number that all our fractions collide,
-    // we have to move in the other direction (because smaller denominator equates to larger values).
-    // And moving in the other direction means finding the gcd of all of the demoninators.
-    const now = performance.now();
-    const lcmResult = fractionalLcm([
-      betaScale,
-      gammaScale,
-      deltaScale,
-      omegaScale,
-    ]);
+      // 1.1, 20.5, 2.3, 6.0;
+      const betaScale = 1;
+      const gammaScale = 5.1;
+      const deltaScale = 5.11;
+      const omegaScale = 2;
 
-    const points = baseStepsRequiredForACircle * lcmResult + 1;
-    console.log(points);
+      // Algorithm: find the lcm of all the scalars, calculate as fractions,
+      // ex: lcm(0.7, 0.316, 0.132) => 1000 / gcd(700, 316, 132);
 
-    const cycloids = [
-      // Base Circle
-      {
-        radius: 300,
-      },
-      {
-        radius: 100,
-        rotationDirection: "counterclockwise",
-        rodLengthScale: 0,
-        thetaScale: betaScale,
-        isOutsideOfParent: true,
-      },
-      {
-        radius: 50,
-        rotationDirection: "clockwise",
-        rodLengthScale: 0,
-        thetaScale: gammaScale,
-        isOutsideOfParent: true,
-      },
-      {
-        radius: 25,
-        rotationDirection: "clockwise",
-        rodLengthScale: 0,
-        thetaScale: deltaScale,
-        isOutsideOfParent: true,
-      },
-      {
-        radius: 50,
-        rotationDirection: "counterClockwise",
-        rodLengthScale: 2,
-        thetaScale: omegaScale,
-        isOutsideOfParent: true,
-      },
-    ];
-    const lastCycloid = cycloids[cycloids.length - 1];
-    const rodLength = lastCycloid.radius * lastCycloid.rodLengthScale;
-  </script>
-  <script>
-    let startingPoint;
-    let endingPoint;
-    let endingSameAsFirstCount = 0;
+      // Rationale: If we think of the lcm of decimals as lcm of fractions,
+      // we'll see a very easy-to-spot pattern.
+      // Let's imagine an lcm of (0.2, 0.25, 0.3) -- or (1/2, 1/25, 1/3)
+      // Now, the numerator, in our case, at least, will always be the same number 1, 10, 100, 1000, ....
+      // And we have to find out the gcd of the bottom numbers because,
+      // lcm is some number >= the largest number in a group,
+      // gcd is some number <= the smallest number in a group,
+      // If what we're trying to do is to find the greatest number that all our fractions collide,
+      // we have to move in the other direction (because smaller denominator equates to larger values).
+      // And moving in the other direction means finding the gcd of all of the demoninators.
+      const now = performance.now();
+      const lcmResult = fractional_lcm([
+        betaScale,
+        gammaScale,
+        deltaScale,
+        omegaScale,
+      ]);
+      console.log(lcmResult);
+      const then = performance.now();
+      console.log(then - now + " milliseconds");
 
-    const kindOfEqual = (num1, num2) =>
-      parseFloat(num1.toFixed(2)) === parseFloat(num2.toFixed(2));
+      const points = baseStepsRequiredForACircle * lcmResult + 1;
 
-    const draw = () => {
-      let theta = 0;
+      const cycloids = [
+        // Base Circle
+        {
+          radius: 300,
+        },
+        {
+          radius: 100,
+          rotationDirection: "counterclockwise",
+          rodLengthScale: 0,
+          thetaScale: betaScale,
+          isOutsideOfParent: true,
+        },
+        {
+          radius: 50,
+          rotationDirection: "clockwise",
+          rodLengthScale: 0,
+          thetaScale: gammaScale,
+          isOutsideOfParent: true,
+        },
+        {
+          radius: 25,
+          rotationDirection: "clockwise",
+          rodLengthScale: 0,
+          thetaScale: deltaScale,
+          isOutsideOfParent: true,
+        },
+        {
+          radius: 50,
+          rotationDirection: "counterClockwise",
+          rodLengthScale: 2,
+          thetaScale: omegaScale,
+          isOutsideOfParent: true,
+        },
+      ];
+      const lastCycloid = cycloids[cycloids.length - 1];
+      const rodLength = lastCycloid.radius * lastCycloid.rodLengthScale;
 
-      for (let i = 0; i < points; i++) {
-        theta += step;
+      let startingPoint;
+      let endingPoint;
+      let endingSameAsFirstCount = 0;
 
-        const newPoint = computedEpitrochoid(cycloids, theta, rodLength);
+      ctx.strokeStyle = "pink";
 
-        // First point.
-        if (!previousPoints) {
-          previousPoints = newPoint;
-          startingPoint = newPoint;
-        } else {
-          currentPoint = newPoint;
-          ctx.beginPath();
-          ctx.moveTo(previousPoints.x, previousPoints.y);
-          ctx.lineTo(currentPoint.x, currentPoint.y);
-          ctx.strokeStyle = "pink";
-          ctx.stroke();
+      const kindOfEqual = (num1, num2) =>
+        parseFloat(num1.toFixed(2)) === parseFloat(num2.toFixed(2));
+
+      const draw = () => {
+        let theta = 0;
+
+        for (let i = 0; i < points; i++) {
+          theta += step;
+
+          const newPoint = computedEpitrochoid(cycloids, theta, rodLength);
+
+          // First point.
+          if (!previousPoints) {
+            previousPoints = newPoint;
+            startingPoint = newPoint;
+          } else {
+            currentPoint = newPoint;
+            ctx.beginPath();
+            ctx.moveTo(previousPoints.x, previousPoints.y);
+            ctx.lineTo(currentPoint.x, currentPoint.y);
+            ctx.stroke();
+
+            if (
+              enableDebug &&
+              kindOfEqual(currentPoint.x, startingPoint.x) &&
+              (currentPoint.y, startingPoint.y)
+            ) {
+              endingSameAsFirstCount++;
+            }
+
+            previousPoints = currentPoint;
+
+            const isLastPoint = i === points - 1;
+            if (isLastPoint) {
+              endingPoint = currentPoint;
+            }
+          }
+        }
+
+        if (enableDebug) {
+          if (endingSameAsFirstCount > 1) {
+            // This does not always mean that the path repeats itself.
+            console.warn(
+              "Debug: Beginning repeat count: " + endingSameAsFirstCount
+            );
+          }
 
           if (
-            enableDebug &&
-            kindOfEqual(currentPoint.x, startingPoint.x) &&
-            (currentPoint.y, startingPoint.y)
+            !kindOfEqual(startingPoint.x, endingPoint.x) ||
+            !kindOfEqual(startingPoint.y, endingPoint.y)
           ) {
-            endingSameAsFirstCount++;
-          }
-
-          previousPoints = currentPoint;
-
-          if (i === points - 1) {
-            endingPoint = currentPoint;
-
-            const then = performance.now();
-            console.log((then - now) / 1000 + " seconds");
+            console.error("Debug: the path is not closed properly");
+            console.error("Debug: Starting point: ", startingPoint);
+            console.error("Debug: Ending point: ", endingPoint);
+          } else {
+            console.info("Debug: Path closed properly.");
+            console.info(
+              "Debug: Starting and ending points are the same point."
+            );
           }
         }
-      }
+      };
 
-      if (enableDebug) {
-        if (endingSameAsFirstCount > 1) {
-          // This does not always mean that the path repeats itself.
-          console.warn(
-            "Debug: Beginning repeat count: " + endingSameAsFirstCount
-          );
-        }
+      draw();
+    }
 
-        if (
-          !kindOfEqual(startingPoint.x, endingPoint.x) ||
-          !kindOfEqual(startingPoint.y, endingPoint.y)
-        ) {
-          console.error("Debug: the path is not closed properly");
-          console.error("Debug: Starting point: ", startingPoint);
-          console.error("Debug: Ending point: ", endingPoint);
-        } else {
-          console.info("Debug: Path closed properly.");
-          console.info("Debug: Starting and ending points are the same point.");
-        }
-      }
-    };
-
-    draw();
+    main();
   </script>
 </html>
