@@ -256,7 +256,7 @@
 
       // Draw the spline
       for (let t = 0; t < spline.points.length - 3; t += 0.005) {
-        const { x, y } = spline.getPointInSplineCatmull(t);
+        const { x, y } = spline.getPointInSplineEquation2(t);
 
         ctx.fillStyle = "white";
         ctx.beginPath();

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      html,
+      body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+      <canvas id="canvas"></canvas>
+    </div>
+  </body>
+  <script>
+    // Not used in the example below.
+    function draw(callback) {
+      const _draw = (t) => {
+        callback(t);
+
+        requestAnimationFrame(_draw);
+      };
+
+      requestAnimationFrame(_draw);
+    }
+  </script>
+  <script>
+    const canvas = document.getElementById("canvas");
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    const circleStart = {
+      radius: 10,
+    };
+    const circleEnd = {
+      radius: 270,
+    };
+
+    const sprite = {
+      x: w / 2,
+      y: h / 2,
+      angle: 0,
+      draw: function (ctx, circle) {
+        ctx.save();
+
+        ctx.translate(this.x, this.y);
+        const dx = this.x - circle.center.x;
+        const dy = this.y - circle.center.y;
+        ctx.rotate(Math.atan2(dy, dx));
+        ctx.beginPath();
+        ctx.moveTo(14, 0);
+        ctx.lineTo(-14, 0 + 7);
+        ctx.lineTo(-14, 0 - 7);
+        ctx.lineTo(14, 0);
+
+        ctx.restore();
+
+        ctx.stroke();
+      },
+      move: function (ctx, circle, t) {
+        this.x = circle.center.x + Math.cos(t * 0.0002) * circle.radius;
+        this.y = circle.center.y + Math.sin(t * 0.0002) * circle.radius;
+      },
+    };
+
+    const circle = {
+      radius: Math.min((w / 2) * 0.9, (h / 2) * 0.9),
+      center: {
+        x: w / 2,
+        y: h / 2,
+      },
+      draw: function (ctx) {
+        ctx.beginPath();
+        ctx.arc(
+          this.center.x,
+          this.center.y,
+          this.radius,
+          0,
+          Math.PI * 2,
+          false
+        );
+        ctx.stroke();
+      },
+    };
+    draw((t) => {
+      ctx.clearRect(0, 0, w, h);
+
+      circle.draw(ctx);
+      sprite.draw(ctx, circle);
+      sprite.move(ctx, circle, t);
+    });
+  </script>
+  <script></script>
+</html>
