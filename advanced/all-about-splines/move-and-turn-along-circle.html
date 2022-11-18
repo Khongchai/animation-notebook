@@ -52,36 +52,52 @@
       x: w / 2,
       y: h / 2,
       angle: 0,
-      draw: function (ctx, circle) {
+      draw: function (ctx, parent) {
         ctx.save();
 
         ctx.translate(this.x, this.y);
-        const dx = this.x - circle.center.x;
-        const dy = this.y - circle.center.y;
+        const dx = this.x - parent.center.x;
+        const dy = this.y - parent.center.y;
         ctx.rotate(Math.atan2(dy, dx));
         ctx.beginPath();
-        ctx.moveTo(14, 0);
-        ctx.lineTo(-14, 0 + 7);
-        ctx.lineTo(-14, 0 - 7);
-        ctx.lineTo(14, 0);
+        ctx.moveTo(7, 0);
+        ctx.lineTo(0, 24);
+        ctx.lineTo(-7, 0);
+        ctx.lineTo(7, 0);
+        ctx.fill();
 
+        ctx.save();
+        ctx.translate(0, -25);
+        ctx.beginPath();
+        ctx.moveTo(-20, 20);
+        ctx.lineTo(-10, 10);
+        ctx.lineTo(0, 20);
+        ctx.lineTo(10, 10);
+        ctx.lineTo(20, 20);
+        ctx.fill();
         ctx.restore();
 
-        ctx.stroke();
-      },
-      move: function (ctx, circle, t) {
-        this.x = circle.center.x + Math.cos(t * 0.0002) * circle.radius;
-        this.y = circle.center.y + Math.sin(t * 0.0002) * circle.radius;
+        ctx.restore();
       },
     };
-
+  </script>
+  <!-- Shapes -->
+  <script>
     const circle = {
       radius: Math.min((w / 2) * 0.9, (h / 2) * 0.9),
       center: {
         x: w / 2,
         y: h / 2,
       },
-      draw: function (ctx) {
+      sprite: null,
+      drawSprite: function (ctx) {
+        sprite.draw(ctx, this);
+      },
+      animateSprite: function (ctx, t) {
+        sprite.x = this.center.x + Math.cos(t * 0.0002) * this.radius;
+        sprite.y = this.center.y + Math.sin(t * 0.0002) * this.radius;
+      },
+      drawSelf: function (ctx) {
         ctx.beginPath();
         ctx.arc(
           this.center.x,
@@ -94,13 +110,22 @@
         ctx.stroke();
       },
     };
+
+    const parabola = {};
+  </script>
+  <!-- Animate-->
+  <script>
     draw((t) => {
       ctx.clearRect(0, 0, w, h);
 
-      circle.draw(ctx);
-      sprite.draw(ctx, circle);
-      sprite.move(ctx, circle, t);
+      animateSpriteAlongPath(t, ctx, sprite, circle);
     });
+
+    function animateSpriteAlongPath(t, ctx, sprite, shape) {
+      shape.sprite = sprite;
+      shape.drawSelf(ctx);
+      shape.drawSprite(ctx);
+      shape.animateSprite(ctx, t);
+    }
   </script>
-  <script></script>
 </html>
