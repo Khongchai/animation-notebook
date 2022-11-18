@@ -90,10 +90,8 @@
         y: h / 2,
       },
       sprite: null,
-      drawSprite: function (ctx) {
-        sprite.draw(ctx, this);
-      },
       animateSprite: function (ctx, t) {
+        sprite.draw(ctx, this);
         sprite.x = this.center.x + Math.cos(t * 0.0002) * this.radius;
         sprite.y = this.center.y + Math.sin(t * 0.0002) * this.radius;
       },
@@ -111,20 +109,56 @@
       },
     };
 
-    const parabola = {};
+    const utils = {
+      drawParametric: function (ctx, parametricShape, quality = 1000) {
+        ctx.save();
+        ctx.translate(parametricShape.center.x, parametricShape.center.y);
+        ctx.rotate(Math.PI);
+
+        const unit = parametricShape.size / quality;
+        for (let i = -(quality / 2); i < parametricShape.size; i += unit) {
+          ctx.beginPath();
+          ctx.moveTo(i, parametricShape.equation(i));
+          ctx.lineTo(i, parametricShape.equation(i + unit));
+          ctx.stroke();
+        }
+
+        ctx.restore();
+      },
+    };
+
+    const parabola = {
+      equation: (x) => x ** 2,
+      size: 1000,
+      center: {
+        x: w / 2,
+        y: h / 1.5,
+      },
+      sprite: null,
+      drawSelf: function (ctx) {
+        utils.drawParametric(ctx, this);
+      },
+      animateSprite: function (ctx, t) {
+        sprite.draw(ctx, this);
+        // sprite.x = this.center.x + Math.sin(t * 0.0002) * ;
+        // sprite.y = this.center.y + 2 * t * 0.01;
+        // sprite.x = this.center.x + Math.cos(t * 0.0002) * this.radius;
+        // sprite.y = this.center.y + Math.sin(t * 0.0002) * this.radius;
+      },
+    };
   </script>
   <!-- Animate-->
   <script>
     draw((t) => {
       ctx.clearRect(0, 0, w, h);
 
-      animateSpriteAlongPath(t, ctx, sprite, circle);
+      animateSpriteAlongPath(t, ctx, sprite, parabola);
     });
 
     function animateSpriteAlongPath(t, ctx, sprite, shape) {
-      shape.sprite = sprite;
       shape.drawSelf(ctx);
-      shape.drawSprite(ctx);
+
+      shape.sprite = sprite;
       shape.animateSprite(ctx, t);
     }
   </script>
