@@ -24,6 +24,8 @@
   <script>
     /**
      * Generate current point for epitrochoid of nested level n
+     *
+     * TODO some of the values can be pre-computed.
      */
     function computedEpitrochoid(cycloids, theta, rodLength) {
       if (cycloids.length < 2) {
@@ -60,6 +62,21 @@
         y: finalPoint.y + rodLength * Math.sin(theta),
       };
     }
+  </script>
+  <script>
+    const stopwatch = {
+      _time: 0,
+      start: function () {
+        this._time = performance.now();
+      },
+      stop: function () {
+        this._time = performance.now() - this._time;
+      },
+      report: function () {
+        const time = this._time / 1000;
+        console.log("Process took " + time + " seconds");
+      },
+    };
   </script>
   <script type="module">
     import init, { fractional_lcm } from "./calc_points/pkg/calc_points.js";
@@ -136,18 +153,15 @@
       // If what we're trying to do is to find the greatest number that all our fractions collide,
       // we have to move in the other direction (because smaller denominator equates to larger values).
       // And moving in the other direction means finding the gcd of all of the demoninators.
-      const now = performance.now();
       const lcmResult = fractional_lcm([
         betaScale,
         gammaScale,
         deltaScale,
         omegaScale,
       ]);
-      console.log(lcmResult);
-      const then = performance.now();
-      console.log(then - now + " milliseconds");
 
       const points = baseStepsRequiredForACircle * lcmResult + 1;
+      console.log("Points amount: " + points);
 
       const cycloids = [
         // Base Circle
@@ -198,6 +212,7 @@
       const draw = () => {
         let theta = 0;
 
+        stopwatch.start();
         for (let i = 0; i < points; i++) {
           theta += step;
 
@@ -230,6 +245,8 @@
             }
           }
         }
+        stopwatch.stop();
+        stopwatch.report();
 
         if (enableDebug) {
           if (endingSameAsFirstCount > 1) {
