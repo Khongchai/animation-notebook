@@ -1,0 +1,378 @@
+<!-- Definitely don't run this. -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      html,
+      body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+        height: 100%;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <script src="calcPoints.js"></script>
+  <body>
+    <div><canvas id="canvas"></canvas></div>
+  </body>
+  <script>
+    function computedEpitrochoid(cycloids, theta, rodLength) {
+      if (cycloids.length < 2) {
+        throw new Error("Provide at least 2 cycloids");
+      }
+
+      const finalPoint = { x: 0, y: 0 };
+
+      for (let i = 1; i < cycloids.length; i++) {
+        const parentCycloid = cycloids[i - 1];
+        const thisCycloid = cycloids[i];
+        const childCycloidRadius = thisCycloid.isOutsideOfParent
+          ? thisCycloid.radius
+          : -thisCycloid.radius;
+        const isChildArcClockwise =
+          thisCycloid.rotationDirection === "clockwise";
+
+        finalPoint.x +=
+          (parentCycloid.radius + childCycloidRadius) *
+          Math.cos(
+            theta * thisCycloid.thetaScale - Math.PI * 0.5 * isChildArcClockwise
+          );
+        finalPoint.y +=
+          (parentCycloid.radius + childCycloidRadius) *
+          Math.sin(
+            theta * thisCycloid.thetaScale + Math.PI * 0.5 * isChildArcClockwise
+          );
+      }
+
+      return {
+        x: finalPoint.x + rodLength * Math.cos(theta),
+        y: finalPoint.y + rodLength * Math.sin(theta),
+      };
+    }
+  </script>
+  <script>
+    const stopwatch = {
+      _time: 0,
+      start: function () {
+        this._time = performance.now();
+      },
+      stop: function () {
+        this._time = performance.now() - this._time;
+      },
+      report: function () {
+        const time = this._time / 1000;
+        console.log("Process took " + time + " seconds");
+      },
+    };
+  </script>
+  <script type="module">
+    import init, { fractional_lcm } from "./calc_points/pkg/calc_points.js";
+
+    async function main() {
+      await init();
+
+      const enableDebug = false;
+
+      const canvas = document.getElementById("canvas");
+      //   gl.translate(width / 2, height / 2);
+      //   gl.fillRect(-width / 2, -height / 2, width, height);
+      //   gl.scale(1, 1);
+
+      let previousPoints = null;
+
+      let currentPoint = {
+        x: 0,
+        y: 0,
+      };
+
+      const baseStepsRequiredForACircle = 10000;
+
+      const step = (Math.PI * 2) / baseStepsRequiredForACircle;
+
+      const betaScale = 1;
+      const gammaScale = 5.1;
+      const deltaScale = 5.11;
+      const omegaScale = 2;
+
+      const lcmResult = fractional_lcm([
+        betaScale,
+        gammaScale,
+        deltaScale,
+        omegaScale,
+      ]);
+
+      const points = baseStepsRequiredForACircle * lcmResult + 1;
+      console.log("Points amount: " + points);
+
+      const cycloids = [
+        // Base Circle
+        {
+          radius: 300,
+        },
+        {
+          radius: 100,
+          rotationDirection: "counterclockwise",
+          rodLengthScale: 0,
+          thetaScale: betaScale,
+          isOutsideOfParent: true,
+        },
+        {
+          radius: 50,
+          rotationDirection: "clockwise",
+          rodLengthScale: 0,
+          thetaScale: gammaScale,
+          isOutsideOfParent: true,
+        },
+        {
+          radius: 25,
+          rotationDirection: "clockwise",
+          rodLengthScale: 0,
+          thetaScale: deltaScale,
+          isOutsideOfParent: true,
+        },
+        {
+          radius: 50,
+          rotationDirection: "counterClockwise",
+          rodLengthScale: 2,
+          thetaScale: omegaScale,
+          isOutsideOfParent: true,
+        },
+      ];
+      const lastCycloid = cycloids[cycloids.length - 1];
+      const rodLength = lastCycloid.radius * lastCycloid.rodLengthScale;
+
+      let startingPoint;
+      let endingPoint;
+      let endingSameAsFirstCount = 0;
+
+      const kindOfEqual = (num1, num2) =>
+        parseFloat(num1.toFixed(2)) === parseFloat(num2.toFixed(2));
+
+      const webGLDrawer = initWebGL(
+        canvas,
+        `
+            precision highp float;
+
+            precision highp float;
+
+            uniform vec2 uResolution;
+            uniform vec2 uLineStart;
+            uniform vec2 uLineEnd;
+
+            void main() {
+                vec2 uv = gl_FragCoord.xy / uResolution;
+
+                    gl_FragColor = vec4(vec3(uv, 1.0), 1.0);
+                }
+      `
+      );
+      webGLDrawer.setColor("pink");
+
+      const draw = () => {
+        let theta = 0;
+
+        stopwatch.start();
+        for (let i = 0; i < points; i++) {
+          theta += step;
+
+          const newPoint = computedEpitrochoid(cycloids, theta, rodLength);
+
+          // First point.
+          if (!previousPoints) {
+            previousPoints = newPoint;
+            startingPoint = newPoint;
+          } else {
+            currentPoint = newPoint;
+            webGLDrawer.drawLine(
+              previousPoints.x,
+              previousPoints.y,
+              currentPoint.x,
+              currentPoint.y
+            );
+
+            if (
+              enableDebug &&
+              kindOfEqual(currentPoint.x, startingPoint.x) &&
+              (currentPoint.y, startingPoint.y)
+            ) {
+              endingSameAsFirstCount++;
+            }
+
+            previousPoints = currentPoint;
+
+            const isLastPoint = i === points - 1;
+            if (isLastPoint) {
+              endingPoint = currentPoint;
+            }
+          }
+        }
+        stopwatch.stop();
+        stopwatch.report();
+
+        if (enableDebug) {
+          if (endingSameAsFirstCount > 1) {
+            // This does not always mean that the path repeats itself.
+            console.warn(
+              "Debug: Beginning repeat count: " + endingSameAsFirstCount
+            );
+          }
+
+          if (
+            !kindOfEqual(startingPoint.x, endingPoint.x) ||
+            !kindOfEqual(startingPoint.y, endingPoint.y)
+          ) {
+            console.error("Debug: the path is not closed properly");
+            console.error("Debug: Starting point: ", startingPoint);
+            console.error("Debug: Ending point: ", endingPoint);
+          } else {
+            console.info("Debug: Path closed properly.");
+            console.info(
+              "Debug: Starting and ending points are the same point."
+            );
+          }
+        }
+      };
+
+      draw();
+    }
+
+    main();
+  </script>
+  <!-- webgl setup stuff -->
+  <script>
+    const dpr = Math.min(devicePixelRatio, 2);
+
+    function initWebGL(canvas, fragmentShader) {
+      const vsSource = `
+        attribute vec4 aVertexPosition;
+
+        void main() {
+            gl_Position = aVertexPosition;
+        }
+        `;
+      const fSource = fragmentShader;
+
+      const gl = canvas.getContext("webgl");
+      const shaderProgram = initShaderProgram(gl, vsSource, fSource);
+      const programInfo = {
+        program: shaderProgram,
+        attribLocations: {
+          vertexPosition: gl.getAttribLocation(
+            shaderProgram,
+            "aVertexPosition"
+          ),
+        },
+        uniformLocations: {
+          uResolution: gl.getUniformLocation(shaderProgram, "uResolution"),
+          uLineStart: gl.getUniformLocation(shaderProgram, "uLineStart"),
+          uLineEnd: gl.getUniformLocation(shaderProgram, "uLineEnd"),
+        },
+      };
+
+      window.addEventListener("resize", (e) => {
+        resize(canvas, dpr, gl);
+      });
+      resize(canvas, dpr, gl);
+
+      const positionBuffer = initPositionBuffers(gl);
+
+      gl.useProgram(programInfo.program);
+
+      // Make this work and then stop webgl from clearing the
+      // buffer then remove all the setup code outside except
+      // for uLineStart and uLineEnd.
+      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+      gl.vertexAttribPointer(
+        programInfo.attribLocations.vertexPosition,
+        2,
+        gl.FLOAT,
+        false,
+        0,
+        0
+      );
+      gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
+
+      gl.uniform2fv(
+        programInfo.uniformLocations.uResolution,
+        new Float32Array([gl.canvas.width, gl.canvas.height])
+      );
+
+      return {
+        gl,
+        program: programInfo.program,
+        setColor: function (hex) {
+          // TODO
+        },
+        drawLine: function (x1, y1, x2, y2) {
+          gl.uniform2fv(
+            programInfo.uniformLocations.uLineStart,
+            new Float32Array([x1, y1])
+          );
+
+          gl.uniform2fv(
+            programInfo.uniformLocations.uLineEnd,
+            new Float32Array([x2, y2])
+          );
+
+          gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+        },
+      };
+    }
+
+    function initShaderProgram(gl, vSource, fSource) {
+      const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vSource);
+      const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fSource);
+
+      const shaderProgram = gl.createProgram();
+      gl.attachShader(shaderProgram, vertexShader);
+      gl.attachShader(shaderProgram, fragmentShader);
+      gl.linkProgram(shaderProgram);
+
+      return shaderProgram;
+    }
+
+    function loadShader(gl, type, source) {
+      const shader = gl.createShader(type);
+      gl.shaderSource(shader, source);
+      gl.compileShader(shader);
+      return shader;
+    }
+
+    function initPositionBuffers(gl) {
+      const positionBuffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+      // prettier-ignore
+      const positions = [
+        1.0,  1.0,
+        1.0, -1.0,
+       -1.0,  1.0,
+       -1.0, -1.0
+      ];
+      gl.bufferData(
+        gl.ARRAY_BUFFER,
+        new Float32Array(positions),
+        gl.STATIC_DRAW
+      );
+
+      return positionBuffer;
+    }
+
+    function resize(canvas, dpr, gl) {
+      // set canvas buffer size to canvas's CSS size.
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+    }
+  </script>
+</html>

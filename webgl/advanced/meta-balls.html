@@ -145,7 +145,7 @@
   </script>
   <script>
     const canvas = document.getElementById("glcanvas");
-    const gl = canvas.getContext("webgl");
+    const gl = canvas.getContext("webgl", { preserveDrawingBuffer: true });
     const dpr = Math.min(devicePixelRatio, 2);
     const mousePos = { x: 0, y: 0 };
     const randBlobLocation = {
@@ -230,7 +230,6 @@
       program: shaderProgram,
       attribLocations: {
         vertexPosition: gl.getAttribLocation(shaderProgram, "aVertexPosition"),
-        vertexColor: gl.getAttribLocation(shaderProgram, "aVertexColor"),
       },
       uniformLocations: {
         uResolution: gl.getUniformLocation(shaderProgram, "uResolution"),
