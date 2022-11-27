@@ -23,7 +23,7 @@
   </head>
   <script src="calcPoints.js"></script>
   <body>
-    <div><canvas id="canvas"></canvas></div>
+    <canvas id="canvas"></canvas>
   </body>
   <script>
     function computedEpitrochoid(cycloids, theta, rodLength) {
@@ -162,17 +162,8 @@
         canvas,
         `
             precision highp float;
-
-            precision highp float;
-
-            uniform vec2 uResolution;
-            uniform vec2 uLineStart;
-            uniform vec2 uLineEnd;
-
             void main() {
-                vec2 uv = gl_FragCoord.xy / uResolution;
-
-                    gl_FragColor = vec4(vec3(uv, 1.0), 1.0);
+                  gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
                 }
       `
       );
@@ -182,7 +173,7 @@
         let theta = 0;
 
         stopwatch.start();
-        for (let i = 0; i < points; i++) {
+        for (let i = 0; i < 10000; i++) {
           theta += step;
 
           const newPoint = computedEpitrochoid(cycloids, theta, rodLength);
@@ -254,10 +245,12 @@
 
     function initWebGL(canvas, fragmentShader) {
       const vsSource = `
-        attribute vec4 aVertexPosition;
+        attribute vec2 a_position;
+
+        uniform mat3 u_matrix;
 
         void main() {
-            gl_Position = aVertexPosition;
+            gl_Position = vec4((u_matrix * vec3(a_position, 1)).xy, 0, 1);
         }
         `;
       const fSource = fragmentShader;
@@ -266,16 +259,11 @@
       const shaderProgram = initShaderProgram(gl, vsSource, fSource);
       const programInfo = {
         program: shaderProgram,
-        attribLocations: {
-          vertexPosition: gl.getAttribLocation(
-            shaderProgram,
-            "aVertexPosition"
-          ),
+        attributeLocations: {
+          aPosition: gl.getAttribLocation(shaderProgram, "a_position"),
         },
         uniformLocations: {
-          uResolution: gl.getUniformLocation(shaderProgram, "uResolution"),
-          uLineStart: gl.getUniformLocation(shaderProgram, "uLineStart"),
-          uLineEnd: gl.getUniformLocation(shaderProgram, "uLineEnd"),
+          uMatrix: gl.getUniformLocation(shaderProgram, "u_matrix"),
         },
       };
 
@@ -284,28 +272,27 @@
       });
       resize(canvas, dpr, gl);
 
-      const positionBuffer = initPositionBuffers(gl);
-
       gl.useProgram(programInfo.program);
 
-      // Make this work and then stop webgl from clearing the
-      // buffer then remove all the setup code outside except
-      // for uLineStart and uLineEnd.
+      const positionBuffer = gl.createBuffer();
       gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
       gl.vertexAttribPointer(
-        programInfo.attribLocations.vertexPosition,
+        programInfo.attributeLocations.aPositio2,
         2,
         gl.FLOAT,
         false,
         0,
         0
       );
-      gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
+      gl.enableVertexAttribArray(programInfo.attributeLocations.aPosition);
 
-      gl.uniform2fv(
-        programInfo.uniformLocations.uResolution,
-        new Float32Array([gl.canvas.width, gl.canvas.height])
-      );
+      const w = gl.canvas.width;
+      const h = gl.canvas.height;
+
+      const projectionMatrix = projectionAndTranslation(w, h, w / 2, h / 2);
+      // const centerMatrix = translation
+      projectionMatrix[6] += 2 / gl.canvas.width / 2;
+      projectionMatrix[7] += 2 / gl.canvas.height / 2;
 
       return {
         gl,
@@ -313,18 +300,22 @@
         setColor: function (hex) {
           // TODO
         },
+        // Setup code should be outside of this method.
         drawLine: function (x1, y1, x2, y2) {
-          gl.uniform2fv(
-            programInfo.uniformLocations.uLineStart,
-            new Float32Array([x1, y1])
+          // Set the matrix.
+          gl.uniformMatrix3fv(
+            programInfo.uniformLocations.uMatrix,
+            false,
+            projectionMatrix
           );
 
-          gl.uniform2fv(
-            programInfo.uniformLocations.uLineEnd,
-            new Float32Array([x2, y2])
+          gl.bufferData(
+            gl.ARRAY_BUFFER,
+            new Float32Array([x1, y1, x2, y2]),
+            gl.STATIC_DRAW
           );
 
-          gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+          gl.drawArrays(gl.LINES, 0, 2);
         },
       };
     }
@@ -348,31 +339,34 @@
       return shader;
     }
 
-    function initPositionBuffers(gl) {
-      const positionBuffer = gl.createBuffer();
-      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-      // prettier-ignore
-      const positions = [
-        1.0,  1.0,
-        1.0, -1.0,
-       -1.0,  1.0,
-       -1.0, -1.0
-      ];
-      gl.bufferData(
-        gl.ARRAY_BUFFER,
-        new Float32Array(positions),
-        gl.STATIC_DRAW
-      );
-
-      return positionBuffer;
-    }
-
     function resize(canvas, dpr, gl) {
       // set canvas buffer size to canvas's CSS size.
       const rect = canvas.getBoundingClientRect();
       canvas.width = rect.width * dpr;
       canvas.height = rect.height * dpr;
       gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+    }
+
+    function projectionAndTranslation(width, height, x, y) {
+      const dst = new Float32Array(9);
+      // Note: This matrix flips the Y axis so 0 is at the top.
+      // src: https://webglfundamentals.org/webgl/resources/m3.js
+
+      // calculate translation using width and height
+      const _x = (x / width) * 2 - 1;
+      const _y = (y / height) * 2 - 1;
+
+      dst[0] = 2 / width;
+      dst[1] = 0;
+      dst[2] = 0;
+      dst[3] = 0;
+      dst[4] = -2 / height;
+      dst[5] = 0;
+      dst[6] = _x;
+      dst[7] = _y;
+      dst[8] = 1;
+
+      return dst;
     }
   </script>
 </html>
