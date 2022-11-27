@@ -1,4 +1,4 @@
-<!-- Definitely don't run this. -->
+<!-- Pretty noice result: around 0.24 - 0.27 seconds for webGL and 1.7 for canvas :D -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -26,38 +26,82 @@
     <canvas id="canvas"></canvas>
   </body>
   <script>
-    function computedEpitrochoid(cycloids, theta, rodLength) {
-      if (cycloids.length < 2) {
+    function computedEpitrochoid(data, theta, rodLength) {
+      if (data.length < 2) {
         throw new Error("Provide at least 2 cycloids");
       }
 
       const finalPoint = { x: 0, y: 0 };
 
-      for (let i = 1; i < cycloids.length; i++) {
-        const parentCycloid = cycloids[i - 1];
-        const thisCycloid = cycloids[i];
-        const childCycloidRadius = thisCycloid.isOutsideOfParent
-          ? thisCycloid.radius
-          : -thisCycloid.radius;
-        const isChildArcClockwise =
-          thisCycloid.rotationDirection === "clockwise";
+      // This is not faster than the loop below, but we can now pass it
+      // to rust...with hope that it will be faster.
+      for (let i = 0; i < data.length; i++) {
+        const currentData = data[i];
 
         finalPoint.x +=
-          (parentCycloid.radius + childCycloidRadius) *
-          Math.cos(
-            theta * thisCycloid.thetaScale - Math.PI * 0.5 * isChildArcClockwise
-          );
+          (currentData[0] + currentData[1]) *
+          Math.cos(theta * currentData[3] - Math.PI * 0.5 * currentData[2]);
         finalPoint.y +=
-          (parentCycloid.radius + childCycloidRadius) *
-          Math.sin(
-            theta * thisCycloid.thetaScale + Math.PI * 0.5 * isChildArcClockwise
-          );
+          (currentData[0] + currentData[1]) *
+          Math.sin(theta * currentData[3] + Math.PI * 0.5 * currentData[2]);
       }
+
+      // for (let i = 1; i < cycloids.length; i++) {
+      //   const parentCycloid = cycloids[i - 1];
+      //   const thisCycloid = cycloids[i];
+      //   const childCycloidRadius = thisCycloid.isOutsideOfParent
+      //     ? thisCycloid.radius
+      //     : -thisCycloid.radius;
+      //   const isChildArcClockwise =
+      //     thisCycloid.rotationDirection === "clockwise";
+
+      //   // We ask the child it needs the parent to scale its theta.
+      //   finalPoint.x +=
+      //     (parentCycloid.radius + childCycloidRadius) *
+      //     Math.cos(
+      //       theta * thisCycloid.thetaScale - Math.PI * 0.5 * isChildArcClockwise
+      //     );
+      //   finalPoint.y +=
+      //     (parentCycloid.radius + childCycloidRadius) *
+      //     Math.sin(
+      //       theta * thisCycloid.thetaScale + Math.PI * 0.5 * isChildArcClockwise
+      //     );
+      // }
 
       return {
         x: finalPoint.x + rodLength * Math.cos(theta),
         y: finalPoint.y + rodLength * Math.sin(theta),
       };
+    }
+
+    function calcLines(points, theta, step, data, rodLength) {
+      const arr = [];
+      let previousPoint;
+      let endingPoint;
+
+      for (let i = 0; i < points; i++) {
+        theta += step;
+
+        const newPoint = computedEpitrochoid(data, theta, rodLength);
+
+        // First point.
+        if (!previousPoint) {
+          previousPoint = newPoint;
+          startingPoint = newPoint;
+        } else {
+          currentPoint = newPoint;
+          arr.push(
+            previousPoint.x,
+            previousPoint.y,
+            currentPoint.x,
+            currentPoint.y
+          );
+
+          previousPoint = currentPoint;
+        }
+      }
+
+      return arr;
     }
   </script>
   <script>
@@ -84,9 +128,6 @@
       const enableDebug = false;
 
       const canvas = document.getElementById("canvas");
-      //   gl.translate(width / 2, height / 2);
-      //   gl.fillRect(-width / 2, -height / 2, width, height);
-      //   gl.scale(1, 1);
 
       let previousPoint = null;
 
@@ -100,9 +141,9 @@
       const step = (Math.PI * 2) / baseStepsRequiredForACircle;
 
       const betaScale = 1;
-      const gammaScale = 5.1;
+      const gammaScale = 5.11;
       const deltaScale = 5.11;
-      const omegaScale = 2;
+      const omegaScale = 7;
 
       const lcmResult = fractional_lcm([
         betaScale,
@@ -163,7 +204,7 @@
         `
             precision highp float;
             void main() {
-                  gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+                  gl_FragColor = vec4(1.0, 0.5, 0.7, 1.0);
                 }
       `
       );
@@ -175,66 +216,33 @@
         let theta = 0;
 
         stopwatch.start();
-        for (let i = 0; i < points; i++) {
-          theta += step;
 
-          const newPoint = computedEpitrochoid(cycloids, theta, rodLength);
-
-          // First point.
-          if (!previousPoint) {
-            previousPoint = newPoint;
-            startingPoint = newPoint;
-          } else {
-            currentPoint = newPoint;
-            lines.push(
-              previousPoint.x,
-              previousPoint.y,
-              currentPoint.x,
-              currentPoint.y
-            );
-
-            if (
-              enableDebug &&
-              kindOfEqual(currentPoint.x, startingPoint.x) &&
-              (currentPoint.y, startingPoint.y)
-            ) {
-              endingSameAsFirstCount++;
-            }
-
-            previousPoint = currentPoint;
-
-            const isLastPoint = i === points - 1;
-            if (isLastPoint) {
-              endingPoint = currentPoint;
-            }
-          }
+        // An attempt at optimizing the function.
+        const dataForComputedEpitrochoid = [];
+        for (let i = 1; i < cycloids.length; i++) {
+          const parentCycloid = cycloids[i - 1];
+          const thisCycloid = cycloids[i];
+          dataForComputedEpitrochoid.push([
+            parentCycloid.radius,
+            thisCycloid.isOutsideOfParent
+              ? thisCycloid.radius
+              : -thisCycloid.radius,
+            thisCycloid.rotationDirection === "clockwise" ? 1 : 0,
+            thisCycloid.thetaScale,
+          ]);
         }
+
+        const lines = calcLines(
+          points,
+          theta,
+          step,
+          dataForComputedEpitrochoid,
+          rodLength
+        );
+
         webGLDrawer.drawLines(lines);
         stopwatch.stop();
         stopwatch.report();
-
-        if (enableDebug) {
-          if (endingSameAsFirstCount > 1) {
-            // This does not always mean that the path repeats itself.
-            console.warn(
-              "Debug: Beginning repeat count: " + endingSameAsFirstCount
-            );
-          }
-
-          if (
-            !kindOfEqual(startingPoint.x, endingPoint.x) ||
-            !kindOfEqual(startingPoint.y, endingPoint.y)
-          ) {
-            console.error("Debug: the path is not closed properly");
-            console.error("Debug: Starting point: ", startingPoint);
-            console.error("Debug: Ending point: ", endingPoint);
-          } else {
-            console.info("Debug: Path closed properly.");
-            console.info(
-              "Debug: Starting and ending points are the same point."
-            );
-          }
-        }
       };
 
       draw();
@@ -270,9 +278,6 @@
         },
       };
 
-      window.addEventListener("resize", (e) => {
-        resize(canvas, dpr, gl);
-      });
       resize(canvas, dpr, gl);
 
       gl.useProgram(programInfo.program);
@@ -291,7 +296,6 @@
 
       const w = gl.canvas.width;
       const h = gl.canvas.height;
-
       const projectionMatrix = projectionAndTranslation(w, h, w / 2, h / 2);
 
       return {
@@ -332,6 +336,7 @@
             gl.STATIC_DRAW
           );
 
+          // Not much difference between LINES and LINE_STRIP
           gl.drawArrays(gl.LINES, 0, lines.length / 2);
         },
       };

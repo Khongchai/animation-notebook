@@ -94,7 +94,7 @@
       canvas.height = height;
       ctx.translate(width / 2, height / 2);
       ctx.fillRect(-width / 2, -height / 2, width, height);
-      ctx.scale(1, 1);
+      ctx.scale(0.7, 0.7);
 
       let previousPoints = null;
 
@@ -136,9 +136,9 @@
 
       // 1.1, 20.5, 2.3, 6.0;
       const betaScale = 1;
-      const gammaScale = 5.1;
+      const gammaScale = 5.11;
       const deltaScale = 5.11;
-      const omegaScale = 2;
+      const omegaScale = 7;
 
       // Algorithm: find the lcm of all the scalars, calculate as fractions,
       // ex: lcm(0.7, 0.316, 0.132) => 1000 / gcd(700, 316, 132);
