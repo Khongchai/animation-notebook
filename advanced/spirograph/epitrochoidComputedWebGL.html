@@ -88,7 +88,7 @@
       //   gl.fillRect(-width / 2, -height / 2, width, height);
       //   gl.scale(1, 1);
 
-      let previousPoints = null;
+      let previousPoint = null;
 
       let currentPoint = {
         x: 0,
@@ -169,24 +169,26 @@
       );
       webGLDrawer.setColor("pink");
 
+      const lines = [];
+
       const draw = () => {
         let theta = 0;
 
         stopwatch.start();
-        for (let i = 0; i < 10000; i++) {
+        for (let i = 0; i < points; i++) {
           theta += step;
 
           const newPoint = computedEpitrochoid(cycloids, theta, rodLength);
 
           // First point.
-          if (!previousPoints) {
-            previousPoints = newPoint;
+          if (!previousPoint) {
+            previousPoint = newPoint;
             startingPoint = newPoint;
           } else {
             currentPoint = newPoint;
-            webGLDrawer.drawLine(
-              previousPoints.x,
-              previousPoints.y,
+            lines.push(
+              previousPoint.x,
+              previousPoint.y,
               currentPoint.x,
               currentPoint.y
             );
@@ -199,7 +201,7 @@
               endingSameAsFirstCount++;
             }
 
-            previousPoints = currentPoint;
+            previousPoint = currentPoint;
 
             const isLastPoint = i === points - 1;
             if (isLastPoint) {
@@ -207,6 +209,7 @@
             }
           }
         }
+        webGLDrawer.drawLines(lines);
         stopwatch.stop();
         stopwatch.report();
 
@@ -290,9 +293,6 @@
       const h = gl.canvas.height;
 
       const projectionMatrix = projectionAndTranslation(w, h, w / 2, h / 2);
-      // const centerMatrix = translation
-      projectionMatrix[6] += 2 / gl.canvas.width / 2;
-      projectionMatrix[7] += 2 / gl.canvas.height / 2;
 
       return {
         gl,
@@ -316,6 +316,23 @@
           );
 
           gl.drawArrays(gl.LINES, 0, 2);
+        },
+        /**
+         * @param {{x1: number, y1: number, x2: number, y2: number}[]} lines
+         */
+        drawLines: function (lines) {
+          gl.uniformMatrix3fv(
+            programInfo.uniformLocations.uMatrix,
+            false,
+            projectionMatrix
+          );
+          gl.bufferData(
+            gl.ARRAY_BUFFER,
+            new Float32Array(lines),
+            gl.STATIC_DRAW
+          );
+
+          gl.drawArrays(gl.LINES, 0, lines.length / 2);
         },
       };
     }
