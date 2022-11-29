@@ -61,4 +61,4 @@ for (let i = 0; i < 10; i++) {
   } as Output);
 }
 
-writeFileStrSync("data.json", JSON.stringify(outputs));
+writeFileStrSync("../calc_lines/src/test_data.json", JSON.stringify(outputs));
