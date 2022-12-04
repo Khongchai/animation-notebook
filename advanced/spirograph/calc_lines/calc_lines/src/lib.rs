@@ -11,7 +11,7 @@ pub fn draw_lines(
     step: f64,
     data: JsValue,
     rod_length: f64,
-) -> Box<[f64]> {
+) -> Vec<f64> {
     let mut arr: Vec<f64> = Vec::new();
     let mut first_time = true;
     let mut prev_point: [f64; 2] = [0.0, 0.0];
@@ -34,7 +34,7 @@ pub fn draw_lines(
         theta += step;
     }
 
-    return Box::from(arr);
+    return arr;
 }
 
 pub fn compute_epitrochoid(data: &Vec<Vec<f64>>, theta: f64, rod_length: f64) -> [f64; 2] {
@@ -90,12 +90,29 @@ mod tests {
                 .collect::<Vec<Vec<f64>>>();
 
             let computation_result = compute_epitrochoid(&data, theta, rod_length);
-            let result = value["result"].as_object().unwrap();
+            let expected = value["result"].as_object().unwrap();
 
-            assert!(
-                computation_result[0] == result["x"].as_f64().unwrap()
-                    && computation_result[1] == result["y"].as_f64().unwrap()
+            println!("computation result: {:?}", computation_result);
+            println!("expected: {:?}", expected);
+
+            let bound = 0.0000001;
+
+            assert_within_bound(
+                computation_result[0],
+                expected["x"].as_f64().unwrap(),
+                bound,
             );
+
+            assert_within_bound(
+                computation_result[1],
+                expected["y"].as_f64().unwrap(),
+                bound,
+            );
+        }
+
+        /// Assert that a given set of numbers's difference is no larger than some value.
+        fn assert_within_bound(n1: f64, n2: f64, bound: f64) {
+            return assert!((n1 - n2).abs() < bound);
         }
     }
 }
