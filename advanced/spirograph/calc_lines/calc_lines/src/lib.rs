@@ -5,8 +5,8 @@ use std::f64::consts::PI;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
-pub fn draw_lines(
-    points: i64,
+pub fn calc_lines(
+    points: usize,
     mut theta: f64,
     step: f64,
     data: JsValue,
