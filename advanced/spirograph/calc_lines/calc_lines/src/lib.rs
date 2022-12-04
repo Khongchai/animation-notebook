@@ -2,7 +2,10 @@ use core::panic;
 
 use std::f64::consts::PI;
 
+use std::time::Instant;
 use wasm_bindgen::prelude::*;
+
+// TODO : return just 1 element in an array to profile the for loop
 
 #[wasm_bindgen]
 pub fn calc_lines(
@@ -16,9 +19,11 @@ pub fn calc_lines(
     let mut first_time = true;
     let mut prev_point: [f64; 2] = [0.0, 0.0];
     let mut current_point: [f64; 2] = [0.0, 0.0];
+
     let parsed_data: Vec<Vec<f64>> = serde_wasm_bindgen::from_value(data).unwrap();
+
     for _ in 0..points {
-        let new_point = compute_epitrochoid(&parsed_data, theta, rod_length);
+        let new_point: [f64; 2] = compute_epitrochoid(&parsed_data, theta, rod_length);
 
         if first_time {
             first_time = false;
@@ -29,6 +34,7 @@ pub fn calc_lines(
             arr.push(prev_point[1]);
             arr.push(current_point[0]);
             arr.push(current_point[1]);
+            prev_point = current_point;
         }
 
         theta += step;
@@ -37,6 +43,7 @@ pub fn calc_lines(
     arr
 }
 
+//TODO if loop is slower in wasm, then maybe using just this will be faster?
 pub fn compute_epitrochoid(data: &Vec<Vec<f64>>, theta: f64, rod_length: f64) -> [f64; 2] {
     if data.len() < 2 {
         panic!("Provide at least 2 cycloids");
