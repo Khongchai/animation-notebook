@@ -46,28 +46,6 @@
           Math.sin(theta * currentData[3] + Math.PI * 0.5 * currentData[2]);
       }
 
-      // for (let i = 1; i < cycloids.length; i++) {
-      //   const parentCycloid = cycloids[i - 1];
-      //   const thisCycloid = cycloids[i];
-      //   const childCycloidRadius = thisCycloid.isOutsideOfParent
-      //     ? thisCycloid.radius
-      //     : -thisCycloid.radius;
-      //   const isChildArcClockwise =
-      //     thisCycloid.rotationDirection === "clockwise";
-
-      //   // We ask the child it needs the parent to scale its theta.
-      //   finalPoint.x +=
-      //     (parentCycloid.radius + childCycloidRadius) *
-      //     Math.cos(
-      //       theta * thisCycloid.thetaScale - Math.PI * 0.5 * isChildArcClockwise
-      //     );
-      //   finalPoint.y +=
-      //     (parentCycloid.radius + childCycloidRadius) *
-      //     Math.sin(
-      //       theta * thisCycloid.thetaScale + Math.PI * 0.5 * isChildArcClockwise
-      //     );
-      // }
-
       return {
         x: finalPoint.x + rodLength * Math.cos(theta),
         y: finalPoint.y + rodLength * Math.sin(theta),
@@ -77,7 +55,7 @@
     function calcLines(points, theta, step, data, rodLength) {
       const arr = [];
       let previousPoint;
-      let endingPoint;
+      let currentPoint;
 
       for (let i = 0; i < points; i++) {
         theta += step;
@@ -87,7 +65,6 @@
         // First point.
         if (!previousPoint) {
           previousPoint = newPoint;
-          startingPoint = newPoint;
         } else {
           currentPoint = newPoint;
           arr.push(
@@ -192,8 +169,6 @@
       const lastCycloid = cycloids[cycloids.length - 1];
       const rodLength = lastCycloid.radius * lastCycloid.rodLengthScale;
 
-      let startingPoint;
-      let endingPoint;
       let endingSameAsFirstCount = 0;
 
       const kindOfEqual = (num1, num2) =>
@@ -240,7 +215,8 @@
           rodLength
         );
         // Rust
-        // const lines = calc_lines(points, theta, step, dataForComputedEpitrochoid, rodLength);
+        // Array should be initialized in rust
+        // const lines = calc_lines(points, theta, step, rodLength);
 
         webGLDrawer.drawLines(lines);
         stopwatch.stop();

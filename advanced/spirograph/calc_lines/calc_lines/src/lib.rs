@@ -1,23 +1,61 @@
-/**
- * TODO list: 1. parse the json in the test file,
- * 2. create test cases (and import compute_epitrochoid).
- * 3. implement the method.
- * 4. return the value as [x, y] to JavaScript.
- */
+use core::panic;
+
+use std::f64::consts::PI;
+
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
-pub fn draw_lines(data: JsValue, theta: f64, rod_length: f64) -> Box<[f64]> {
-    //  TODO
-    return Box::new([]);
+pub fn draw_lines(
+    points: i64,
+    mut theta: f64,
+    step: f64,
+    data: JsValue,
+    rod_length: f64,
+) -> Box<[f64]> {
+    let mut arr: Vec<f64> = Vec::new();
+    let mut first_time = true;
+    let mut prev_point: [f64; 2] = [0.0, 0.0];
+    let mut current_point: [f64; 2] = [0.0, 0.0];
+    let parsed_data: Vec<Vec<f64>> = serde_wasm_bindgen::from_value(data).unwrap();
+    for _ in 0..points {
+        let new_point = compute_epitrochoid(&parsed_data, theta, rod_length);
+
+        if first_time {
+            first_time = false;
+            prev_point = new_point;
+        } else {
+            current_point = new_point;
+            arr.push(prev_point[0]);
+            arr.push(prev_point[1]);
+            arr.push(current_point[0]);
+            arr.push(current_point[1]);
+        }
+
+        theta += step;
+    }
+
+    return Box::from(arr);
 }
 
-// TODO write test first
 pub fn compute_epitrochoid(data: &Vec<Vec<f64>>, theta: f64, rod_length: f64) -> [f64; 2] {
-    println!("{:?}, {}, {}", data, theta, rod_length);
+    if data.len() < 2 {
+        panic!("Provide at least 2 cycloids");
+    }
 
-    //TODO return vec2
-    return [0.0, 0.0];
+    let mut final_point = [0.0, 0.0];
+
+    for i in 0..data.len() {
+        let current_data = &data[i];
+        final_point[0] += (current_data[0] + current_data[1])
+            * (theta * current_data[3] - PI * 0.5 * current_data[2]).cos();
+        final_point[1] += (current_data[0] + current_data[1])
+            * (theta * current_data[3] + PI * 0.5 * current_data[2]).sin();
+    }
+
+    return [
+        final_point[0] + rod_length * theta.cos(),
+        final_point[1] + rod_length * theta.sin(),
+    ];
 }
 
 #[cfg(test)]
