@@ -1,8 +1,10 @@
 //@ts-ignore
 import { writeFileStrSync } from "https://deno.land/std@0.52.0/fs/mod.ts";
 
+type FixedSizeDataArray = [number, number, number, number];
+
 interface ComputedEpitrochoidArgs {
-  data: number[][];
+  data: FixedSizeDataArray[];
   theta: number;
   rodLength: number;
 }
@@ -44,10 +46,11 @@ for (let i = 0; i < 10; i++) {
   const args: ComputedEpitrochoidArgs = {
     data: Array(Math.round(Math.random() * 10) + 2)
       .fill(0)
-      .map((_) =>
-        Array(4)
-          .fill(0)
-          .map((_) => Math.round(Math.random() * 10))
+      .map(
+        (_) =>
+          Array(4)
+            .fill(0)
+            .map((_) => Math.round(Math.random() * 10)) as FixedSizeDataArray
       ),
     rodLength: parseFloat((Math.random() * 10).toFixed(2)),
     theta: parseFloat((Math.random() * 5).toFixed(3)),
@@ -61,4 +64,6 @@ for (let i = 0; i < 10; i++) {
   } as Output);
 }
 
-writeFileStrSync("../calc_lines/src/test_data.json", JSON.stringify(outputs));
+console.log(outputs);
+
+writeFileStrSync("../calc_lines/test_data.json", JSON.stringify(outputs));
