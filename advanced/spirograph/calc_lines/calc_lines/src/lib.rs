@@ -2,7 +2,6 @@ use core::panic;
 
 use std::f64::consts::PI;
 
-use std::time::Instant;
 use wasm_bindgen::prelude::*;
 
 // TODO : return just 1 element in an array to profile the for loop
@@ -19,17 +18,21 @@ pub fn calc_lines(
     let mut first_time = true;
     let mut prev_point: [f64; 2] = [0.0, 0.0];
     let mut current_point: [f64; 2] = [0.0, 0.0];
+    let mut new_point: [f64; 2] = [0.0, 0.0];
 
     let parsed_data: Vec<Vec<f64>> = serde_wasm_bindgen::from_value(data).unwrap();
 
+    // try pre-computing the first computation outside of the loop to get rid of the first if check
+    // that gets run every iteration.
     for _ in 0..points {
-        let new_point: [f64; 2] = compute_epitrochoid(&parsed_data, theta, rod_length);
+        new_point = compute_epitrochoid(&parsed_data, theta, rod_length);
 
         if first_time {
             first_time = false;
             prev_point = new_point;
         } else {
             current_point = new_point;
+            // Find a way to do this in one instruction.
             arr.push(prev_point[0]);
             arr.push(prev_point[1]);
             arr.push(current_point[0]);
@@ -43,7 +46,6 @@ pub fn calc_lines(
     arr
 }
 
-//TODO if loop is slower in wasm, then maybe using just this will be faster?
 pub fn compute_epitrochoid(data: &Vec<Vec<f64>>, theta: f64, rod_length: f64) -> [f64; 2] {
     if data.len() < 2 {
         panic!("Provide at least 2 cycloids");
@@ -51,18 +53,17 @@ pub fn compute_epitrochoid(data: &Vec<Vec<f64>>, theta: f64, rod_length: f64) ->
 
     let mut final_point = [0.0, 0.0];
 
-    for i in 0..data.len() {
-        let current_data = &data[i];
+    data.iter().for_each(|current_data| {
         final_point[0] += (current_data[0] + current_data[1])
             * (theta * current_data[3] - PI * 0.5 * current_data[2]).cos();
         final_point[1] += (current_data[0] + current_data[1])
             * (theta * current_data[3] + PI * 0.5 * current_data[2]).sin();
-    }
+    });
 
-    [
-        final_point[0] + rod_length * theta.cos(),
-        final_point[1] + rod_length * theta.sin(),
-    ]
+    final_point[0] = final_point[0] + rod_length * theta.cos();
+    final_point[1] = final_point[1] + rod_length * theta.sin();
+
+    final_point
 }
 
 #[cfg(test)]
