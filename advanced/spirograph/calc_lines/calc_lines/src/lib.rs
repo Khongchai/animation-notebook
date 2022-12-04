@@ -34,7 +34,7 @@ pub fn draw_lines(
         theta += step;
     }
 
-    return arr;
+    arr
 }
 
 pub fn compute_epitrochoid(data: &Vec<Vec<f64>>, theta: f64, rod_length: f64) -> [f64; 2] {
@@ -52,10 +52,10 @@ pub fn compute_epitrochoid(data: &Vec<Vec<f64>>, theta: f64, rod_length: f64) ->
             * (theta * current_data[3] + PI * 0.5 * current_data[2]).sin();
     }
 
-    return [
+    [
         final_point[0] + rod_length * theta.cos(),
         final_point[1] + rod_length * theta.sin(),
-    ];
+    ]
 }
 
 #[cfg(test)]
