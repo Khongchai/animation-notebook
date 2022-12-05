@@ -41,15 +41,15 @@
         finalPoint.x +=
           (currentData[0] + currentData[1]) *
           Math.cos(theta * currentData[3] - Math.PI * 0.5 * currentData[2]);
-        finalPoint.y +=
+        finalPoint.y =
           (currentData[0] + currentData[1]) *
           Math.sin(theta * currentData[3] + Math.PI * 0.5 * currentData[2]);
       }
 
-      return {
-        x: finalPoint.x + rodLength * Math.cos(theta),
-        y: finalPoint.y + rodLength * Math.sin(theta),
-      };
+      finalPoint.x = finalPoint.x + rodLength * Math.cos(theta);
+      finalPoint.y = finalPoint.y + rodLength * Math.sin(theta);
+
+      return finalPoint;
     }
 
     function calcLines(points, theta, step, data, rodLength) {
@@ -91,16 +91,21 @@
         this._time = performance.now() - this._time;
       },
       report: function () {
-        const time = this._time / 1000;
-        console.log("Process took " + time + " seconds");
+        console.log("Process took " + this._time + " ms");
       },
     };
   </script>
   <script type="module">
-    import init, { fractional_lcm } from "./calc_points/pkg/calc_points.js";
+    import initFractionalLcm, {
+      fractional_lcm,
+    } from "./calc_points/pkg/calc_points.js";
+    import initCalcLines, {
+      calc_lines,
+    } from "./calc_lines/calc_lines/pkg/calc_lines.js";
 
     async function main() {
-      await init();
+      await initFractionalLcm();
+      await initCalcLines();
 
       const enableDebug = false;
 
@@ -190,8 +195,6 @@
       const draw = () => {
         let theta = 0;
 
-        stopwatch.start();
-
         // An attempt at optimizing the function.
         const dataForComputedEpitrochoid = [];
         for (let i = 1; i < cycloids.length; i++) {
@@ -207,16 +210,23 @@
           ]);
         }
 
-        const lines = calcLines(
+        stopwatch.start();
+
+        // const lines = calcLines(
+        //   points,
+        //   theta,
+        //   step,
+        //   dataForComputedEpitrochoid,
+        //   rodLength
+        // );
+
+        const lines = calc_lines(
           points,
           theta,
           step,
           dataForComputedEpitrochoid,
           rodLength
         );
-        // Rust
-        // Array should be initialized in rust
-        // const lines = calc_lines(points, theta, step, rodLength);
 
         webGLDrawer.drawLines(lines);
         stopwatch.stop();
