@@ -41,7 +41,7 @@
         finalPoint.x +=
           (currentData[0] + currentData[1]) *
           Math.cos(theta * currentData[3] - Math.PI * 0.5 * currentData[2]);
-        finalPoint.y =
+        finalPoint.y +=
           (currentData[0] + currentData[1]) *
           Math.sin(theta * currentData[3] + Math.PI * 0.5 * currentData[2]);
       }
@@ -122,10 +122,10 @@
 
       const step = (Math.PI * 2) / baseStepsRequiredForACircle;
 
-      const betaScale = 1;
-      const gammaScale = 5.11;
-      const deltaScale = 5.11;
-      const omegaScale = 7;
+      const betaScale = 1.1;
+      const gammaScale = 25.3;
+      const deltaScale = 7.56;
+      const omegaScale = 8;
 
       const lcmResult = fractional_lcm([
         betaScale,
@@ -212,21 +212,27 @@
 
         stopwatch.start();
 
-        // const lines = calcLines(
-        //   points,
-        //   theta,
-        //   step,
-        //   dataForComputedEpitrochoid,
-        //   rodLength
-        // );
-
-        const lines = calc_lines(
-          points,
-          theta,
-          step,
-          dataForComputedEpitrochoid,
-          rodLength
-        );
+        // For now, rust's wasm implementation does not do very well with large loops.
+        let lines;
+        if (points > 20000) {
+          // js
+          lines = calcLines(
+            points,
+            theta,
+            step,
+            dataForComputedEpitrochoid,
+            rodLength
+          );
+        } else {
+          // rs
+          const lines = calc_lines(
+            points,
+            theta,
+            step,
+            dataForComputedEpitrochoid,
+            rodLength
+          );
+        }
 
         webGLDrawer.drawLines(lines);
         stopwatch.stop();
