@@ -20,12 +20,9 @@ pub fn calc_lines(
     let mut first_time = true;
     let mut prev_point: [f64; 2] = [0.0, 0.0];
     let mut new_point: [f64; 2];
-    // let mut prev_and_new_points: [f64; 4] = [];
 
     let parsed_data: Vec<Vec<f64>> = serde_wasm_bindgen::from_value(data).unwrap();
 
-    // try pre-computing the first computation outside of the loop to get rid of the first if check
-    // that gets run every iteration.
     for _ in 0..points {
         new_point = compute_epitrochoid(&parsed_data, theta, rod_length);
 
