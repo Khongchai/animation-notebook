@@ -4,7 +4,9 @@ use std::f64::consts::PI;
 
 use wasm_bindgen::prelude::*;
 
-// TODO : return just 1 element in an array to profile the for loop
+// TODO : optimize by:
+// adding things to vec in 1 instruction
+// write to linear memory and have JavaScript read from it instead of copying over the values.
 
 #[wasm_bindgen]
 pub fn calc_lines(
@@ -14,11 +16,11 @@ pub fn calc_lines(
     data: JsValue,
     rod_length: f64,
 ) -> Vec<f64> {
-    let mut arr: Vec<f64> = Vec::new();
+    let mut arr: Vec<f64> = Vec::with_capacity(points * 4);
     let mut first_time = true;
     let mut prev_point: [f64; 2] = [0.0, 0.0];
-    let mut current_point: [f64; 2] = [0.0, 0.0];
-    let mut new_point: [f64; 2] = [0.0, 0.0];
+    let mut new_point: [f64; 2];
+    // let mut prev_and_new_points: [f64; 4] = [];
 
     let parsed_data: Vec<Vec<f64>> = serde_wasm_bindgen::from_value(data).unwrap();
 
@@ -29,16 +31,11 @@ pub fn calc_lines(
 
         if first_time {
             first_time = false;
-            prev_point = new_point;
         } else {
-            current_point = new_point;
-            // Find a way to do this in one instruction.
-            arr.push(prev_point[0]);
-            arr.push(prev_point[1]);
-            arr.push(current_point[0]);
-            arr.push(current_point[1]);
-            prev_point = current_point;
+            arr.extend_from_slice(&[prev_point[0], prev_point[1], new_point[0], new_point[1]]);
         }
+
+        prev_point = new_point;
 
         theta += step;
     }
