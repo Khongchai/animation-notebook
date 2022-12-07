@@ -4,10 +4,6 @@ use std::f64::consts::PI;
 
 use wasm_bindgen::prelude::*;
 
-// TODO : optimize by:
-// adding things to vec in 1 instruction
-// write to linear memory and have JavaScript read from it instead of copying over the values.
-
 #[wasm_bindgen]
 pub fn calc_lines(
     points: usize,
@@ -16,15 +12,33 @@ pub fn calc_lines(
     data: JsValue,
     rod_length: f64,
 ) -> Vec<f64> {
-    let mut arr: Vec<f64> = Vec::with_capacity(points * 4);
+    let mut arr: Vec<f64> = Vec::with_capacity(points * 4 - 4);
     let mut first_time = true;
     let mut prev_point: [f64; 2] = [0.0, 0.0];
-    let mut new_point: [f64; 2];
+    let mut new_point: [f64; 2] = [0.0, 0.0];
 
-    let parsed_data: Vec<Vec<f64>> = serde_wasm_bindgen::from_value(data).unwrap();
+    let parsed_data: Vec<[f64; 4]> = serde_wasm_bindgen::from_value(data).unwrap();
+
+    let parsed_data_len = parsed_data.len();
+    if parsed_data_len < 2 {
+        panic!("Provide at least 2 cycloids");
+    }
+
+    let parsed_data_crunched: Vec<[f64; 3]> = parsed_data
+        .iter()
+        .map(|a| [a[0] + a[1], PI * 0.5 * a[2], a[3]])
+        .collect();
+
+    let parsed_data_crunched_ptr: *const [f64; 3] = parsed_data_crunched.as_ptr();
 
     for _ in 0..points {
-        new_point = compute_epitrochoid(&parsed_data, theta, rod_length);
+        compute_epitrochoid(
+            parsed_data_crunched_ptr,
+            parsed_data_len,
+            theta,
+            rod_length,
+            &mut new_point,
+        );
 
         if first_time {
             first_time = false;
@@ -40,24 +54,24 @@ pub fn calc_lines(
     arr
 }
 
-pub fn compute_epitrochoid(data: &Vec<Vec<f64>>, theta: f64, rod_length: f64) -> [f64; 2] {
-    if data.len() < 2 {
-        panic!("Provide at least 2 cycloids");
+pub fn compute_epitrochoid(
+    data: *const [f64; 3],
+    data_len: usize,
+    theta: f64,
+    rod_length: f64,
+    new_point: &mut [f64; 2],
+) {
+    *new_point = [0.0, 0.0];
+    unsafe {
+        for i in 0..data_len {
+            let d = *data.add(i);
+            new_point[0] += d[0] * (theta * d[2] - d[1]).cos();
+            new_point[1] += d[0] * (theta * d[2] + d[1]).sin();
+        }
+
+        new_point[0] += rod_length * theta.cos();
+        new_point[1] += rod_length * theta.sin();
     }
-
-    let mut final_point = [0.0, 0.0];
-
-    data.iter().for_each(|current_data| {
-        final_point[0] += (current_data[0] + current_data[1])
-            * (theta * current_data[3] - PI * 0.5 * current_data[2]).cos();
-        final_point[1] += (current_data[0] + current_data[1])
-            * (theta * current_data[3] + PI * 0.5 * current_data[2]).sin();
-    });
-
-    final_point[0] = final_point[0] + rod_length * theta.cos();
-    final_point[1] = final_point[1] + rod_length * theta.sin();
-
-    final_point
 }
 
 #[cfg(test)]
