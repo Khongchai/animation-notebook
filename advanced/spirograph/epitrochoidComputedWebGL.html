@@ -118,7 +118,7 @@
         y: 0,
       };
 
-      const baseStepsRequiredForACircle = 10000;
+      const baseStepsRequiredForACircle = 550;
 
       const step = (Math.PI * 2) / baseStepsRequiredForACircle;
 
@@ -219,6 +219,13 @@
           dataForComputedEpitrochoid,
           rodLength
         );
+        // const lines = calcLines(
+        //   points,
+        //   theta,
+        //   step,
+        //   dataForComputedEpitrochoid,
+        //   rodLength
+        // );
 
         webGLDrawer.drawLines(lines);
         stopwatch.stop();
