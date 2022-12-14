@@ -233,6 +233,11 @@
       };
 
       draw();
+
+      window.onresize = () => {
+        resize(canvas, dpr, webGLDrawer.gl);
+        draw();
+      };
     }
 
     main();
@@ -253,7 +258,7 @@
         `;
       const fSource = fragmentShader;
 
-      const gl = canvas.getContext("webgl");
+      const gl = canvas.getContext("webgl2");
       const shaderProgram = initShaderProgram(gl, vsSource, fSource);
       const programInfo = {
         program: shaderProgram,
@@ -280,10 +285,6 @@
         0
       );
       gl.enableVertexAttribArray(programInfo.attributeLocations.aPosition);
-
-      const w = gl.canvas.width;
-      const h = gl.canvas.height;
-      const projectionMatrix = projectionAndTranslation(w, h, w / 2, h / 2);
 
       return {
         gl,
@@ -312,6 +313,10 @@
          * @param {{x1: number, y1: number, x2: number, y2: number}[]} lines
          */
         drawLines: function (lines) {
+          const w = gl.canvas.width;
+          const h = gl.canvas.height;
+          const projectionMatrix = projectionAndTranslation(w, h, w / 2, h / 2);
+
           gl.uniformMatrix3fv(
             programInfo.uniformLocations.uMatrix,
             false,
