@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      html,
+      body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+      <canvas id="canvas"></canvas>
+    </div>
+  </body>
+  <script>
+    const canvas = document.getElementById("canvas");
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+  </script>
+  <script>
+    ctx.strokeStyle = "black";
+
+    function drawGrid({ width, height, x, y, column, row }) {
+      const offset = {
+        x: x - width / 2,
+        y: y - height / 2,
+      };
+
+      for (let i = 0; i <= column; i++) {
+        const gridWidth = width / column;
+        ctx.beginPath();
+        ctx.moveTo(offset.x + i * gridWidth, offset.y);
+        ctx.lineTo(offset.x + i * gridWidth, height + offset.y);
+        ctx.stroke();
+      }
+
+      for (let i = 0; i <= row; i++) {
+        const gridHeight = height / row;
+        ctx.beginPath();
+        ctx.moveTo(offset.x, i * gridHeight + offset.y);
+        ctx.lineTo(offset.x + width, i * gridHeight + offset.y);
+        ctx.stroke();
+      }
+    }
+
+    drawGrid({
+      width: 1000,
+      height: 1000,
+      x: w / 2,
+      y: h / 2,
+      column: 10,
+      row: 10,
+    });
+  </script>
+</html>
