@@ -1,3 +1,4 @@
+<!-- TODO, a documented exercise for future reference. -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -31,6 +32,30 @@
     const ctx = canvas.getContext("2d");
   </script>
   <script>
+    // let offset = previousOffset ?? 0;
+    // Keep track of distance moved from mousedown
+    // set distance moved to offset
+    const offset = {
+      downPos: {
+        x: 0,
+        y: 0,
+      },
+      curPos: {
+        x: 0,
+        y: 0,
+      },
+      // onmousup -> TODO
+
+      // onmousemove
+      diff: function () {
+        return {
+          x: this.curPos.x - this.downPos.x,
+          y: this.curPos.y - this.downPos.y,
+        };
+      },
+      isDown: false,
+    };
+
     ctx.strokeStyle = "black";
 
     function drawGrid({ width, height, x, y, column, row }) {
@@ -56,13 +81,51 @@
       }
     }
 
-    drawGrid({
-      width: 1000,
-      height: 1000,
-      x: w / 2,
-      y: h / 2,
-      column: 10,
-      row: 10,
+    const draw = () =>
+      drawGrid({
+        width: 1200,
+        height: 1200,
+        x: w / 2,
+        y: h / 2,
+        column: 15,
+        row: 15,
+      });
+
+    draw();
+  </script>
+  <script>
+    document.addEventListener("mousedown", (e) => {
+      offset.isDown = true;
+      offset.curPos = {
+        x: e.x,
+        y: e.y,
+      };
+      offset.downPos = {
+        x: e.x,
+        y: e.y,
+      };
     });
+
+    document.addEventListener("mousemove", (e) => {
+      if (offset.isDown) {
+        offset.curPos = {
+          x: e.x,
+          y: e.y,
+        };
+
+        console.log(offset.diff());
+      }
+    });
+
+    document.addEventListener("mouseup", () => {
+      offset.isDown = false;
+    });
+
+    document.addEventListener("wheel", (e) => {
+      ctx.clearRect(0, 0, w, h);
+    });
+  </script>
+  <script>
+    requestAnimationFrame(draw);
   </script>
 </html>
