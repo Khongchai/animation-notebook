@@ -1,4 +1,7 @@
 <!-- TODO, a documented exercise for future reference. -->
+<!-- TODO: pan, zoom, pan while zooming, zoom at any center. -->
+<!-- TODO: all operations through event listeners, but throttled to match the device's framerate -->
+<!-- Needs to be comprehensive as we need to be applying this to webGL in the future and shit's gonna be very confusing. -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -30,13 +33,14 @@
     canvas.width = w;
     canvas.height = h;
     const ctx = canvas.getContext("2d");
+    ctx.scale(1, 1);
   </script>
   <script>
     // let offset = previousOffset ?? 0;
     // Keep track of distance moved from mousedown
     // set distance moved to offset
     const offset = {
-      downPos: {
+      mouseDownPos: {
         x: 0,
         y: 0,
       },
@@ -44,14 +48,25 @@
         x: 0,
         y: 0,
       },
-      // onmousup -> TODO
-
-      // onmousemove
-      diff: function () {
-        return {
-          x: this.curPos.x - this.downPos.x,
-          y: this.curPos.y - this.downPos.y,
-        };
+      // For keeping track of how much translation we have already done to the canvas.
+      offset: {
+        x: 0,
+        y: 0,
+      },
+      onmousedown: function (e) {
+        this.isDown = true;
+        this.mouseDownPos.x = e.x - this.offset.x;
+        this.mouseDownPos.y = e.y - this.offset.y;
+      },
+      //TODO on mousedown.
+      onmouseup: function (e) {
+        this.isDown = false;
+      },
+      onmousemove: function (e) {
+        if (this.isDown) {
+          this.offset.x = e.x - this.mouseDownPos.x;
+          this.offset.y = e.y - this.mouseDownPos.y;
+        }
       },
       isDown: false,
     };
@@ -81,7 +96,14 @@
       }
     }
 
-    const draw = () =>
+    const draw = () => {
+      ctx.save();
+      ctx.setTransform([1, 0, 0, 1, 0, 0]);
+      ctx.clearRect(0, 0, w, h);
+      ctx.restore();
+      ctx.setTransform(
+        1, 0, 0, 1, offset.offset.x, offset.offset.y
+      )
       drawGrid({
         width: 1200,
         height: 1200,
@@ -90,39 +112,26 @@
         column: 15,
         row: 15,
       });
+      requestAnimationFrame(draw);
+    };
 
     draw();
   </script>
   <script>
     document.addEventListener("mousedown", (e) => {
-      offset.isDown = true;
-      offset.curPos = {
-        x: e.x,
-        y: e.y,
-      };
-      offset.downPos = {
-        x: e.x,
-        y: e.y,
-      };
+      offset.onmousedown(e);
     });
 
     document.addEventListener("mousemove", (e) => {
-      if (offset.isDown) {
-        offset.curPos = {
-          x: e.x,
-          y: e.y,
-        };
-
-        console.log(offset.diff());
-      }
+      offset.onmousemove(e);
     });
 
-    document.addEventListener("mouseup", () => {
-      offset.isDown = false;
+    document.addEventListener("mouseup", (e) => {
+      offset.onmouseup(e);
     });
 
     document.addEventListener("wheel", (e) => {
-      ctx.clearRect(0, 0, w, h);
+      // ctx.clearRect(0, 0, w, h);
     });
   </script>
   <script>
