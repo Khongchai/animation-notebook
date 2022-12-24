@@ -1,3 +1,4 @@
+<!-- TODO: try like this instead as it might be more scalable (can apply to webgl: https://codepen.io/amir-s/pen/jzqZdG?editors=0010)-->
 <!-- TODO, a documented exercise for future reference. -->
 <!-- TODO: pan, zoom, pan while zooming, zoom at any center. -->
 <!-- TODO: all operations through event listeners, but throttled to match the device's framerate -->
@@ -157,7 +158,7 @@
         totalOffset.x,
         totalOffset.y
       );
-      drawDebug(zoomOffset.getZoomCenter());
+      drawDebug(zoomOffset.offset);
       drawGrid({
         width: 1200,
         height: 1200,
