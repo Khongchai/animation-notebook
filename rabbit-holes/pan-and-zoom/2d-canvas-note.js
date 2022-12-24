@@ -35,6 +35,14 @@ class Controls {
       const wx = (x-controls.view.x)/(controls.view.zoom);
       const wy = (y-controls.view.y)/(controls.view.zoom);
       
+      /**
+       * Multiplying wx by the zoom factor (zoom) effectively scales the cursor 
+       * position relative to the current zoom level. For example, if the zoom 
+       * factor is 0.1 and wx is 100, the result of wx*zoom would be 10. 
+       * This means that the cursor is currently positioned at a distance of 
+       * 10 units from the zoom center in world space, where the units are scaled 
+       * by the current zoom level.
+       */
       const offsetX = wx*zoom;
       const offsetY = wy*zoom;
       console.log(offsetX, offsetY);
