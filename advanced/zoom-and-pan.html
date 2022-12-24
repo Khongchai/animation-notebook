@@ -33,18 +33,18 @@
     canvas.width = w;
     canvas.height = h;
     const ctx = canvas.getContext("2d");
-    ctx.scale(1, 1);
   </script>
   <script>
+    // Global aggregate offset from zooming and panning.
+    const totalOffset = {
+      x: 0,
+      y: 0,
+    };
     // let offset = previousOffset ?? 0;
     // Keep track of distance moved from mousedown
     // set distance moved to offset
-    const offset = {
+    const panOffset = {
       mouseDownPos: {
-        x: 0,
-        y: 0,
-      },
-      curPos: {
         x: 0,
         y: 0,
       },
@@ -58,7 +58,6 @@
         this.mouseDownPos.x = e.x - this.offset.x;
         this.mouseDownPos.y = e.y - this.offset.y;
       },
-      //TODO on mousedown.
       onmouseup: function (e) {
         this.isDown = false;
       },
@@ -66,9 +65,49 @@
         if (this.isDown) {
           this.offset.x = e.x - this.mouseDownPos.x;
           this.offset.y = e.y - this.mouseDownPos.y;
+          console.log(
+            ctx.getTransform(),
+            `Offset: ${this.offset.x}, ${this.offset.y}`
+          );
         }
       },
       isDown: false,
+    };
+
+    // Zoom offset must be calculated after panning only.
+    const zoomOffset = {
+      zoomLevel: 1,
+      offset: {
+        x: 0,
+        y: 0,
+      },
+      getZoomCenter: function () {
+        // Dividing by zoom level to correct the speed.
+        // The more zoomed in we are, the slower the speed of the cursor.
+        // this.mousePos.x << wrong speed
+        // this.mousePos.x / this.zoomLevel << correct speed but wrong position when panning.
+        // ( this.mousePos.x  - panOffset.y ) / this.zoomLevel = correct cursor position in world space.
+
+        return {
+          x: (this.mousePos.x - totalOffset.x) / this.zoomLevel,
+          y: (this.mousePos.y - totalOffset.y) / this.zoomLevel,
+        };
+      },
+      mousePos: { x: 0, y: 0 },
+      onwheel: function (e) {
+        let change = e.deltaY * 0.0005;
+
+        // TODO logarithmic zoom https://www.youtube.com/watch?v=u1A_6Ap4xmE
+        // change += Math.log10(Math.max(), 1);
+        this.zoomLevel = Math.max(this.zoomLevel - change, 0.1);
+
+        const transform = ctx.getTransform();
+        this.offset = this.getZoomCenter();
+      },
+      onmousemove: function (e) {
+        this.mousePos.x = e.x;
+        this.mousePos.y = e.y;
+      },
     };
 
     ctx.strokeStyle = "black";
@@ -96,14 +135,29 @@
       }
     }
 
+    function drawDebug(coord) {
+      ctx.beginPath();
+      ctx.strokStyle = "pink";
+      ctx.arc(coord.x, coord.y, 20, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
     const draw = () => {
       ctx.save();
       ctx.setTransform([1, 0, 0, 1, 0, 0]);
       ctx.clearRect(0, 0, w, h);
       ctx.restore();
+      totalOffset.x = panOffset.offset.x;
+      totalOffset.y = panOffset.offset.y;
       ctx.setTransform(
-        1, 0, 0, 1, offset.offset.x, offset.offset.y
-      )
+        zoomOffset.zoomLevel,
+        0,
+        0,
+        zoomOffset.zoomLevel,
+        totalOffset.x,
+        totalOffset.y
+      );
+      drawDebug(zoomOffset.getZoomCenter());
       drawGrid({
         width: 1200,
         height: 1200,
@@ -119,19 +173,20 @@
   </script>
   <script>
     document.addEventListener("mousedown", (e) => {
-      offset.onmousedown(e);
+      panOffset.onmousedown(e);
     });
 
     document.addEventListener("mousemove", (e) => {
-      offset.onmousemove(e);
+      panOffset.onmousemove(e);
+      zoomOffset.onmousemove(e);
     });
 
     document.addEventListener("mouseup", (e) => {
-      offset.onmouseup(e);
+      panOffset.onmouseup(e);
     });
 
     document.addEventListener("wheel", (e) => {
-      // ctx.clearRect(0, 0, w, h);
+      zoomOffset.onwheel(e);
     });
   </script>
   <script>
