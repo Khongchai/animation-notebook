@@ -78,14 +78,14 @@
       isDown: false,
     };
 
-    // Zoom offset must be calculated after panning only.
     const zoomOffset = {
       zoomLevel: 1,
       _calculateZoomOffset: function (currentZoom, zoomChange, sx, sy) {
         // Dividing by zoom level to correct the speed.
         // The more zoomed in we are, the slower the speed of the cursor.
-        // this.mousePos.x << wrong speed
-        // this.mousePos.x / this.zoomLevel << correct speed but wrong position when panning.
+        // sx.x << wrong speed
+        // sx / this.zoomLevel << correct speed but wrong position when panning.
+        // (sx - globalOffset.x) / currentZoom << correct everything.
 
         const wx = (sx - globalOffset.x) / currentZoom;
         const wy = (sy - globalOffset.y) / currentZoom;
@@ -97,10 +97,10 @@
       onwheel: function (e) {
         let change = e.deltaY * 0.0005;
 
+        // TODO logarithmic zoom https://www.youtube.com/watch?v=u1A_6Ap4xmE
+        change += Math.log10(Math.max(this.zoomLevel), 1);
         // Calculate the zoomOffset using the previous zoom.
         this._calculateZoomOffset(this.zoomLevel, change, e.x, e.y);
-        // TODO logarithmic zoom https://www.youtube.com/watch?v=u1A_6Ap4xmE
-        // change += Math.log10(Math.max(), 1);
         this.zoomLevel = Math.max(this.zoomLevel - change, 0.1);
       },
     };
@@ -137,11 +137,17 @@
       ctx.fill();
     }
 
+    let lerpedOffsetX = 0;
+    let lerpedOffsetY = 0;
+
     const draw = () => {
       ctx.save();
       ctx.setTransform([1, 0, 0, 1, 0, 0]);
       ctx.clearRect(0, 0, w, h);
       ctx.restore();
+      // If you were to lerp, lerp these end values below.
+      // TODO improved lerping.
+      // https://www.gamedeveloper.com/programming/improved-lerp-smoothing-
       ctx.setTransform(
         zoomOffset.zoomLevel,
         0,

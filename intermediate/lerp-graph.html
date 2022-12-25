@@ -12,9 +12,12 @@
         border: 0;
         padding: 0;
         margin: 0;
+        overflow: hidden;
       }
       canvas {
         display: block;
+        border: 0;
+        padding: 0;
       }
     </style>
   </head>
@@ -24,13 +27,14 @@
   <script>
     let canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
-    var width = window.innerWidth;
-    var height = window.innerHeight;
+    var width = window.innerWidth * devicePixelRatio;
+    var height = window.innerHeight * devicePixelRatio;
     canvas.width = width;
     canvas.height = height;
     let point = null;
 
-    const lerp = (a, b, t) => a + (b - a) * t;
+    const unstableLerp = (a, b, t) => a + (b - a) * t;
+    const stableLerp = (a, b, t) => (1 - t) * a + b * t;
 
     const timeStep = 0.5;
 
@@ -40,13 +44,13 @@
       if (!point) {
         point = {
           x,
-          y: lerp(0, height, x / width),
+          y: stableLerp(0, height, x / width),
         };
         continue;
       }
       ctx.moveTo(point.x, point.y);
       point.x = x;
-      point.y = lerp(point.y, height, 0.0005);
+      point.y = stableLerp(point.y, height, 0.0005);
       ctx.lineTo(point.x, point.y);
       ctx.stroke();
     }
