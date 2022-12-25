@@ -2,27 +2,27 @@
 
 let canvas, circles;
 const controls = {
-  view: {x: 0, y: 0, zoom: 1},
-  viewPos: { prevX: null,  prevY: null,  isDragging: false },
-}
+  view: { x: 0, y: 0, zoom: 1 },
+  viewPos: { prevX: null, prevY: null, isDragging: false },
+};
 
 function setup() {
-	canvas = createCanvas(window.innerWidth, window.innerHeight);
-  canvas.mouseWheel(e => Controls.zoom(controls).worldZoom(e))
-  circles = Circle.create(100)
+  canvas = createCanvas(window.innerWidth, window.innerHeight);
+  canvas.mouseWheel((e) => Controls.zoom(controls).worldZoom(e));
+  circles = Circle.create(100);
 }
 
 function draw() {
-	background(100)
+  background(100);
   translate(controls.view.x, controls.view.y);
-  scale(controls.view.zoom)
-  circles.forEach(circle => circle.show());
+  scale(controls.view.zoom);
+  circles.forEach((circle) => circle.show());
 }
 
 class Controls {
   static zoom(controls) {
     function worldZoom(e) {
-      const {x, y, deltaY} = e;
+      const { x, y, deltaY } = e;
       const direction = deltaY > 0 ? -1 : 1;
       const factor = 0.05;
       const zoom = 1 * direction * factor;
@@ -32,49 +32,47 @@ class Controls {
       // x -> cursor pos in screen space
       // y -> cursor pos in screen space
       // same for wx and wy
-      const wx = (x-controls.view.x)/(controls.view.zoom);
-      const wy = (y-controls.view.y)/(controls.view.zoom);
-      
+      const wx = (x - controls.view.x) / controls.view.zoom;
+      const wy = (y - controls.view.y) / controls.view.zoom;
+
       /**
-       * Multiplying wx by the zoom factor (zoom) effectively scales the cursor 
-       * position relative to the current zoom level. For example, if the zoom 
-       * factor is 0.1 and wx is 100, the result of wx*zoom would be 10. 
-       * This means that the cursor is currently positioned at a distance of 
-       * 10 units from the zoom center in world space, where the units are scaled 
+       * Multiplying wx by the zoom factor (zoom) effectively scales the cursor
+       * position relative to the current zoom level. For example, if the zoom
+       * factor is 0.1 and wx is 100, the result of wx*zoom would be 10.
+       * This means that the cursor is currently positioned at a distance of
+       * 10 units from the zoom center in world space, where the units are scaled
        * by the current zoom level.
        */
-      const offsetX = wx*zoom;
-      const offsetY = wy*zoom;
-      console.log(offsetX, offsetY);
-      
+      const offsetX = wx * zoom;
+      const offsetY = wy * zoom;
+
       // view.x and view.y are basically what we are gonna use as the zoom centers.
       controls.view.x -= offsetX;
       controls.view.y -= offsetY;
       controls.view.zoom += zoom;
     }
 
-    return {worldZoom}
+    return { worldZoom };
   }
 }
-
 
 class Circle {
   constructor(x, y) {
     this.x = x;
     this.y = y;
   }
-  
+
   show() {
     fill(255);
     noStroke();
     ellipse(this.x, this.y, 15, 15);
   }
-  
+
   static create(count) {
     return Array.from(Array(count), () => {
       const x = random(-500, width + 500);
       const y = random(-500, height + 500);
       return new this(x, y);
-    })
+    });
   }
 }

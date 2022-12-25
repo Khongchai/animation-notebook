@@ -36,40 +36,43 @@
     const ctx = canvas.getContext("2d");
   </script>
   <script>
-    // Global aggregate offset from zooming and panning.
-    const totalOffset = {
-      x: 0,
-      y: 0,
+    // Useful for a library to obtain the current global offset from the canvas context intead
+    // of setting it to zero.
+    const offsetUponEntering = ctx.getTransform();
+    const globalOffset = {
+      x: offsetUponEntering.e,
+      y: offsetUponEntering.f,
     };
     // let offset = previousOffset ?? 0;
     // Keep track of distance moved from mousedown
     // set distance moved to offset
     const panOffset = {
-      mouseDownPos: {
+      prev: {
         x: 0,
         y: 0,
       },
       // For keeping track of how much translation we have already done to the canvas.
-      offset: {
+      cur: {
         x: 0,
         y: 0,
       },
       onmousedown: function (e) {
         this.isDown = true;
-        this.mouseDownPos.x = e.x - this.offset.x;
-        this.mouseDownPos.y = e.y - this.offset.y;
+        this.prev.x = e.x - this.cur.x;
+        this.prev.y = e.y - this.cur.y;
       },
       onmouseup: function (e) {
         this.isDown = false;
       },
       onmousemove: function (e) {
         if (this.isDown) {
-          this.offset.x = e.x - this.mouseDownPos.x;
-          this.offset.y = e.y - this.mouseDownPos.y;
-          console.log(
-            ctx.getTransform(),
-            `Offset: ${this.offset.x}, ${this.offset.y}`
-          );
+          const dx = e.x - this.prev.x;
+          const dy = e.y - this.prev.y;
+
+          globalOffset.x += dx;
+          globalOffset.y += dy;
+          this.prev.x = e.x;
+          this.prev.y = e.y;
         }
       },
       isDown: false,
@@ -78,36 +81,27 @@
     // Zoom offset must be calculated after panning only.
     const zoomOffset = {
       zoomLevel: 1,
-      offset: {
-        x: 0,
-        y: 0,
-      },
-      getZoomCenter: function () {
+      _calculateZoomOffset: function (currentZoom, zoomChange, sx, sy) {
         // Dividing by zoom level to correct the speed.
         // The more zoomed in we are, the slower the speed of the cursor.
         // this.mousePos.x << wrong speed
         // this.mousePos.x / this.zoomLevel << correct speed but wrong position when panning.
-        // ( this.mousePos.x  - panOffset.y ) / this.zoomLevel = correct cursor position in world space.
 
-        return {
-          x: (this.mousePos.x - totalOffset.x) / this.zoomLevel,
-          y: (this.mousePos.y - totalOffset.y) / this.zoomLevel,
-        };
+        const wx = (sx - globalOffset.x) / currentZoom;
+        const wy = (sy - globalOffset.y) / currentZoom;
+
+        // Refer to 2d-canvas-note.js
+        globalOffset.x += wx * zoomChange;
+        globalOffset.y += wy * zoomChange;
       },
-      mousePos: { x: 0, y: 0 },
       onwheel: function (e) {
         let change = e.deltaY * 0.0005;
 
+        // Calculate the zoomOffset using the previous zoom.
+        this._calculateZoomOffset(this.zoomLevel, change, e.x, e.y);
         // TODO logarithmic zoom https://www.youtube.com/watch?v=u1A_6Ap4xmE
         // change += Math.log10(Math.max(), 1);
         this.zoomLevel = Math.max(this.zoomLevel - change, 0.1);
-
-        const transform = ctx.getTransform();
-        this.offset = this.getZoomCenter();
-      },
-      onmousemove: function (e) {
-        this.mousePos.x = e.x;
-        this.mousePos.y = e.y;
       },
     };
 
@@ -148,17 +142,14 @@
       ctx.setTransform([1, 0, 0, 1, 0, 0]);
       ctx.clearRect(0, 0, w, h);
       ctx.restore();
-      totalOffset.x = panOffset.offset.x;
-      totalOffset.y = panOffset.offset.y;
       ctx.setTransform(
         zoomOffset.zoomLevel,
         0,
         0,
         zoomOffset.zoomLevel,
-        totalOffset.x,
-        totalOffset.y
+        globalOffset.x,
+        globalOffset.y
       );
-      drawDebug(zoomOffset.offset);
       drawGrid({
         width: 1200,
         height: 1200,
@@ -179,7 +170,6 @@
 
     document.addEventListener("mousemove", (e) => {
       panOffset.onmousemove(e);
-      zoomOffset.onmousemove(e);
     });
 
     document.addEventListener("mouseup", (e) => {
