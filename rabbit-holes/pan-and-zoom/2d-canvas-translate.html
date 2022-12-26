@@ -78,6 +78,9 @@ but the events are throttled such that all actions are done within the confines 
 
     const zoomOffset = {
       getZoomLevel: () => ctx.getTransform().a,
+    
+      // Instead of referring to the globalOffset, refer to ctx's current transformation.
+      // Basically, that's like the source of truth now.
       _calculateZoomOffset: function (currentZoom, zoomChange, sx, sy) {
         const wx = (sx - globalOffset.x) / currentZoom;
         const wy = (sy - globalOffset.y) / currentZoom;
@@ -133,14 +136,6 @@ but the events are throttled such that all actions are done within the confines 
       ctx.transform(
         1, 0, 0, 1, globalOffset.x, globalOffset.y
        );
-    //   ctx.setTransform(
-    //     zoomOffset.zoomLevel,
-    //     0,
-    //     0,
-    //     zoomOffset.zoomLevel,
-    //     globalOffset.x,
-    //     globalOffset.y
-    //   );
       drawGrid({
         width: 1200,
         height: 1200,
