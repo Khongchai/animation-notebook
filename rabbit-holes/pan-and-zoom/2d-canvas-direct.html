@@ -1,0 +1,190 @@
+      <!-- Transform by manipulating the current transform directly, not really
+      usful if this was a library. -->
+<!-- TODO: try like this instead as it might be more scalable (can apply to webgl: https://codepen.io/amir-s/pen/jzqZdG?editors=0010)-->
+<!-- a documented exercise for future reference. -->
+<!-- TODO: all operations through event listeners, but throttled to match the device's framerate -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      html,
+      body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+      <canvas id="canvas"></canvas>
+    </div>
+  </body>
+  <script>
+    const canvas = document.getElementById("canvas");
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+  </script>
+  <script>
+    // Useful for a library to obtain the current global offset from the canvas context intead
+    // of setting it to zero.
+    const offsetUponEntering = ctx.getTransform();
+
+    // TOOD lerp globalOffset with a JavaScript's proxy.
+    // TODO improved lerping.
+    // https://www.gamedeveloper.com/programming/improved-lerp-smoothing-
+    const globalOffset = {
+      x: offsetUponEntering.e,
+      y: offsetUponEntering.f,
+    };
+    // let offset = previousOffset ?? 0;
+    // Keep track of distance moved from mousedown
+    // set distance moved to offset
+    const panOffset = {
+      prev: {
+        x: 0,
+        y: 0,
+      },
+      // For keeping track of how much translation we have already done to the canvas.
+      cur: {
+        x: 0,
+        y: 0,
+      },
+      onmousedown: function (e) {
+        this.isDown = true;
+        this.prev.x = e.x - this.cur.x;
+        this.prev.y = e.y - this.cur.y;
+      },
+      onmouseup: function (e) {
+        this.isDown = false;
+      },
+      onmousemove: function (e) {
+        if (this.isDown) {
+          const dx = e.x - this.prev.x;
+          const dy = e.y - this.prev.y;
+
+          globalOffset.x += dx;
+          globalOffset.y += dy;
+          this.prev.x = e.x;
+          this.prev.y = e.y;
+        }
+      },
+      isDown: false,
+    };
+
+    const zoomOffset = {
+      zoomLevel: 1,
+      _calculateZoomOffset: function (currentZoom, zoomChange, sx, sy) {
+        // Dividing by zoom level to correct the speed.
+        // The more zoomed in we are, the slower the speed of the cursor.
+        // sx.x << wrong speed
+        // sx / this.zoomLevel << correct speed but wrong position when panning.
+        // (sx - globalOffset.x) / currentZoom << correct everything.
+
+        const wx = (sx - globalOffset.x) / currentZoom;
+        const wy = (sy - globalOffset.y) / currentZoom;
+
+        // Refer to 2d-canvas-note.js
+        globalOffset.x += wx * zoomChange;
+        globalOffset.y += wy * zoomChange;
+      },
+      onwheel: function (e) {
+        let change = e.deltaY * 0.0005;
+
+        // TODO logarithmic zoom https://www.youtube.com/watch?v=u1A_6Ap4xmE
+        // change += Math.log10(Math.max(this.zoomLevel), 1);
+        // Calculate the zoomOffset using the previous zoom.
+        this._calculateZoomOffset(this.zoomLevel, change, e.x, e.y);
+        this.zoomLevel = Math.max(this.zoomLevel - change, 0.1);
+      },
+    };
+
+    ctx.strokeStyle = "black";
+
+    function drawGrid({ width, height, x, y, column, row }) {
+      const offset = {
+        x: x - width / 2,
+        y: y - height / 2,
+      };
+
+      for (let i = 0; i <= column; i++) {
+        const gridWidth = width / column;
+        ctx.beginPath();
+        ctx.moveTo(offset.x + i * gridWidth, offset.y);
+        ctx.lineTo(offset.x + i * gridWidth, height + offset.y);
+        ctx.stroke();
+      }
+
+      for (let i = 0; i <= row; i++) {
+        const gridHeight = height / row;
+        ctx.beginPath();
+        ctx.moveTo(offset.x, i * gridHeight + offset.y);
+        ctx.lineTo(offset.x + width, i * gridHeight + offset.y);
+        ctx.stroke();
+      }
+    }
+
+    function drawDebug(coord) {
+      ctx.beginPath();
+      ctx.strokStyle = "pink";
+      ctx.arc(coord.x, coord.y, 20, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    const draw = () => {
+      ctx.save();
+      ctx.setTransform([1, 0, 0, 1, 0, 0]);
+      ctx.clearRect(0, 0, w, h);
+      ctx.restore();
+      ctx.setTransform(
+        zoomOffset.zoomLevel,
+        0,
+        0,
+        zoomOffset.zoomLevel,
+        globalOffset.x,
+        globalOffset.y
+      );
+      drawGrid({
+        width: 1200,
+        height: 1200,
+        x: w / 2,
+        y: h / 2,
+        column: 15,
+        row: 15,
+      });
+      requestAnimationFrame(draw);
+    };
+
+    draw();
+  </script>
+  <script>
+    document.addEventListener("mousedown", (e) => {
+      panOffset.onmousedown(e);
+    });
+
+    document.addEventListener("mousemove", (e) => {
+      panOffset.onmousemove(e);
+    });
+
+    document.addEventListener("mouseup", (e) => {
+      panOffset.onmouseup(e);
+    });
+
+    document.addEventListener("wheel", (e) => {
+      zoomOffset.onwheel(e);
+    });
+  </script>
+  <script>
+    requestAnimationFrame(draw);
+  </script>
+</html>

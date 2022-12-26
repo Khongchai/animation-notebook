@@ -1,6 +1,8 @@
-<!-- TODO: try like this instead as it might be more scalable (can apply to webgl: https://codepen.io/amir-s/pen/jzqZdG?editors=0010)-->
-<!-- a documented exercise for future reference. -->
-<!-- TODO: all operations through event listeners, but throttled to match the device's framerate -->
+<!-- A more useful zoom and pan that zooms and pans without overriding the curren transform.!-->
+<!-- This is done through a separate event listener, not in any explicit requestAnimationFrame, 
+but the events are throttled such that all actions are done within the confines of the current fps.-->
+<!-- TODO zoom and pan with transform(). -->
+<!-- TODO throttle the events to the device's fps. -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -34,20 +36,10 @@
     const ctx = canvas.getContext("2d");
   </script>
   <script>
-    // Useful for a library to obtain the current global offset from the canvas context intead
-    // of setting it to zero.
-    const offsetUponEntering = ctx.getTransform();
-
-    // TOOD lerp globalOffset with a JavaScript's proxy.
-    // TODO improved lerping.
-    // https://www.gamedeveloper.com/programming/improved-lerp-smoothing-
     const globalOffset = {
-      x: offsetUponEntering.e,
-      y: offsetUponEntering.f,
+      x: 0,
+      y: 0,
     };
-    // let offset = previousOffset ?? 0;
-    // Keep track of distance moved from mousedown
-    // set distance moved to offset
     const panOffset = {
       prev: {
         x: 0,
@@ -75,6 +67,8 @@
           globalOffset.y += dy;
           this.prev.x = e.x;
           this.prev.y = e.y;
+
+          draw();
         }
       },
       isDown: false,
@@ -83,27 +77,17 @@
     const zoomOffset = {
       zoomLevel: 1,
       _calculateZoomOffset: function (currentZoom, zoomChange, sx, sy) {
-        // Dividing by zoom level to correct the speed.
-        // The more zoomed in we are, the slower the speed of the cursor.
-        // sx.x << wrong speed
-        // sx / this.zoomLevel << correct speed but wrong position when panning.
-        // (sx - globalOffset.x) / currentZoom << correct everything.
-
         const wx = (sx - globalOffset.x) / currentZoom;
         const wy = (sy - globalOffset.y) / currentZoom;
-
-        // Refer to 2d-canvas-note.js
         globalOffset.x += wx * zoomChange;
         globalOffset.y += wy * zoomChange;
       },
       onwheel: function (e) {
         let change = e.deltaY * 0.0005;
-
-        // TODO logarithmic zoom https://www.youtube.com/watch?v=u1A_6Ap4xmE
-        // change += Math.log10(Math.max(this.zoomLevel), 1);
-        // Calculate the zoomOffset using the previous zoom.
         this._calculateZoomOffset(this.zoomLevel, change, e.x, e.y);
         this.zoomLevel = Math.max(this.zoomLevel - change, 0.1);
+
+        draw();
       },
     };
 
@@ -145,10 +129,10 @@
       ctx.clearRect(0, 0, w, h);
       ctx.restore();
       ctx.setTransform(
-        globalOffset.x,
+        zoomOffset.zoomLevel,
         0,
         0,
-        globalOffset.y,
+        zoomOffset.zoomLevel,
         globalOffset.x,
         globalOffset.y
       );
@@ -160,7 +144,6 @@
         column: 15,
         row: 15,
       });
-      requestAnimationFrame(draw);
     };
 
     draw();
@@ -180,6 +163,41 @@
 
     document.addEventListener("wheel", (e) => {
       zoomOffset.onwheel(e);
+    });
+
+    // Mocking external interactions.
+    document.addEventListener("keypress", (event) => {
+        const {a, d, e, f}= ctx.getTransform();
+      if (event.key == "k") {
+        ctx.setTransform(
+            a + 0.2, 0, 0, d + 0.2, e, f
+        );
+      } else if (event.key == "j") {
+        ctx.setTransform(
+            a - 0.2, 0, 0, d - 0.2, e, f
+        );
+      } else if (event.key == "h") {
+        ctx.setTransform(
+            a, 0, 0, d, e - 20, f
+        );
+      } else if (event.key == "l") {
+        ctx.setTransform(
+            a, 0, 0, d, e + 20, f
+        );
+      }
+
+      ctx.save();
+      ctx.setTransform([1, 0, 0, 1, 0, 0]);
+      ctx.clearRect(0, 0, w, h);
+      ctx.restore();
+      drawGrid({
+        width: 1200,
+        height: 1200,
+        x: w / 2,
+        y: h / 2,
+        column: 15,
+        row: 15,
+      });
     });
   </script>
   <script>
