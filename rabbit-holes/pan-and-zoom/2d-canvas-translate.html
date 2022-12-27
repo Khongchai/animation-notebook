@@ -41,6 +41,7 @@ but the events are throttled such that all actions are done within the confines 
     const globalOffset = {
       dx: 0,
       dy: 0,
+      dz: 1,
     };
     const panOffset = {
       prev: {
@@ -65,34 +66,47 @@ but the events are throttled such that all actions are done within the confines 
           const dx = e.x - this.prev.x;
           const dy = e.y - this.prev.y;
 
-          globalOffset.dx = dx/ zoomOffset.getZoomLevel();
-          globalOffset.dy = dy / zoomOffset.getZoomLevel();
+          globalOffset.dx = dx / zoomOffset.getCurrentZoomLevel();
+          globalOffset.dy = dy / zoomOffset.getCurrentZoomLevel();
           this.prev.x = e.x;
           this.prev.y = e.y;
 
           draw();
+
+          globalOffset.dx = 0;
+          globalOffset.dy = 0;
         }
       },
       isDown: false,
     };
 
     const zoomOffset = {
+        prev: 1,
+        cur: 1,
       // Assume that .a and .d is the same
-      getZoomLevel: () => ctx.getTransform().a,
-    
+      getCurrentZoomLevel: () => ctx.getTransform().a,
+
       // Instead of referring to the globalOffset, refer to ctx's current transformation.
       // Basically, that's like the source of truth now.
       _calculateZoomOffset: function (currentZoom, zoomChange, sx, sy) {
-        const {e, f} = ctx.getTransform();
+        // Get the previous transform.
+        const { e, f } = ctx.getTransform();
         const wx = (sx - e) / currentZoom;
         const wy = (sy - f) / currentZoom;
-        // globalOffset.dx = wx * zoomChange;
-        // globalOffset.dy = wy * zoomChange;
+        console.log(wx);
+        globalOffset.dx = -wx * zoomChange;
+        globalOffset.dy = -wy * zoomChange;
       },
       onwheel: function (e) {
-        // let change = e.deltaY * 0.0005;
-        // // this._calculateZoomOffset(this.getZoomLevel(), change, e.x, e.y);
-        // this.zoomLevel = Math.max(this.getZoomLevel() - change, 0.1);
+        let change = e.deltaY * 0.0005;
+        change = Math.max(change, 0.01) * -Math.sign(e.deltaY);
+        globalOffset.dz = 1 + change;
+        this._calculateZoomOffset(this.getCurrentZoomLevel(), change, e.x, e.y);
+
+        draw();
+
+        // reset the offset dz
+        globalOffset.dz = 1;
       },
     };
 
@@ -133,9 +147,7 @@ but the events are throttled such that all actions are done within the confines 
       ctx.setTransform([1, 0, 0, 1, 0, 0]);
       ctx.clearRect(0, 0, w, h);
       ctx.restore();
-      ctx.transform(
-        1, 0, 0, 1, globalOffset.dx, globalOffset.dy
-       );
+      ctx.transform(globalOffset.dz, 0, 0, globalOffset.dz, globalOffset.dx, globalOffset.dy);
       drawGrid({
         width: 1200,
         height: 1200,
@@ -161,29 +173,27 @@ but the events are throttled such that all actions are done within the confines 
       panOffset.onmouseup(e);
     });
 
-    document.addEventListener("wheel", (e) => {
-      zoomOffset.onwheel(e);
-    });
+    document.addEventListener(
+      "wheel",
+      (e) => {
+        e.preventDefault();
+
+        zoomOffset.onwheel(e);
+      },
+      { passive: false }
+    );
 
     // Mocking external interactions.
     document.addEventListener("keypress", (event) => {
-        const {a, d, e, f}= ctx.getTransform();
+      const { a, d, e, f } = ctx.getTransform();
       if (event.key == "k") {
-        ctx.setTransform(
-            a + 0.2, 0, 0, d + 0.2, e, f
-        );
+        ctx.setTransform(a + 0.2, 0, 0, d + 0.2, e, f);
       } else if (event.key == "j") {
-        ctx.setTransform(
-            a - 0.2, 0, 0, d - 0.2, e, f
-        );
+        ctx.setTransform(a - 0.2, 0, 0, d - 0.2, e, f);
       } else if (event.key == "h") {
-        ctx.setTransform(
-            a, 0, 0, d, e - 20, f
-        );
+        ctx.setTransform(a, 0, 0, d, e - 20, f);
       } else if (event.key == "l") {
-        ctx.setTransform(
-            a, 0, 0, d, e + 20, f
-        );
+        ctx.setTransform(a, 0, 0, d, e + 20, f);
       }
 
       ctx.save();
