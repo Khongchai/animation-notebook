@@ -39,8 +39,8 @@ but the events are throttled such that all actions are done within the confines 
   </script>
   <script>
     const globalOffset = {
-      x: 0,
-      y: 0,
+      dx: 0,
+      dy: 0,
     };
     const panOffset = {
       prev: {
@@ -65,8 +65,8 @@ but the events are throttled such that all actions are done within the confines 
           const dx = e.x - this.prev.x;
           const dy = e.y - this.prev.y;
 
-          globalOffset.x = dx/ zoomOffset.getZoomLevel();
-          globalOffset.y = dy / zoomOffset.getZoomLevel();
+          globalOffset.dx = dx/ zoomOffset.getZoomLevel();
+          globalOffset.dy = dy / zoomOffset.getZoomLevel();
           this.prev.x = e.x;
           this.prev.y = e.y;
 
@@ -77,22 +77,22 @@ but the events are throttled such that all actions are done within the confines 
     };
 
     const zoomOffset = {
+      // Assume that .a and .d is the same
       getZoomLevel: () => ctx.getTransform().a,
     
       // Instead of referring to the globalOffset, refer to ctx's current transformation.
       // Basically, that's like the source of truth now.
       _calculateZoomOffset: function (currentZoom, zoomChange, sx, sy) {
-        const wx = (sx - globalOffset.x) / currentZoom;
-        const wy = (sy - globalOffset.y) / currentZoom;
-        globalOffset.x += wx * zoomChange;
-        globalOffset.y += wy * zoomChange;
+        const {e, f} = ctx.getTransform();
+        const wx = (sx - e) / currentZoom;
+        const wy = (sy - f) / currentZoom;
+        // globalOffset.dx = wx * zoomChange;
+        // globalOffset.dy = wy * zoomChange;
       },
       onwheel: function (e) {
-        let change = e.deltaY * 0.0005;
-        this._calculateZoomOffset(this.getZoomLevel(), change, e.x, e.y);
-        this.zoomLevel = Math.max(this.getZoomLevel() - change, 0.1);
-
-        draw();
+        // let change = e.deltaY * 0.0005;
+        // // this._calculateZoomOffset(this.getZoomLevel(), change, e.x, e.y);
+        // this.zoomLevel = Math.max(this.getZoomLevel() - change, 0.1);
       },
     };
 
@@ -134,7 +134,7 @@ but the events are throttled such that all actions are done within the confines 
       ctx.clearRect(0, 0, w, h);
       ctx.restore();
       ctx.transform(
-        1, 0, 0, 1, globalOffset.x, globalOffset.y
+        1, 0, 0, 1, globalOffset.dx, globalOffset.dy
        );
       drawGrid({
         width: 1200,
