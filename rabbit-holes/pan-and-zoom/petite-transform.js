@@ -5,11 +5,7 @@ class PetiteTransform {
   /**
    * @type {() => {x: number, y: number, z: number}} `x` is the x offset, `y` the y offset, and `z` the zoom scale.
    */
-  #getTransformReference = () => {
-    x: 0;
-    y: 0;
-    z: 0;
-  };
+  #getTransformReference;
   // TODO
   #easeFactor = 1;
   #cumulatedTransform = {
@@ -82,10 +78,12 @@ class PetiteTransform {
    *
    * @param {() => number} transformReference a callback that returns the current transform of the canvas.
    * @param {number} easeFactor the t in (a + (b - a) * t) of the linear interpolation equation.
+   * where t is <= 1 and >= 0. If t is less than 1, repeated call to the `currenTransform` method will yield
+   * a different value.
    * @param {number?} devicePixelRatio The device pixel ratio that you set your canvas to. It is
    * vital that this matches what you have set for your canvas.
    */
-  constructor(transformReference, easeFactor, devicePixelRatio = 1) {
+  constructor(transformReference, easeFactor = 1, devicePixelRatio = 1) {
     this.#easeFactor = easeFactor;
     this.#getTransformReference = transformReference;
     this.#cumulatedTransform.setTransform(0, 0, 1);
@@ -145,12 +143,12 @@ class PetiteTransform {
    * @type {() => {dx: number, dy: number, dz: number}}
    */
   get currentTransform() {
-    return { ...this.#cumulatedTransform };
+    return this.#cumulatedTransform.getTransform();
   }
 
   #addEventListener(type, callback, options) {
     document.addEventListener(type, callback, options);
-    this.#listenersRefs.add({ type, callback, options });
+    this.#listenersRefs.push({ type, callback, options });
   }
 
   /**
@@ -171,13 +169,13 @@ class PetiteTransform {
    */
   #onmousemove(e) {
     if (this.#isMouseDown) {
-      const dx = e.x - this.prev.x;
-      const dy = e.y - this.prev.y;
+      const dx = e.x - this.#panOffset.prev.x;
+      const dy = e.y - this.#panOffset.prev.y;
 
       const globalDx = dx / this.#getTransformReference().z;
       const globalDy = dy / this.#getTransformReference().z;
-      this.prev.x = e.x;
-      this.prev.y = e.y;
+      this.#panOffset.prev.x = e.x;
+      this.#panOffset.prev.y = e.y;
 
       this.#cumulatedTransform.setTransformIncrement(globalDx, globalDy);
     }

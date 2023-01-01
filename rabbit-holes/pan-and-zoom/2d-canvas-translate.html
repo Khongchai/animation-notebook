@@ -46,106 +46,15 @@ but the events are throttled such that all actions are done within the confines 
     // });
     // const globalTransform = t.currentTransform;
 
-    // const t = new PetiteTransform();
+    const t = new PetiteTransform(
+      function () {
+        const { a, e, f } = ctx.getTransform();
 
-    const globalTransform = {
-      dx: 0,
-      dy: 0,
-      dz: 1,
-      isSet: false,
-      /**
-       * Self-explanatory.
-       */
-      setTransform: function (x = this.dx, y = this.dy, z = this.dz) {
-        this.isSet = true;
-        this.dx = x;
-        this.dy = y;
-        this.dz = z;
+        return { x: e, y: f, z: a };
       },
-      /**
-       * Like `setTransform`, but instead of replacing the values, increment them instead.
-       *
-       * This is to cache all values in-between frames when called from an animation loop.
-       */
-      setTransformIncrement: function (x = 0, y = 0, z = 0) {
-        this.isSet = true;
-        this.dx += x;
-        this.dy += y;
-        this.dz += z;
-      },
-      /**
-       * Spoonfeed the client only once and then close until more values are set.
-       * This is to prevent any translation method in an animation frame from applying the
-       * same transform twice. If you need the same transform in multiple places, store it in a variable somewhere.
-       */
-      getTransform: function () {
-        if (this.isSet) {
-          this.isSet = false;
-          const returnVal = { dx: this.dx, dy: this.dy, dz: this.dz };
-          this.dx = 0;
-          this.dy = 0;
-          this.dz = 1;
-
-          return returnVal;
-        }
-
-        return { dx: 0, dy: 0, dz: 1 };
-      },
-    };
-    const panOffset = {
-      prev: {
-        x: 0,
-        y: 0,
-      },
-      // For keeping track of how much translation we have already done to the canvas.
-      cur: {
-        x: 0,
-        y: 0,
-      },
-      onmousedown: function (e) {
-        this.isDown = true;
-        this.prev.x = e.x - this.cur.x;
-        this.prev.y = e.y - this.cur.y;
-      },
-      onmouseup: function (e) {
-        this.isDown = false;
-      },
-      onmousemove: function (e) {
-        if (this.isDown) {
-          const dx = e.x - this.prev.x;
-          const dy = e.y - this.prev.y;
-
-          const globalDx = dx / zoomOffset.getCurrentZoomLevel();
-          const globalDy = dy / zoomOffset.getCurrentZoomLevel();
-          this.prev.x = e.x;
-          this.prev.y = e.y;
-
-          globalTransform.setTransformIncrement(globalDx, globalDy);
-        }
-      },
-      isDown: false,
-    };
-
-    const zoomOffset = {
-      // Assume that .a and .d are the same
-      getCurrentZoomLevel: () => ctx.getTransform().a,
-
-      // Instead of referring to the globalOffset, refer to ctx's current transformation.
-      // Basically, that's like the source of truth now.
-      _calculateZoomOffset: function (currentZoom, zoomChange, sx, sy) {
-        // Get the previous transform.
-        const { e, f } = ctx.getTransform();
-        const wx = (sx - e) / currentZoom;
-        const wy = (sy - f) / currentZoom;
-
-        globalTransform.setTransform(-wx * zoomChange, -wy * zoomChange);
-      },
-      onwheel: function (e) {
-        let change = -e.deltaY * 0.0005;
-        globalTransform.setTransform(null, null, 1 + change);
-        this._calculateZoomOffset(this.getCurrentZoomLevel(), change, e.x, e.y);
-      },
-    };
+      1,
+      devicePixelRatio
+    );
 
     ctx.strokeStyle = "black";
 
@@ -184,7 +93,7 @@ but the events are throttled such that all actions are done within the confines 
       ctx.setTransform([1, 0, 0, 1, 0, 0]);
       ctx.clearRect(0, 0, w, h);
       ctx.restore();
-      const transform = globalTransform.getTransform();
+      const transform = t.currentTransform;
       ctx.transform(
         transform.dz,
         0,
@@ -207,42 +116,6 @@ but the events are throttled such that all actions are done within the confines 
     draw();
   </script>
   <script>
-    document.addEventListener("mousedown", (e) => {
-      panOffset.onmousedown({
-        x: e.x * devicePixelRatio,
-        y: e.y * devicePixelRatio,
-      });
-    });
-
-    document.addEventListener("mousemove", (e) => {
-      panOffset.onmousemove({
-        x: e.x * devicePixelRatio,
-        y: e.y * devicePixelRatio,
-      });
-    });
-
-    document.addEventListener("mouseup", (e) => {
-      panOffset.onmouseup({
-        x: e.x * devicePixelRatio,
-        y: e.y * devicePixelRatio,
-      });
-    });
-
-    document.addEventListener(
-      "wheel",
-      (e) => {
-        e.preventDefault();
-
-        zoomOffset.onwheel({
-          x: e.x * devicePixelRatio,
-          y: e.y * devicePixelRatio,
-          deltaY: e.deltaY,
-        });
-        draw();
-      },
-      { passive: false }
-    );
-
     // Mocking external interactions.
     document.addEventListener("keypress", (event) => {
       const { a, d, e, f } = ctx.getTransform();
