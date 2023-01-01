@@ -12,6 +12,12 @@ class PetiteTransform {
     dx: 0,
     dy: 0,
     dz: 1,
+    total: {
+      mat: new DOMMatrix(),
+      update: function ({ dx, dy, dz }) {
+        this.mat.multiplySelf(new DOMMatrix([dz, 0, 0, dz, dx, dy]));
+      },
+    },
     isSet: false,
     /**
      * Self-explanatory.
@@ -38,6 +44,7 @@ class PetiteTransform {
       this.dz += z;
     },
     /**
+     * TODO isSet might not be necessary because we are resetting the dx dy and dz values anyway.
      * Spoonfeed the client only once and then close until more values are set.
      * This is to prevent any translation method in an animation frame from applying the
      * same transform twice. If you need the same transform in multiple places, store it in a variable somewhere.
@@ -48,9 +55,12 @@ class PetiteTransform {
       if (this.isSet) {
         this.isSet = false;
         const returnVal = { dx: this.dx, dy: this.dy, dz: this.dz };
+
         this.dx = 0;
         this.dy = 0;
         this.dz = 1;
+
+        this.total.update(returnVal);
 
         return returnVal;
       }
@@ -76,16 +86,26 @@ class PetiteTransform {
 
   /**
    *
-   * @param {() => number} transformReference a callback that returns the current transform of the canvas.
+   * @param {() => {x: number, y: number, z: number} | null | undefined} transformReference a callback that returns the current transform of the canvas.
+   * @param {number?} devicePixelRatio The device pixel ratio that you set your canvas to. It is
+   * vital that this matches what you have set for your canvas.
    * @param {number} easeFactor the t in (a + (b - a) * t) of the linear interpolation equation.
    * where t is <= 1 and >= 0. If t is less than 1, repeated call to the `currenTransform` method will yield
    * a different value.
-   * @param {number?} devicePixelRatio The device pixel ratio that you set your canvas to. It is
-   * vital that this matches what you have set for your canvas.
    */
-  constructor(transformReference, easeFactor = 1, devicePixelRatio = 1) {
+  constructor(transformReference, devicePixelRatio = 1, easeFactor = 1) {
     this.#easeFactor = easeFactor;
-    this.#getTransformReference = transformReference;
+    if (transformReference) {
+      this.#getTransformReference = transformReference;
+    } else {
+      const total = this.#cumulatedTransform.total;
+      this.#getTransformReference = () => ({
+        x: total.mat.e,
+        y: total.mat.f,
+        z: total.mat.a,
+      });
+    }
+
     this.#cumulatedTransform.setTransform(0, 0, 1);
 
     this.#addEventListener("mousedown", (e) => {
@@ -186,7 +206,6 @@ class PetiteTransform {
    */
   #onwheel(e) {
     const change = -e.deltaY * 0.0005;
-    this.#cumulatedTransform.dz = 1 + change;
     const { x, y, z } = this.#getTransformReference();
 
     // Grab the world space position of the cursor so that we can calculate
@@ -194,6 +213,10 @@ class PetiteTransform {
     const wx = (e.x - x) / z;
     const wy = (e.y - y) / z;
 
-    this.#cumulatedTransform.setTransform(-wx * change, -wy * change);
+    this.#cumulatedTransform.setTransform(
+      -wx * change,
+      -wy * change,
+      1 + change
+    );
   }
 }
