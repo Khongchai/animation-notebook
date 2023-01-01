@@ -1,4 +1,4 @@
-      <!-- Transform by manipulating the current transform directly, not really
+<!-- Transform by manipulating the current transform directly, not really
       usful if this was a library. -->
 <!-- TODO: try like this instead as it might be more scalable (can apply to webgl: https://codepen.io/amir-s/pen/jzqZdG?editors=0010)-->
 <!-- a documented exercise for future reference. -->
@@ -99,11 +99,24 @@
         globalOffset.y += wy * zoomChange;
       },
       onwheel: function (e) {
-        let change = e.deltaY * 0.0005;
+        /**
+         * Consistent zooming.
+         * Let s be the constant scale factor for zooming.
+         * If we apply a transformation matrix to the current canvas matrix, the scale factor s
+         * is applied every time by multiplying the current canvas scale factors a and d by s.
+         * This results in the scale of the canvas increasing by a factor of s each time.
+         *
+         * Non-consistent zooming.
+         * However, if we use the current method, the scale factor s is not applied every time.
+         * Instead, it is a constant value that is added to the current scale of the canvas.
+         * This means that as the canvas is scaled more and more, the change in scale becomes proportionally smaller.
+         *
+         * The `ctx.getTransform().a` value fixes this issue by providing the current scale factor of the canvas,
+         * allowing us to apply the scale factor s consistently.
+         */
 
-        // TODO logarithmic zoom https://www.youtube.com/watch?v=u1A_6Ap4xmE
-        // change += Math.max(Math.log10(this.zoomLevel), 1) * Math.sign(e.deltaY);
-        // Calculate the zoomOffset using the previous zoom.
+        let change = e.deltaY * 0.0005 * ctx.getTransform().a;
+
         this._calculateZoomOffset(this.zoomLevel, change, e.x, e.y);
         this.zoomLevel = Math.max(this.zoomLevel - change, 0.1);
       },
@@ -180,11 +193,15 @@
       panOffset.onmouseup(e);
     });
 
-    document.addEventListener("wheel", (e) => {
-      // Turn off default device's scaling, if any.
-      e.preventDefault();
-      zoomOffset.onwheel(e);
-    }, {passive: false});
+    document.addEventListener(
+      "wheel",
+      (e) => {
+        // Turn off default device's scaling, if any.
+        e.preventDefault();
+        zoomOffset.onwheel(e);
+      },
+      { passive: false }
+    );
   </script>
   <script>
     requestAnimationFrame(draw);
