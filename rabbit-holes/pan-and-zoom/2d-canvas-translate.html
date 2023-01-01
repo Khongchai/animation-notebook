@@ -2,9 +2,7 @@
 <!-- This is done through a separate event listener, not in any explicit requestAnimationFrame, 
 but the events are throttled such that all actions are done within the confines of the current fps.-->
 <!-- TODO make the API really simple -->
-<!-- DONE: pan -->
-<!-- TODO zoom -->
-<!-- TODO throttle the events to the device's fps. -->
+<!-- TODO better lerping method. -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -21,6 +19,8 @@ but the events are throttled such that all actions are done within the confines 
       }
       canvas {
         display: block;
+        width: 100%;
+        height: 100%;
       }
     </style>
   </head>
@@ -31,36 +31,54 @@ but the events are throttled such that all actions are done within the confines 
   </body>
   <script>
     const canvas = document.getElementById("canvas");
-    const w = window.innerWidth;
-    const h = window.innerHeight;
+    const w = window.innerWidth * devicePixelRatio;
+    const h = window.innerHeight * devicePixelRatio;
     canvas.width = w;
     canvas.height = h;
     const ctx = canvas.getContext("2d");
   </script>
+  <script src="petite-transform.js"></script>
   <script>
-    // const t = new PetiteTransform(
-    //   () => ctx.getTransform().a,
-    // );
+    // const t = new PetiteTransform({
+    //    transformReference: () => ctx.getTransform(),
+    //    TODO look at the "better lerping" thing.
+    //    easeFactor: 0.7,
+    // });
     // const globalTransform = t.currentTransform;
 
-    const globalOffset = {
+    // const t = new PetiteTransform();
+
+    const globalTransform = {
       dx: 0,
       dy: 0,
       dz: 1,
       isSet: false,
-      set: function (x = this.dx, y = this.dy, z = this.dz) {
+      /**
+       * Self-explanatory.
+       */
+      setTransform: function (x = this.dx, y = this.dy, z = this.dz) {
         this.isSet = true;
         this.dx = x;
         this.dy = y;
         this.dz = z;
       },
-      setIncrement: function (x = 0, y = 0, z = 0) {
+      /**
+       * Like `setTransform`, but instead of replacing the values, increment them instead.
+       *
+       * This is to cache all values in-between frames when called from an animation loop.
+       */
+      setTransformIncrement: function (x = 0, y = 0, z = 0) {
         this.isSet = true;
         this.dx += x;
         this.dy += y;
         this.dz += z;
       },
-      get: function () {
+      /**
+       * Spoonfeed the client only once and then close until more values are set.
+       * This is to prevent any translation method in an animation frame from applying the
+       * same transform twice. If you need the same transform in multiple places, store it in a variable somewhere.
+       */
+      getTransform: function () {
         if (this.isSet) {
           this.isSet = false;
           const returnVal = { dx: this.dx, dy: this.dy, dz: this.dz };
@@ -102,15 +120,13 @@ but the events are throttled such that all actions are done within the confines 
           this.prev.x = e.x;
           this.prev.y = e.y;
 
-          globalOffset.setIncrement(globalDx, globalDy);
+          globalTransform.setTransformIncrement(globalDx, globalDy);
         }
       },
       isDown: false,
     };
 
     const zoomOffset = {
-      prev: 1,
-      cur: 1,
       // Assume that .a and .d are the same
       getCurrentZoomLevel: () => ctx.getTransform().a,
 
@@ -122,11 +138,11 @@ but the events are throttled such that all actions are done within the confines 
         const wx = (sx - e) / currentZoom;
         const wy = (sy - f) / currentZoom;
 
-        globalOffset.set(-wx * zoomChange, -wy * zoomChange);
+        globalTransform.setTransform(-wx * zoomChange, -wy * zoomChange);
       },
       onwheel: function (e) {
         let change = -e.deltaY * 0.0005;
-        globalOffset.set(null, null, 1 + change);
+        globalTransform.setTransform(null, null, 1 + change);
         this._calculateZoomOffset(this.getCurrentZoomLevel(), change, e.x, e.y);
       },
     };
@@ -168,7 +184,7 @@ but the events are throttled such that all actions are done within the confines 
       ctx.setTransform([1, 0, 0, 1, 0, 0]);
       ctx.clearRect(0, 0, w, h);
       ctx.restore();
-      const transform = globalOffset.get();
+      const transform = globalTransform.getTransform();
       ctx.transform(
         transform.dz,
         0,
@@ -192,15 +208,24 @@ but the events are throttled such that all actions are done within the confines 
   </script>
   <script>
     document.addEventListener("mousedown", (e) => {
-      panOffset.onmousedown(e);
+      panOffset.onmousedown({
+        x: e.x * devicePixelRatio,
+        y: e.y * devicePixelRatio,
+      });
     });
 
     document.addEventListener("mousemove", (e) => {
-      panOffset.onmousemove(e);
+      panOffset.onmousemove({
+        x: e.x * devicePixelRatio,
+        y: e.y * devicePixelRatio,
+      });
     });
 
     document.addEventListener("mouseup", (e) => {
-      panOffset.onmouseup(e);
+      panOffset.onmouseup({
+        x: e.x * devicePixelRatio,
+        y: e.y * devicePixelRatio,
+      });
     });
 
     document.addEventListener(
@@ -208,7 +233,12 @@ but the events are throttled such that all actions are done within the confines 
       (e) => {
         e.preventDefault();
 
-        zoomOffset.onwheel(e);
+        zoomOffset.onwheel({
+          x: e.x * devicePixelRatio,
+          y: e.y * devicePixelRatio,
+          deltaY: e.deltaY,
+        });
+        draw();
       },
       { passive: false }
     );
