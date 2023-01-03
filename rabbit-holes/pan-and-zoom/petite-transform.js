@@ -14,13 +14,13 @@ class PetiteTransform {
     dy: 0,
     dz: 1,
     total: {
-      mat: { x: 0, y: 0, z: 1 },
+      pos: { x: 0, y: 0, z: 1 },
       update: function ({ dx, dy, dz }) {
         // Apply translation first.
         // This is the dot product of the existing matrix and the incoming matrix.
-        this.mat.x = this.mat.x + dx * this.mat.z;
-        this.mat.y = this.mat.y + dy * this.mat.z;
-        this.mat.z *= dz;
+        this.pos.x = this.pos.x + dx * this.pos.z;
+        this.pos.y = this.pos.y + dy * this.pos.z;
+        this.pos.z *= dz;
       },
     },
     /**
@@ -84,6 +84,8 @@ class PetiteTransform {
    *
    * @param {{transformReference?: () => {x: number, y: number, z: number}, devicePixelRatio?: number, easeFactor?: 1, manageZoom?: boolean, managePan?: boolean}}
    * `transformReference` a callback that returns the current transform of the canvas.
+   * This sets up the two different modes, the relative mode, which uses the reference to the current transform outside
+   * the control of this canvas, and the absolute mode, which does not care about anything else and will treat itself as the source of the transformational truth.
    * `devicePixelRatio` The device pixel ratio that you set your canvas to. It is
    * vital that this matches what you have set for your canvas.
    * `easeFactor` the t in (a + (b - a) * t) of the linear interpolation equation.
@@ -105,9 +107,9 @@ class PetiteTransform {
     } else {
       const total = this.#cumulatedTransform.total;
       this.#getTransformReference = () => ({
-        x: total.mat.x,
-        y: total.mat.y,
-        z: total.mat.z,
+        x: total.pos.x,
+        y: total.pos.y,
+        z: total.pos.z,
       });
     }
 
@@ -122,7 +124,7 @@ class PetiteTransform {
       });
 
       this.#addEventListener("mousemove", (e) => {
-        this.#onmousemove({
+        this.onpan({
           x: e.x * devicePixelRatio,
           y: e.y * devicePixelRatio,
         });
@@ -151,6 +153,17 @@ class PetiteTransform {
         { passive: false }
       );
     }
+  }
+
+  /**
+   * Returns the cumulated transform throughout the lifecyle of this canvas.
+   *
+   * Useful for when you want to sync multiple canvases to one transform while switching between them.
+   *
+   * @returns {{x: number, y: number, z: number}}
+   */
+  get cumulatedTransform() {
+    return this.#cumulatedTransform.total.pos;
   }
 
   /**
@@ -196,7 +209,7 @@ class PetiteTransform {
   /**
    * @param {{x: number, y: number}} e
    */
-  #onmousemove(e) {
+  onpan(e) {
     if (this.#isMouseDown) {
       const dx = e.x - this.#panOffset.prev.x;
       const dy = e.y - this.#panOffset.prev.y;

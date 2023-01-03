@@ -16,6 +16,8 @@ but the events are throttled such that all actions are done within the confines 
         border: 0;
         padding: 0;
         margin: 0;
+        height: 100%;
+        width: 100%;
       }
       canvas {
         display: block;
@@ -25,9 +27,7 @@ but the events are throttled such that all actions are done within the confines 
     </style>
   </head>
   <body>
-    <div>
-      <canvas id="canvas"></canvas>
-    </div>
+    <canvas id="canvas"></canvas>
   </body>
   <script>
     const canvas = document.getElementById("canvas");
@@ -43,15 +43,15 @@ but the events are throttled such that all actions are done within the confines 
       easeFactor: 1,
       devicePixelRatio,
       // If nul or undefined, the thing all transforms will be managed by the lib.
-      // transformReference: null,
-      transformReference: () => {
-        const t = ctx.getTransform();
-        return {
-          x: t.e,
-          y: t.f,
-          z: t.a,
-        };
-      },
+      transformReference: null,
+      // transformReference: () => {
+      //   const t = ctx.getTransform();
+      //   return {
+      //     x: t.e,
+      //     y: t.f,
+      //     z: t.a,
+      //   };
+      // },
     });
 
     ctx.strokeStyle = "black";
