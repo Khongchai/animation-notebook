@@ -9,6 +9,7 @@ class PetiteTransform {
   #getTransformReference;
   // TODO
   #easeFactor = 1;
+  #eventTarget;
   #cumulatedTransform = {
     dx: 0,
     dy: 0,
@@ -93,6 +94,7 @@ class PetiteTransform {
    * a different value.
    * `manageZoom` whether or not to have this set up the zoom listener.
    * `managePan` whether or not to have this set up the pan listener.
+   * `eventTarget` target to attach the event listener to.
    */
   constructor({
     transformReference,
@@ -100,6 +102,7 @@ class PetiteTransform {
     easeFactor = 1,
     managePan = true,
     manageZoom = true,
+    eventTarget = document,
   }) {
     this.#easeFactor = easeFactor;
     if (transformReference) {
@@ -112,6 +115,8 @@ class PetiteTransform {
         z: total.pos.z,
       });
     }
+
+    this.#eventTarget = eventTarget;
 
     this.#cumulatedTransform.setTransform(0, 0, 1);
 
@@ -171,7 +176,7 @@ class PetiteTransform {
    */
   dispose() {
     this.#listenersRefs.forEach((obj) =>
-      document.removeEventListener(obj.type, obj.callback, obj.options)
+      this.#eventTarget.removeEventListener(obj.type, obj.callback, obj.options)
     );
   }
 
