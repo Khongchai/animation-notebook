@@ -13,19 +13,21 @@ class PetiteTransform {
     dy: 0,
     dz: 1,
     total: {
-      mat: new DOMMatrix(),
+      mat: { x: 0, y: 0, z: 1 },
       update: function ({ dx, dy, dz }) {
-        this.mat.multiplySelf(new DOMMatrix([dz, 0, 0, dz, dx, dy]));
+        // Apply translation first.
+        // This is the dot product of the existing matrix and the incoming matrix.
+        this.mat.x = this.mat.x + dx * this.mat.z;
+        this.mat.y = this.mat.y + dy * this.mat.z;
+        this.mat.z *= dz;
       },
     },
-    isSet: false,
     /**
      * Self-explanatory.
      *
      * @type {(x?: number, y?: number, z?: number) => void}
      */
     setTransform: function (x = this.dx, y = this.dy, z = this.dz) {
-      this.isSet = true;
       this.dx = x;
       this.dy = y;
       this.dz = z;
@@ -38,13 +40,11 @@ class PetiteTransform {
      * @type {(x?: number, y?: number, z?: number) => void}
      */
     setTransformIncrement: function (x = 0, y = 0, z = 0) {
-      this.isSet = true;
       this.dx += x;
       this.dy += y;
       this.dz += z;
     },
     /**
-     * TODO isSet might not be necessary because we are resetting the dx dy and dz values anyway.
      * Spoonfeed the client only once and then close until more values are set.
      * This is to prevent any translation method in an animation frame from applying the
      * same transform twice. If you need the same transform in multiple places, store it in a variable somewhere.
@@ -52,20 +52,15 @@ class PetiteTransform {
      * @type {() => {dx: number, dy: number, dz: number}}
      */
     getTransform: function () {
-      if (this.isSet) {
-        this.isSet = false;
-        const returnVal = { dx: this.dx, dy: this.dy, dz: this.dz };
+      const returnVal = { dx: this.dx, dy: this.dy, dz: this.dz };
 
-        this.dx = 0;
-        this.dy = 0;
-        this.dz = 1;
+      this.dx = 0;
+      this.dy = 0;
+      this.dz = 1;
 
-        this.total.update(returnVal);
+      this.total.update(returnVal);
 
-        return returnVal;
-      }
-
-      return { dx: 0, dy: 0, dz: 1 };
+      return returnVal;
     },
   };
   #isMouseDown = false;
@@ -100,9 +95,9 @@ class PetiteTransform {
     } else {
       const total = this.#cumulatedTransform.total;
       this.#getTransformReference = () => ({
-        x: total.mat.e,
-        y: total.mat.f,
-        z: total.mat.a,
+        x: total.mat.x,
+        y: total.mat.y,
+        z: total.mat.z,
       });
     }
 
