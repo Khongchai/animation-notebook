@@ -81,14 +81,15 @@ class PetiteTransform {
 
   /**
    *
-   * @param {() => {x: number, y: number, z: number} | null | undefined} transformReference a callback that returns the current transform of the canvas.
-   * @param {number?} devicePixelRatio The device pixel ratio that you set your canvas to. It is
+   * @param {{transformReference?: () => {x: number, y: number, z: number}, devicePixelRatio?: number, easeFactor?: 1}}
+   * `transformReference` a callback that returns the current transform of the canvas.
+   * `devicePixelRatio` The device pixel ratio that you set your canvas to. It is
    * vital that this matches what you have set for your canvas.
-   * @param {number} easeFactor the t in (a + (b - a) * t) of the linear interpolation equation.
+   * `easeFactor` the t in (a + (b - a) * t) of the linear interpolation equation.
    * where t is <= 1 and >= 0. If t is less than 1, repeated call to the `currenTransform` method will yield
    * a different value.
    */
-  constructor(transformReference, devicePixelRatio = 1, easeFactor = 1) {
+  constructor({ transformReference, devicePixelRatio = 1, easeFactor = 1 }) {
     this.#easeFactor = easeFactor;
     if (transformReference) {
       this.#getTransformReference = transformReference;

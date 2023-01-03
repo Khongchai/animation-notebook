@@ -39,17 +39,20 @@ but the events are throttled such that all actions are done within the confines 
   </script>
   <script src="petite-transform.js"></script>
   <script>
-    const t = new PetiteTransform(
-      // Null as first parameter means the thing will be managed by the lib.
-      // null,
-      function () {
-        const { a, e, f } = ctx.getTransform();
-
-        return { x: e, y: f, z: a };
-      },
+    const t = new PetiteTransform({
+      easeFactor: 1,
       devicePixelRatio,
-      1
-    );
+      // If nul or undefined, the thing all transforms will be managed by the lib.
+      // transformReference: null,
+      transformReference: () => {
+        const t = ctx.getTransform();
+        return {
+          x: t.e,
+          y: t.f,
+          z: t.a,
+        };
+      },
+    });
 
     ctx.strokeStyle = "black";
 
