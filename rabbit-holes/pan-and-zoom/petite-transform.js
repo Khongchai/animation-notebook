@@ -1,6 +1,7 @@
-// TODO possible feature:
+// TODO :
 // Simplify API find a way to simplify things further
 // Managed mode, where the lib manages all canvas transformations.
+// Check if the listeners are actually being removed.
 class PetiteTransform {
   /**
    * @type {() => {x: number, y: number, z: number}} `x` is the x offset, `y` the y offset, and `z` the zoom scale.
@@ -81,15 +82,23 @@ class PetiteTransform {
 
   /**
    *
-   * @param {{transformReference?: () => {x: number, y: number, z: number}, devicePixelRatio?: number, easeFactor?: 1}}
+   * @param {{transformReference?: () => {x: number, y: number, z: number}, devicePixelRatio?: number, easeFactor?: 1, manageZoom?: boolean, managePan?: boolean}}
    * `transformReference` a callback that returns the current transform of the canvas.
    * `devicePixelRatio` The device pixel ratio that you set your canvas to. It is
    * vital that this matches what you have set for your canvas.
    * `easeFactor` the t in (a + (b - a) * t) of the linear interpolation equation.
    * where t is <= 1 and >= 0. If t is less than 1, repeated call to the `currenTransform` method will yield
    * a different value.
+   * `manageZoom` whether or not to have this set up the zoom listener.
+   * `managePan` whether or not to have this set up the pan listener.
    */
-  constructor({ transformReference, devicePixelRatio = 1, easeFactor = 1 }) {
+  constructor({
+    transformReference,
+    devicePixelRatio = 1,
+    easeFactor = 1,
+    managePan = true,
+    manageZoom = true,
+  }) {
     this.#easeFactor = easeFactor;
     if (transformReference) {
       this.#getTransformReference = transformReference;
@@ -104,40 +113,44 @@ class PetiteTransform {
 
     this.#cumulatedTransform.setTransform(0, 0, 1);
 
-    this.#addEventListener("mousedown", (e) => {
-      this.#onmousedown({
-        x: e.x * devicePixelRatio,
-        y: e.y * devicePixelRatio,
-      });
-    });
-
-    this.#addEventListener("mousemove", (e) => {
-      this.#onmousemove({
-        x: e.x * devicePixelRatio,
-        y: e.y * devicePixelRatio,
-      });
-    });
-
-    this.#addEventListener("mouseup", (e) => {
-      this.#onmouseup({
-        x: e.x * devicePixelRatio,
-        y: e.y * devicePixelRatio,
-      });
-    });
-
-    this.#addEventListener(
-      "wheel",
-      (e) => {
-        e.preventDefault();
-
-        this.#onwheel({
+    if (managePan) {
+      this.#addEventListener("mousedown", (e) => {
+        this.#onmousedown({
           x: e.x * devicePixelRatio,
           y: e.y * devicePixelRatio,
-          deltaY: e.deltaY,
         });
-      },
-      { passive: false }
-    );
+      });
+
+      this.#addEventListener("mousemove", (e) => {
+        this.#onmousemove({
+          x: e.x * devicePixelRatio,
+          y: e.y * devicePixelRatio,
+        });
+      });
+
+      this.#addEventListener("mouseup", (e) => {
+        this.#onmouseup({
+          x: e.x * devicePixelRatio,
+          y: e.y * devicePixelRatio,
+        });
+      });
+    }
+
+    if (manageZoom) {
+      this.#addEventListener(
+        "wheel",
+        (e) => {
+          e.preventDefault();
+
+          this.#onwheel({
+            x: e.x * devicePixelRatio,
+            y: e.y * devicePixelRatio,
+            deltaY: e.deltaY,
+          });
+        },
+        { passive: false }
+      );
+    }
   }
 
   /**
