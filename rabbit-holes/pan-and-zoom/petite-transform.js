@@ -51,9 +51,9 @@ class PetiteTransform {
      * This is to prevent any translation method in an animation frame from applying the
      * same transform twice. If you need the same transform in multiple places, store it in a variable somewhere.
      *
-     * @type {() => {dx: number, dy: number, dz: number}}
+     * @type {(type: "relative" | "absolute") => {dx: number, dy: number, dz: number}}
      */
-    getTransform: function () {
+    getTransform: function (type) {
       const returnVal = { dx: this.dx, dy: this.dy, dz: this.dz };
 
       this.dx = 0;
@@ -62,7 +62,7 @@ class PetiteTransform {
 
       this.total.update(returnVal);
 
-      return returnVal;
+      return type === "relative" ? returnVal : this.total.pos;
     },
   };
   #isMouseDown = false;
@@ -161,17 +161,6 @@ class PetiteTransform {
   }
 
   /**
-   * Returns the cumulated transform throughout the lifecyle of this canvas.
-   *
-   * Useful for when you want to sync multiple canvases to one transform while switching between them.
-   *
-   * @returns {{x: number, y: number, z: number}}
-   */
-  get cumulatedTransform() {
-    return this.#cumulatedTransform.total.pos;
-  }
-
-  /**
    * Call this when you would like to remove all event listeners.
    */
   dispose() {
@@ -187,10 +176,25 @@ class PetiteTransform {
    * like `ctx.setTransform` instead of something like `ctx.transform` or
    * `ctx.translate`, the transformations will not work correctly.
    *
+   * For something to use with the former, please refer to `currentAbsolteTransform`.
+   *
    * @type {() => {dx: number, dy: number, dz: number}}
    */
-  get currentTransform() {
-    return this.#cumulatedTransform.getTransform();
+  get currentRelativeTransform() {
+    return this.#cumulatedTransform.getTransform("relative");
+  }
+
+  /**
+   * Returns the absolute, cumulated transform throughout the lifecyle of this canvas.
+   *
+   * Useful for when you want to sync multiple canvases to one transform while switching between them as this can be treated as the source of truth.
+   *
+   * But kind of useless if the transformReference is set to Nonnull value (the source of truth is not this anymore and the value won't be accurate).
+   *
+   * @returns {{x: number, y: number, z: number}}
+   */
+  get currentAbsoluteTransform() {
+    return this.#cumulatedTransform.getTransform("absolute");
   }
 
   #addEventListener(type, callback, options) {

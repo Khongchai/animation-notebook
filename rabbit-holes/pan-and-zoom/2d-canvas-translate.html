@@ -91,15 +91,24 @@ but the events are throttled such that all actions are done within the confines 
       ctx.setTransform([1, 0, 0, 1, 0, 0]);
       ctx.clearRect(0, 0, w, h);
       ctx.restore();
-      const transform = t.currentTransform;
-      ctx.transform(
-        transform.dz,
+      const transform = t.currentAbsoluteTransform;
+      ctx.setTransform(
+        transform.z,
         0,
         0,
-        transform.dz,
-        transform.dx,
-        transform.dy
+        transform.z,
+        transform.x,
+        transform.y
       );
+      // const transform = t.currentRelativeTransform;
+      // ctx.transform(
+      //   transform.dz,
+      //   0,
+      //   0,
+      //   transform.dz,
+      //   transform.dx,
+      //   transform.dy
+      // );
       drawGrid({
         width: 1200,
         height: 1200,
