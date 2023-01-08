@@ -31,8 +31,8 @@ but the events are throttled such that all actions are done within the confines 
   </body>
   <script>
     const canvas = document.getElementById("canvas");
-    const w = window.innerWidth * devicePixelRatio;
-    const h = window.innerHeight * devicePixelRatio;
+    let w = window.innerWidth * devicePixelRatio;
+    let h = window.innerHeight * devicePixelRatio;
     canvas.width = w;
     canvas.height = h;
     const ctx = canvas.getContext("2d");
@@ -53,28 +53,6 @@ but the events are throttled such that all actions are done within the confines 
       //   };
       // },
     });
-
-    const follower = {
-      x: w / 2,
-      y: w / 2,
-      r: 20,
-      apply: function (dx, dy, dz) {
-        this.x += dx;
-        this.y += dy;
-        this.r *= dz;
-      },
-
-      draw: function (ctx) {
-        ctx.save();
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
-
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.restore();
-      },
-    };
 
     t.onUpdate((dx, dy, dz) => {
       console.log(dx, dy, dz);
@@ -143,13 +121,19 @@ but the events are throttled such that all actions are done within the confines 
         column: 15,
         row: 15,
       });
-      follower.draw(ctx);
       requestAnimationFrame(draw);
     };
 
     draw();
   </script>
   <script>
+    window.addEventListener("resize", (_) => {
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * devicePixelRatio;
+      canvas.height = rect.height * devicePixelRatio;
+      w = canvas.width;
+      h = canvas.height;
+    });
     // Mocking external interactions.
     document.addEventListener("keypress", (event) => {
       const { a, d, e, f } = ctx.getTransform();
