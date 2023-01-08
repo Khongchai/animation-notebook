@@ -42,7 +42,7 @@ but the events are throttled such that all actions are done within the confines 
     const t = new PetiteTransform({
       easeFactor: 1,
       devicePixelRatio,
-      // If nul or undefined, the thing all transforms will be managed by the lib.
+      // If nul or undefined, all transforms will be managed by the lib.
       transformReference: null,
       // transformReference: () => {
       //   const t = ctx.getTransform();
@@ -52,6 +52,32 @@ but the events are throttled such that all actions are done within the confines 
       //     z: t.a,
       //   };
       // },
+    });
+
+    const follower = {
+      x: w / 2,
+      y: w / 2,
+      r: 20,
+      apply: function (dx, dy, dz) {
+        this.x += dx;
+        this.y += dy;
+        this.r *= dz;
+      },
+
+      draw: function (ctx) {
+        ctx.save();
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+      },
+    };
+
+    t.onUpdate((dx, dy, dz) => {
+      console.log(dx, dy, dz);
     });
 
     ctx.strokeStyle = "black";
@@ -117,6 +143,7 @@ but the events are throttled such that all actions are done within the confines 
         column: 15,
         row: 15,
       });
+      follower.draw(ctx);
       requestAnimationFrame(draw);
     };
 

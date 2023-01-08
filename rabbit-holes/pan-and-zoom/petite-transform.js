@@ -2,6 +2,7 @@
 // Simplify API find a way to simplify things further
 // Managed mode, where the lib manages all canvas transformations.
 // Check if the listeners are actually being removed.
+// TODO another level of abstraction above this.
 class PetiteTransform {
   /**
    * @type {() => {x: number, y: number, z: number}} `x` is the x offset, `y` the y offset, and `z` the zoom scale.
@@ -9,19 +10,29 @@ class PetiteTransform {
   #getTransformReference;
   // TODO
   #easeFactor = 1;
+  /**
+   * @type {HTMLElement}
+   */
   #eventTarget;
   #cumulatedTransform = {
     dx: 0,
     dy: 0,
     dz: 1,
     total: {
+      _parent: this,
       pos: { x: 0, y: 0, z: 1 },
       update: function ({ dx, dy, dz }) {
         // Apply translation first.
         // This is the dot product of the existing matrix and the incoming matrix.
-        this.pos.x = this.pos.x + dx * this.pos.z;
-        this.pos.y = this.pos.y + dy * this.pos.z;
+        this.pos.x += dx *= this.pos.z;
+        this.pos.y += dy *= this.pos.z;
         this.pos.z *= dz;
+
+        // Don't return if is identity transform
+        const iTransform = !dx && !dy && dz === 1;
+        if (!iTransform) {
+          this._parent.#onUpdateListeners.forEach((f) => f(dx, dy, dz));
+        }
       },
     },
     /**
@@ -80,6 +91,10 @@ class PetiteTransform {
    * @type {{type: string, callback: () => any}[]}
    */
   #listenersRefs = [];
+  /**
+   * @type {((dx: number, dy: number, dz: number) => any)[]}
+   */
+  #onUpdateListeners = [];
 
   /**
    *
@@ -129,7 +144,7 @@ class PetiteTransform {
       });
 
       this.#addEventListener("mousemove", (e) => {
-        this.onpan({
+        this.#onpan({
           x: e.x * devicePixelRatio,
           y: e.y * devicePixelRatio,
         });
@@ -149,7 +164,7 @@ class PetiteTransform {
         (e) => {
           e.preventDefault();
 
-          this.#onwheel({
+          this.#onZoom({
             x: e.x * devicePixelRatio,
             y: e.y * devicePixelRatio,
             deltaY: e.deltaY,
@@ -167,6 +182,7 @@ class PetiteTransform {
     this.#listenersRefs.forEach((obj) =>
       this.#eventTarget.removeEventListener(obj.type, obj.callback, obj.options)
     );
+    this.#onUpdateListeners = [];
   }
 
   /**
@@ -189,7 +205,7 @@ class PetiteTransform {
    *
    * Useful for when you want to sync multiple canvases to one transform while switching between them as this can be treated as the source of truth.
    *
-   * But kind of useless if the transformReference is set to Nonnull value (the source of truth is not this anymore and the value won't be accurate).
+   * But kind of useless if the `transformReference` is set to a non-null value (the source of truth is not this anymore and the value won't be accurate).
    *
    * @returns {{x: number, y: number, z: number}}
    */
@@ -218,36 +234,50 @@ class PetiteTransform {
   /**
    * @param {{x: number, y: number}} e
    */
-  onpan(e) {
+  #onpan(e) {
     if (this.#isMouseDown) {
       const dx = e.x - this.#panOffset.prev.x;
       const dy = e.y - this.#panOffset.prev.y;
 
-      const globalDx = dx / this.#getTransformReference().z;
-      const globalDy = dy / this.#getTransformReference().z;
+      const worldDx = dx / this.#getTransformReference().z;
+      const worldDy = dy / this.#getTransformReference().z;
       this.#panOffset.prev.x = e.x;
       this.#panOffset.prev.y = e.y;
 
-      this.#cumulatedTransform.setTransformIncrement(globalDx, globalDy);
+      this.#cumulatedTransform.setTransformIncrement(worldDx, worldDy);
     }
   }
 
   /**
    * @param {{x: number, y: number, deltaY: number}} e
    */
-  #onwheel(e) {
+  #onZoom(e) {
     const change = -e.deltaY * 0.0005;
     const { x, y, z } = this.#getTransformReference();
 
     // Grab the world space position of the cursor so that we can calculate
     // later how much to offset the canvas by after zooming.
-    const wx = (e.x - x) / z;
-    const wy = (e.y - y) / z;
+    const wt = {
+      dx: ((x - e.x) * change) / z,
+      dy: ((y - e.y) * change) / z,
+      dz: 1 + change,
+    };
+    this.#cumulatedTransform.setTransform(wt.dx, wt.dy, wt.dz);
+  }
 
-    this.#cumulatedTransform.setTransform(
-      -wx * change,
-      -wy * change,
-      1 + change
+  disposeAdditionalListener(callback) {
+    this.#onUpdateListeners = this.#onUpdateListeners.filter(
+      (thing) => thing != callback
     );
+  }
+
+  /**
+   * Attach additional listners that wants to receive the information about the transformation being applied to the current matrix.
+   *
+   * @param {(dx: number, dy: number, dz: number) => void} callback always return the change for the current transform in world space.
+   * 0 will be returned for dx and dy when no changes are made in the axis, and 1 for dz (eg. in the case of panning).
+   */
+  onUpdate(callback) {
+    this.#onUpdateListeners.push(callback);
   }
 }
