@@ -113,7 +113,7 @@ class PetiteTransform {
 
   /**
    *
-   * @param {{transformReference?: () => {x: number, y: number, z: number}, devicePixelRatio?: number, easeFactor?: 1, manageZoom?: boolean, managePan?: boolean}}
+   * @param {{transformReference?: () => {x: number, y: number, z: number}, devicePixelRatio?: number, easeFactor?: 1, manageZoom?: boolean, managePan?: boolean, zoomSettings?: {max: number, min: number}}}
    * `transformReference` a callback that returns the current transform of the canvas.
    * This sets up the two different modes, the relative mode, which uses the reference to the current transform outside
    * the control of this canvas, and the absolute mode, which does not care about anything else and will treat itself as the source of the transformational truth.
