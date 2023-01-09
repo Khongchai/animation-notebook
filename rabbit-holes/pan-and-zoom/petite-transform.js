@@ -8,6 +8,10 @@ class PetiteTransform {
    * @type {() => {x: number, y: number, z: number}} `x` is the x offset, `y` the y offset, and `z` the zoom scale.
    */
   #getTransformReference;
+  /**
+   * @type {{max: number, min: number}}
+   */
+  #zoomSettings;
   // TODO
   #easeFactor = 1;
   /**
@@ -24,14 +28,25 @@ class PetiteTransform {
       update: function ({ dx, dy, dz }) {
         // Apply translation first.
         // This is the dot product of the existing matrix and the incoming matrix.
-        this.pos.x += dx *= this.pos.z;
-        this.pos.y += dy *= this.pos.z;
+        this.pos.x += dx * this.pos.z;
+        this.pos.y += dy * this.pos.z;
         this.pos.z *= dz;
 
         // Don't return if is identity transform
         const iTransform = !dx && !dy && dz === 1;
         if (!iTransform) {
-          this._parent.#onUpdateListeners.forEach((f) => f(dx, dy, dz));
+          this._parent.#onUpdateListeners.forEach((f) =>
+            f({
+              absolute: {
+                ...this.pos,
+              },
+              relative: {
+                dx,
+                dy,
+                dz,
+              },
+            })
+          );
         }
       },
     },
@@ -92,7 +107,7 @@ class PetiteTransform {
    */
   #listenersRefs = [];
   /**
-   * @type {((dx: number, dy: number, dz: number) => any)[]}
+   * @type {(({absolute: {x: number, y: number, z: number}, relative: {dx: number, dy: number, dz: number}}) => any)[]}
    */
   #onUpdateListeners = [];
 
@@ -118,7 +133,12 @@ class PetiteTransform {
     managePan = true,
     manageZoom = true,
     eventTarget = document,
+    zoomSettings = {
+      max: Number.POSITIVE_INFINITY,
+      min: Number.NEGATIVE_INFINITY,
+    },
   }) {
+    this.#zoomSettings = zoomSettings;
     this.#easeFactor = easeFactor;
     if (transformReference) {
       this.#getTransformReference = transformReference;
@@ -262,6 +282,13 @@ class PetiteTransform {
       dy: ((y - e.y) * change) / z,
       dz: 1 + change,
     };
+
+    const { max, min } = this.#zoomSettings;
+    const futureZoom = wt.dz * z;
+    if (max < futureZoom || min > futureZoom) {
+      return;
+    }
+
     this.#cumulatedTransform.setTransform(wt.dx, wt.dy, wt.dz);
   }
 
@@ -274,7 +301,7 @@ class PetiteTransform {
   /**
    * Attach additional listners that wants to receive the information about the transformation being applied to the current matrix.
    *
-   * @param {(dx: number, dy: number, dz: number) => void} callback always return the change for the current transform in world space.
+   * @param {({absolute: {x: number, y: number, z: number}, relative: {dx: number, dy: number, dz: number}}) => void} callback always return the change for the current transform in world space.
    * 0 will be returned for dx and dy when no changes are made in the axis, and 1 for dz (eg. in the case of panning).
    */
   onUpdate(callback) {
