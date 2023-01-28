@@ -140,8 +140,8 @@
     // 1.1, 20.5, 2.3, 6.0;
     const betaScale = 5;
     const gammaScale = 5;
-    const deltaScale = 10;
-    const omegaScale = 20;
+    const deltaScale = 5;
+    const omegaScale = 5;
 
     // Algorithm: find the lcm of all the scalars, calculate as fractions,
     // ex: lcm(0.7, 0.316, 0.132) => 1000 / gcd(700, 316, 132);
@@ -162,8 +162,9 @@
       deltaScale,
       omegaScale,
     ]);
+    console.log(lcmResult);
 
-    const points = baseStepsRequiredForACircle * Math.ceil(lcmResult) + 1;
+    const points = baseStepsRequiredForACircle * lcmResult + 1;
     console.log("Points amount: " + points);
 
     const cycloids = [
