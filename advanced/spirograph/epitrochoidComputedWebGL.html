@@ -125,15 +125,16 @@
 
     const step = (Math.PI * 2) / baseStepsRequiredForACircle;
 
-    const betaScale = 5;
-    const gammaScale = 5;
-    const deltaScale = 5;
+    const betaScale = 10;
+    const gammaScale = 20;
+    const deltaScale = 15;
 
     const lcmResult = fractional_lcm([
       betaScale,
       gammaScale,
       deltaScale,
     ]);
+    console.log("lcm result: " + lcmResult);
 
     const points = baseStepsRequiredForACircle * lcmResult + 1;
     console.log("Points amount: " + points);
