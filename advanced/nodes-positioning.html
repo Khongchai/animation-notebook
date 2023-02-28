@@ -42,6 +42,7 @@
             const newNode = args?.parent
               ? { parent: args.parent, x: 0, y: 0 }
               : { parent: null };
+            newNode.children = [];
             this.nodes.push(newNode);
 
             return newNode;
@@ -82,7 +83,8 @@
             ctx.fill();
 
             if (n.parent) {
-              const { bottom, top } = lineBuilder(n.parent, n);
+              n.parent.children.push(n);
+              const { bottom, top } = lineBuilder(n);
               ctx.beginPath();
               ctx.moveTo(bottom.x, bottom.y);
               ctx.lineTo(top.x, top.y);
@@ -117,45 +119,44 @@
   </script>
   <script>
     // Draw
-    LevelFactory.drawNodes(
-      ctx,
-      // where parent === child.parent
-      (parent, child) => {
-        const x1 = child.x;
-        const y1 = child.y;
-        const r1 = child.r;
+    LevelFactory.drawNodes(ctx, (node) => {
+      const parent = node.parent;
 
-        const x2 = parent.x;
-        const y2 = parent.y;
-        const r2 = parent.r;
+      const x1 = node.x;
+      const y1 = node.y;
+      const r1 = node.r;
 
-        const xOffsetScale = 0.2;
+      const x2 = parent.x;
+      const y2 = parent.y;
+      const r2 = parent.r;
 
-        const xOffset = (x2 - x1) * xOffsetScale;
+      const xOffsetScale = 0.2;
+      let xOffset = (x2 - x1) * xOffsetScale;
+      let sign = Math.sign(xOffset);
+      xOffset = Math.pow(Math.abs(xOffset), 0.65) * sign;
 
-        const clamp = (n, min, max) => Math.min(Math.max(n, min), max);
-        const finalX = clamp(x2 - xOffset, x2 - r2, x2 + r2);
-        const k = Math.max(
-          0,
-          -Math.pow(x2, 2) +
-            2 * x2 * finalX +
-            Math.pow(r2, 2) -
-            Math.pow(finalX, 2)
-        );
+      const clamp = (n, min, max) => Math.min(Math.max(n, min), max);
+      const finalX = clamp(x2 - xOffset, x2 - r2, x2 + r2);
+      const k = Math.max(
+        0,
+        -Math.pow(x2, 2) +
+          2 * x2 * finalX +
+          Math.pow(r2, 2) -
+          Math.pow(finalX, 2)
+      );
 
-        const finalY = Math.sqrt(k) + y2;
+      const finalY = Math.sqrt(k) + y2;
 
-        return {
-          top: {
-            x: finalX,
-            y: finalY,
-          },
-          bottom: {
-            x: x1,
-            y: y1 - r1,
-          },
-        };
-      }
-    );
+      return {
+        top: {
+          x: finalX,
+          y: finalY,
+        },
+        bottom: {
+          x: x1,
+          y: y1 - r1,
+        },
+      };
+    });
   </script>
 </html>
