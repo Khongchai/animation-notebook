@@ -66,11 +66,36 @@
         radius: 30,
       },
 
-      drawNodes: function (ctx, lineBuilder) {
+      buildNodes: (level1Count) => {
+        // lv0
+        const level0 = LevelFactory.newLevel();
+        const rootNode = level0.addNode();
+
+        // lvl1
+        const level1 = LevelFactory.newLevel();
+        for (let i = 0; i < level1Count; i++) {
+          level1.addNode({ parent: rootNode });
+        }
+
+        // Add here for more levels
+      },
+
+      drawNodes: function (count, ctx, lineBuilder) {
+        this.buildNodes(count);
         const { radius, center, margin } = this.config;
 
         for (let i = 0; i < this.levels.length; i++) {
           const level = this.levels[i];
+          // Just some extra information about the position of the nodes
+          // in this level.
+          const meta = {
+            absoluteMax:
+              center.x +
+              margin.x * (level.nodes.length - 1) -
+              (margin.x / 2) * (level.nodes.length - 1),
+            absoluteMin: center.x - (margin.x / 2) * (level.nodes.length - 1),
+          };
+
           for (let j = 0; j < level.nodes.length; j++) {
             const xPos = center.x + margin.x * j;
             const xOffset = (margin.x / 2) * (level.nodes.length - 1);
@@ -84,10 +109,11 @@
 
             if (n.parent) {
               n.parent.children.push(n);
-              const { bottom, top } = lineBuilder(n);
+              const { bottom, top } = lineBuilder(n, meta);
               ctx.beginPath();
               ctx.moveTo(bottom.x, bottom.y);
               ctx.lineTo(top.x, top.y);
+              ctx.strokeStyle = "red";
               ctx.stroke();
             }
           }
@@ -95,31 +121,76 @@
       },
     };
   </script>
+  <!-- Everything above is just a set up code, ignore them. -->
   <script>
-    // lv0
-    const level0 = LevelFactory.newLevel();
-    const rootNode = level0.addNode();
+    let childNodeCount = 5;
+    /**
+     * Node definition.
+     *
+     * Node: {
+     *  parent: Node,
+     *  children: Node[]
+     *  x: number,
+     *  y: number,
+     *  r: number
+     * }
+     */
+    LevelFactory.drawNodes(childNodeCount, ctx, (node, meta) => {
+      const parent = node.parent;
+      const x1 = node.x;
+      const y1 = node.y;
 
-    // lv1
-    const level1 = LevelFactory.newLevel();
-    level1.addNode({ parent: rootNode });
-    const middleNodeFromLevel1 = level1.addNode({ parent: rootNode });
-    level1.addNode({ parent: rootNode });
+      const x2 = parent.x;
+      const y2 = parent.y;
 
-    // // lv2
-    const level2 = LevelFactory.newLevel();
-    level2.addNode({ parent: middleNodeFromLevel1 });
-    level2.addNode({ parent: middleNodeFromLevel1 });
-    level2.addNode({ parent: middleNodeFromLevel1 });
-    level2.addNode({ parent: middleNodeFromLevel1 });
-    level2.addNode({ parent: middleNodeFromLevel1 });
-    level2.addNode({ parent: middleNodeFromLevel1 });
-    level2.addNode({ parent: middleNodeFromLevel1 });
-    level2.addNode({ parent: middleNodeFromLevel1 });
+      const k = 0.2;
+
+      const minPositionInTheLeft = canvas.width * k;
+
+      let offsetX = (x1 - x2) * k; // moved here
+      const remap = () => {
+        const oldMax = meta.absoluteMax;
+        const oldMin = meta.absoluteMin;
+
+        const newMax = x2 + parent.r;
+        const newMin = x2 - parent.r;
+
+        const oldVal = x1;
+
+        const newValueAsFraction = (oldVal - oldMin) / (oldMax - oldMin);
+        const newValue = newMin + (newMax - newMin) * newValueAsFraction;
+
+        return newValue;
+      };
+
+      const finalX = remap();
+
+      const finalY =
+        Math.sqrt(
+          Math.max(
+            0,
+            -Math.pow(x2, 2) +
+              2 * x2 * finalX +
+              Math.pow(parent.r, 2) -
+              Math.pow(finalX, 2)
+          )
+        ) + y2;
+
+      return {
+        top: {
+          x: finalX,
+          y: finalY,
+        },
+        bottom: {
+          x: x1,
+          y: y1 - node.r,
+        },
+      };
+    });
   </script>
-  <script>
-    // Draw
-    LevelFactory.drawNodes(ctx, (node) => {
+</html>
+
+<!--  LevelFactory.drawNodes(ctx, (node) => {
       const parent = node.parent;
 
       const x1 = node.x;
@@ -157,6 +228,4 @@
           y: y1 - r1,
         },
       };
-    });
-  </script>
-</html>
+    }); -->
