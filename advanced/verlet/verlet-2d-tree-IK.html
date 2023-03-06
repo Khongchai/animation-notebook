@@ -17,8 +17,12 @@
         padding: 0;
         margin: 0;
         background-color: rgb(20, 25, 45);
+        width: 100%;
+        height: 100%;
       }
       canvas {
+        width: 100%;
+        height: 100%;
         display: block;
       }
     </style>
@@ -230,8 +234,8 @@
   <script>
     let canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
-    var width = window.innerWidth;
-    var height = window.innerHeight;
+    var width = window.innerWidth * devicePixelRatio;
+    var height = window.innerHeight * devicePixelRatio;
     canvas.width = width;
     canvas.height = height;
 
@@ -411,8 +415,8 @@
   <script>
     window.addEventListener("mousedown", (e) => {
       points.forEach((p) => {
-        const dx = e.clientX - p.x;
-        const dy = e.clientY - p.y;
+        const dx = e.clientX * devicePixelRatio - p.x;
+        const dy = e.clientY * devicePixelRatio - p.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
         if (dist < pointRadius) {
           pointToMove = p;
@@ -425,8 +429,8 @@
     });
 
     window.addEventListener("mousemove", (e) => {
-      mouse.x = e.x;
-      mouse.y = e.y;
+      mouse.x = e.x * devicePixelRatio;
+      mouse.y = e.y * devicePixelRatio;
     });
   </script>
 </html>

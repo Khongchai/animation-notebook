@@ -123,7 +123,7 @@
   </script>
   <!-- Everything above is just a set up code, ignore them. -->
   <script>
-    let childNodeCount = 5;
+    let childNodeCount = 8;
     /**
      * Node definition.
      *
@@ -135,7 +135,7 @@
      *  r: number
      * }
      */
-    LevelFactory.drawNodes(childNodeCount, ctx, (node, meta) => {
+    LevelFactory.drawNodes(childNodeCount, ctx, (node) => {
       const parent = node.parent;
       const x1 = node.x;
       const y1 = node.y;
@@ -144,26 +144,12 @@
       const y2 = parent.y;
 
       const k = 0.2;
+      let xOffset = (x1 - x2) * k;
+      let sign = Math.sign(xOffset);
+      xOffset = Math.pow(Math.abs(xOffset), 0.65) * sign;
 
-      const minPositionInTheLeft = canvas.width * k;
-
-      let offsetX = (x1 - x2) * k; // moved here
-      const remap = () => {
-        const oldMax = meta.absoluteMax;
-        const oldMin = meta.absoluteMin;
-
-        const newMax = x2 + parent.r;
-        const newMin = x2 - parent.r;
-
-        const oldVal = x1;
-
-        const newValueAsFraction = (oldVal - oldMin) / (oldMax - oldMin);
-        const newValue = newMin + (newMax - newMin) * newValueAsFraction;
-
-        return newValue;
-      };
-
-      const finalX = remap();
+      const clamp = (n, min, max) => Math.min(Math.max(n, min), max);
+      const finalX = clamp(x2 + xOffset, x2 - parent.r, x2 + parent.r);
 
       const finalY =
         Math.sqrt(

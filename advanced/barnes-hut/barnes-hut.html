@@ -12,8 +12,12 @@
         padding: 0;
         margin: 0;
         font-family: "Selawik";
+        width: 100%;
+        height: 100%;
       }
       canvas {
+        width: 100%;
+        height: 100%;
         position: absolute;
         left: 0;
         top: 0;
@@ -51,8 +55,8 @@
   <script>
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
-    const width = window.innerWidth;
-    const height = window.innerHeight;
+    const width = window.innerWidth * devicePixelRatio;
+    const height = window.innerHeight * devicePixelRatio;
 
     canvas.width = width;
     canvas.height = height;
@@ -80,7 +84,12 @@
       }
     });
     document.addEventListener("click", (e) => {
-      const newParticle = new Particle(e.clientX, e.clientY, 0, 0);
+      const newParticle = new Particle(
+        e.clientX * devicePixelRatio,
+        e.clientY * devicePixelRatio,
+        0,
+        0
+      );
       newParticle.mass = particleMass;
       newParticle.radius = 5 + particleMass;
       particles.push(newParticle);
