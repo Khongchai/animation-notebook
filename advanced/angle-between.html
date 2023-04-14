@@ -20,8 +20,8 @@
   <script>
     let canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
-    var width = window.innerWidth;
-    var height = window.innerHeight;
+    var width = window.innerWidth * devicePixelRatio;
+    var height = window.innerHeight * devicePixelRatio;
     canvas.width = width;
     canvas.height = height;
 

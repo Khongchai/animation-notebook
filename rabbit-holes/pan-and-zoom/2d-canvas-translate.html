@@ -41,10 +41,10 @@ but the events are throttled such that all actions are done within the confines 
   <script src="petite-transform.js"></script>
   <script>
     const t = new PetiteTransform({
-      easeFactor: 1,
-      devicePixelRatio,
       // If nul or undefined, all transforms will be managed by the lib.
-      transformReference: null,
+      // transformReference: null,
+      // easeFactor: 1, // defaults to 1
+      devicePixelRatio, // defaults to 1
       zoomSettings: {
         max: 2,
         min: 0.5,
@@ -59,24 +59,24 @@ but the events are throttled such that all actions are done within the confines 
       // },
     });
 
-    t.onUpdate(({ absolute, relative }) => {
-      ctx.save();
-      ctx.setTransform([1, 0, 0, 1, 0, 0]);
-      ctx.clearRect(0, 0, w, h);
-      ctx.restore();
-      const { dx, dy, dz } = relative;
-      // const { x, y, z } = absolute;
-      ctx.transform(dz, 0, 0, dz, dx, dy);
-      // ctx.setTransform(z, 0, 0, z, x, y);
-      drawGrid({
-        width: 1200,
-        height: 1200,
-        x: w / 2,
-        y: h / 2,
-        column: 15,
-        row: 15,
-      });
-    });
+    // t.onUpdate(({ absolute, relative }) => {
+    //   ctx.save();
+    //   ctx.setTransform([1, 0, 0, 1, 0, 0]);
+    //   ctx.clearRect(0, 0, w, h);
+    //   ctx.restore();
+    //   const { dx, dy, dz } = relative;
+    //   // const { x, y, z } = absolute;
+    //   ctx.transform(dz, 0, 0, dz, dx, dy);
+    //   // ctx.setTransform(z, 0, 0, z, x, y);
+    //   drawGrid({
+    //     width: 1200,
+    //     height: 1200,
+    //     x: w / 2,
+    //     y: h / 2,
+    //     column: 15,
+    //     row: 15,
+    //   });
+    // });
 
     ctx.strokeStyle = "black";
 
@@ -110,45 +110,45 @@ but the events are throttled such that all actions are done within the confines 
       ctx.fill();
     }
 
-    const draw = () => {
-      t.currentAbsoluteTransform;
-      requestAnimationFrame(draw);
-    };
-
     // const draw = () => {
-    //   ctx.save();
-    //   ctx.setTransform([1, 0, 0, 1, 0, 0]);
-    //   ctx.clearRect(0, 0, w, h);
-    //   ctx.restore();
-    //   const transform = t.currentAbsoluteTransform;
-    //   ctx.setTransform(
-    //     transform.z,
-    //     0,
-    //     0,
-    //     transform.z,
-    //     transform.x,
-    //     transform.y
-    //   );
-    //   // const transform = t.currentRelativeTransform;
-    //   // ctx.transform(
-    //   //   transform.dz,
-    //   //   0,
-    //   //   0,
-    //   //   transform.dz,
-    //   //   transform.dx,
-    //   //   transform.dy
-    //   // );
-    //   drawGrid({
-    //     width: 1200,
-    //     height: 1200,
-    //     x: w / 2,
-    //     y: h / 2,
-    //     column: 15,
-    //     row: 15,
-    //   });
-    //   follower.draw(ctx);
+    //   t.currentAbsoluteTransform;
     //   requestAnimationFrame(draw);
     // };
+
+    const draw = () => {
+      ctx.save();
+      ctx.setTransform([1, 0, 0, 1, 0, 0]);
+      ctx.clearRect(0, 0, w, h);
+      ctx.restore();
+
+      const transform = t.currentAbsoluteTransform;
+      ctx.setTransform(
+        transform.z,
+        0,
+        0,
+        transform.z,
+        transform.x,
+        transform.y
+      );
+      // const transform = t.currentRelativeTransform;
+      // ctx.transform(
+      //   transform.dz,
+      //   0,
+      //   0,
+      //   transform.dz,
+      //   transform.dx,
+      //   transform.dy
+      // );
+      drawGrid({
+        width: 1200,
+        height: 1200,
+        x: w / 2,
+        y: h / 2,
+        column: 15,
+        row: 15,
+      });
+      requestAnimationFrame(draw);
+    };
 
     draw();
   </script>

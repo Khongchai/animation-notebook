@@ -11,12 +11,8 @@
         border: 0;
         padding: 0;
         margin: 0;
-        width: 100%;
-        height: 100%;
       }
       canvas {
-        width: 100%;
-        height: 100%;
         display: block;
       }
     </style>
@@ -39,8 +35,8 @@
   </script>
   <script>
     const canvas = document.getElementById("canvas");
-    const w = window.innerWidth * devicePixelRatio;
-    const h = window.innerHeight * devicePixelRatio;
+    const w = window.innerWidth;
+    const h = window.innerHeight;
     canvas.width = w;
     canvas.height = h;
     const ctx = canvas.getContext("2d");
@@ -57,7 +53,7 @@
       endValue: circleEnd,
       propertiesToTween: ["radius"],
       duration: 3000,
-      tweenType: "bounce1",
+      tweenType: "bounce2",
       callback: () => {
         ctx.clearRect(0, 0, w, h);
         ctx.beginPath();
@@ -66,5 +62,36 @@
         ctx.fill();
       },
     });
+  </script>
+  <script>
+    // POC API - subject to heavy change.
+    // Has just 1 beginning shape (oblong, like the ios navbar)
+    interface CreateBlobsFunction {
+        splitConfig: {
+            // Determines the amount of elements. Before the split, all elements will be clumped together
+            elements: HTMLElement[]
+            start: {
+                // The position before the split in pixels.
+                pos: {x: number, y: number};
+            },
+            end: {
+                // The position of either each blob in pixels or everything altogether.
+                // The number of individual position must match the number of provided html elements.
+                pos: {all: {x: number, y: number}, gap: number} | {x: number, y: number}[]
+            }
+        }
+        aniamtion: {
+            // Animation easing types, easeInOut, easeIn, easeOut, spring, etc.
+            ease: EaseTypes,
+            durationInMilliseconds: number;
+        }
+        // The callback that when called, will trigger the animation.
+        activateSplit: VoidFuction;
+        progress: {
+            onStart: VoidFunction;
+            onEnd: VoidFunction;
+            whileAnimating(progress: number): void;
+        }
+    }
   </script>
 </html>

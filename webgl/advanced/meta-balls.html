@@ -220,7 +220,7 @@
                 float dist1 = distanceRatioCompensated(uv, newMousePos.xy);
                 float dist2 = distanceRatioCompensated(uv, newRandBlobPos.xy);
 
-                gl_FragColor = vec4(vec3(dist1 + dist2), 1.0);
+                gl_FragColor = vec4(floor(vec3(dist1 + dist2)), 1.0);
             }
         `;
 
