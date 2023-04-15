@@ -16,7 +16,7 @@ interface CreateBlobsFunction {
         | { x: number; y: number }[];
     };
   };
-  aniamtion: {
+  animation: {
     // Animation easing types, easeInOut, easeIn, easeOut, spring, etc.
     ease: EaseTypes;
     durationInMilliseconds: number;
