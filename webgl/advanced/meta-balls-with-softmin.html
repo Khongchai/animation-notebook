@@ -1,4 +1,5 @@
 <!-- full-screen square -->
+<!-- Available uniforms: uResoltuion, uMousePos -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -23,6 +24,32 @@
     <canvas id="glcanvas"></canvas>
   </body>
   <script>
+    // Play around here.
+    const fSource = `
+            precision highp float;
+
+            uniform vec2 uResolution;
+            // Because you keep forgetting, gl_FragCoord is 0,0 at the bottom left.
+            // This is already flipped to match glsl coord.
+            uniform vec2 uMousePos;
+
+            void main() {
+              vec2 st = gl_FragCoord.xy / uResolution;
+
+              gl_FragColor = vec4(st * uMousePos, 0.0 ,1.0);
+            }
+        `;
+
+    const vsSource = `
+            attribute vec4 aVertexPosition;
+
+            void main() {
+                gl_Position = aVertexPosition;
+            }
+        `;
+  </script>
+  <script>
+    // Main animation loop
     function draw(callback) {
       let then = 0;
 
@@ -38,8 +65,8 @@
 
       requestAnimationFrame(_draw);
     }
-  </script>
-  <script>
+
+    // Init a full-screen canvas
     function initBuffers(gl) {
       const positionBuffer = gl.createBuffer();
       gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
@@ -61,14 +88,8 @@
       };
     }
 
-    function drawScene(
-      gl,
-      programInfo,
-      positionBuffer,
-      delta,
-      mousePos,
-      randBlobLocation
-    ) {
+    function drawScene(gl, programInfo, positionBuffer, delta, mousePos) {
+      // Clear draw buffer
       gl.clearColor(0.0, 0.0, 0.0, 1.0);
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
@@ -104,11 +125,6 @@
         );
       }
 
-      gl.uniform2fv(
-        programInfo.uniformLocations.uRandBlobLocation,
-        new Float32Array([randBlobLocation.x, randBlobLocation.y])
-      );
-
       {
         const offset = 0;
         const vertexCount = 4;
@@ -133,8 +149,6 @@
       gl.compileShader(shader);
       return shader;
     }
-  </script>
-  <script>
     function resize(canvas) {
       // set canvas buffer size to canvas's CSS size.
       const rect = canvas.getBoundingClientRect();
@@ -142,22 +156,10 @@
       canvas.height = rect.height * dpr;
       gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
     }
-  </script>
-  <script>
     const canvas = document.getElementById("glcanvas");
-    const gl = canvas.getContext("webgl", { preserveDrawingBuffer: true });
+    const gl = canvas.getContext("webgl", { preserveDrawingBuffer: false });
     const dpr = Math.min(devicePixelRatio, 2);
     const mousePos = { x: 0, y: 0 };
-    const randBlobLocation = {
-      x: 0,
-      y: 0,
-      dx: 1,
-      dy: 1,
-      updateBlob: function () {
-        this.x += this.dx / window.innerWidth;
-        this.y += this.dy / window.innerHeight;
-      },
-    };
 
     window.addEventListener("resize", (e) => {
       resize(canvas);
@@ -165,46 +167,11 @@
 
     window.addEventListener("mousemove", (e) => {
       mousePos.x = e.x / window.innerWidth;
-      mousePos.y = e.y / window.innerHeight;
+      const flippedY = window.innerHeight - e.y;
+      mousePos.y = flippedY / window.innerHeight;
     });
 
     resize(canvas);
-
-    const vsSource = `
-            attribute vec4 aVertexPosition;
-
-            void main() {
-                gl_Position = aVertexPosition;
-            }
-        `;
-
-    const fSource = `
-            precision highp float;
-
-            // #define PI 3.14159265359
-
-            // TODO @khongchai understand this
-            vec2 square(vec2 st, in float size) {
-                return step(vec2(size), st) - step(vec2(1.0 - size), st);
-            }
-
-            // vec2 circle(vec2 st, in float radius) {
-            //     return step(length(st), radius);
-            // }
-
-            // TODO @khongchai continue working on this. Go copy code from chatGPT
-
-            uniform vec2 uResolution;
-            uniform vec2 uMousePos;
-            uniform vec2 uRandBlobLocation;
-
-
-            void main() {
-                vec2 st = gl_FragCoord.xy / uResolution;
-
-                gl_FragColor = vec4(square(st), 1.0, 1.0);
-            }
-        `;
 
     const shaderProgram = initShaderProgram(gl, vsSource, fSource);
 
@@ -216,25 +183,13 @@
       uniformLocations: {
         uResolution: gl.getUniformLocation(shaderProgram, "uResolution"),
         uMousePos: gl.getUniformLocation(shaderProgram, "uMousePos"),
-        uRandBlobLocation: gl.getUniformLocation(
-          shaderProgram,
-          "uRandBlobLocation"
-        ),
       },
     };
 
     const { positionBuffer } = initBuffers(gl);
 
     draw((delta) => {
-      randBlobLocation.updateBlob();
-      drawScene(
-        gl,
-        programInfo,
-        positionBuffer,
-        delta,
-        mousePos,
-        randBlobLocation
-      );
+      drawScene(gl, programInfo, positionBuffer, delta, mousePos);
     });
   </script>
 </html>

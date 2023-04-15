@@ -24,6 +24,31 @@
     <canvas id="glcanvas"></canvas>
   </body>
   <script>
+    // Play around here.
+    const fSource = `
+            precision highp float;
+
+            uniform vec2 uResolution;
+            // Because you keep forgetting, gl_FragCoord is 0,0 at the bottom left.
+            // This is already flipped to match glsl coord.
+            uniform vec2 uMousePos;
+
+            void main() {
+              vec2 st = gl_FragCoord.xy / uResolution;
+
+              gl_FragColor = vec4(st * uMousePos, 0.0 ,1.0);
+            }
+        `;
+
+    const vsSource = `
+            attribute vec4 aVertexPosition;
+
+            void main() {
+                gl_Position = aVertexPosition;
+            }
+        `;
+  </script>
+  <script>
     // Main animation loop
     function draw(callback) {
       let then = 0;
@@ -40,8 +65,7 @@
 
       requestAnimationFrame(_draw);
     }
-  </script>
-  <script>
+
     // Init a full-screen canvas
     function initBuffers(gl) {
       const positionBuffer = gl.createBuffer();
@@ -125,8 +149,6 @@
       gl.compileShader(shader);
       return shader;
     }
-  </script>
-  <script>
     function resize(canvas) {
       // set canvas buffer size to canvas's CSS size.
       const rect = canvas.getBoundingClientRect();
@@ -134,8 +156,6 @@
       canvas.height = rect.height * dpr;
       gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
     }
-  </script>
-  <script>
     const canvas = document.getElementById("glcanvas");
     const gl = canvas.getContext("webgl", { preserveDrawingBuffer: false });
     const dpr = Math.min(devicePixelRatio, 2);
@@ -152,30 +172,6 @@
     });
 
     resize(canvas);
-
-    const vsSource = `
-            attribute vec4 aVertexPosition;
-
-            void main() {
-                gl_Position = aVertexPosition;
-            }
-        `;
-
-    // Play around here.
-    const fSource = `
-            precision highp float;
-
-            uniform vec2 uResolution;
-            // Because you keep forgetting, gl_FragCoord is 0,0 at the bottom left.
-            // This is already flipped to match glsl coord.
-            uniform vec2 uMousePos;
-
-            void main() {
-              vec2 st = gl_FragCoord.xy / uResolution;
-
-              gl_FragColor = vec4(st * uMousePos, 0.0 ,1.0);
-            }
-        `;
 
     const shaderProgram = initShaderProgram(gl, vsSource, fSource);
 
