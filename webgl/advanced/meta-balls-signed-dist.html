@@ -1,0 +1,260 @@
+<!-- full-screen square -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Meta balls</title>
+    <style>
+      html,
+      body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+        height: 100%;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="glcanvas"></canvas>
+  </body>
+  <script>
+    function draw(callback) {
+      let then = 0;
+
+      function _draw(now) {
+        now *= 0.001;
+        const deltaTime = now - then;
+        then = now;
+
+        callback(deltaTime);
+
+        requestAnimationFrame(_draw);
+      }
+
+      requestAnimationFrame(_draw);
+    }
+  </script>
+  <script>
+    function initBuffers(gl) {
+      const positionBuffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+      // prettier-ignore
+      const positions = [
+        1.0,  1.0, 
+        1.0, -1.0,
+       -1.0,  1.0,
+       -1.0, -1.0
+      ];
+      gl.bufferData(
+        gl.ARRAY_BUFFER,
+        new Float32Array(positions),
+        gl.STATIC_DRAW
+      );
+
+      return {
+        positionBuffer,
+      };
+    }
+
+    function drawScene(
+      gl,
+      programInfo,
+      positionBuffer,
+      delta,
+      mousePos,
+      randBlobLocation
+    ) {
+      gl.clearColor(0.0, 0.0, 0.0, 1.0);
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+      gl.useProgram(programInfo.program);
+
+      {
+        const numComponents = 2;
+        const type = gl.FLOAT;
+        const normalize = false;
+        const stride = 0;
+        const offset = 0;
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+        gl.vertexAttribPointer(
+          programInfo.attribLocations.vertexPosition,
+          numComponents,
+          type,
+          normalize,
+          stride,
+          offset
+        );
+        gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
+      }
+
+      gl.uniform2fv(
+        programInfo.uniformLocations.uResolution,
+        new Float32Array([gl.canvas.width, gl.canvas.height])
+      );
+
+      if (mousePos) {
+        gl.uniform2fv(
+          programInfo.uniformLocations.uMousePos,
+          new Float32Array([mousePos.x, mousePos.y])
+        );
+      }
+
+      gl.uniform2fv(
+        programInfo.uniformLocations.uRandBlobLocation,
+        new Float32Array([randBlobLocation.x, randBlobLocation.y])
+      );
+
+      {
+        const offset = 0;
+        const vertexCount = 4;
+        gl.drawArrays(gl.TRIANGLE_STRIP, offset, vertexCount);
+      }
+    }
+
+    function initShaderProgram(gl, vsSource, fsSource) {
+      const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vsSource);
+      const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fsSource);
+      const shaderProgram = gl.createProgram();
+      gl.attachShader(shaderProgram, vertexShader);
+      gl.attachShader(shaderProgram, fragmentShader);
+      gl.linkProgram(shaderProgram);
+
+      return shaderProgram;
+    }
+
+    function loadShader(gl, type, source) {
+      const shader = gl.createShader(type);
+      gl.shaderSource(shader, source);
+      gl.compileShader(shader);
+      return shader;
+    }
+  </script>
+  <script>
+    function resize(canvas) {
+      // set canvas buffer size to canvas's CSS size.
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+    }
+  </script>
+  <script>
+    const canvas = document.getElementById("glcanvas");
+    const gl = canvas.getContext("webgl", { preserveDrawingBuffer: true });
+    const dpr = Math.min(devicePixelRatio, 2);
+    const mousePos = { x: 0, y: 0 };
+    const randBlobLocation = {
+      x: 0,
+      y: 0,
+      dx: 1,
+      dy: 1,
+      updateBlob: function () {
+        this.x += this.dx / window.innerWidth;
+        this.y += this.dy / window.innerHeight;
+      },
+    };
+
+    window.addEventListener("resize", (e) => {
+      resize(canvas);
+    });
+
+    window.addEventListener("mousemove", (e) => {
+      mousePos.x = e.x / window.innerWidth;
+      mousePos.y = e.y / window.innerHeight;
+    });
+
+    resize(canvas);
+
+    const vsSource = `
+            attribute vec4 aVertexPosition;
+
+            void main() {
+                gl_Position = aVertexPosition;
+            }
+        `;
+
+    const fSource = `
+            precision highp float;
+
+            uniform vec2 uResolution;
+            uniform vec2 uMousePos;
+            uniform vec2 uRandBlobLocation;
+
+            float uniformCircle(vec2 from, vec2 to) {
+                float dist;
+                if (uResolution.x > uResolution.y) {
+                    float newToY = (to.y / uResolution.x) * uResolution.y;
+                    float newFromY = (from.y / uResolution.x) * uResolution.y;
+                    dist = 0.04 / sqrt(
+                        pow(from.x - to.x, 2.0) + pow(newFromY - newToY, 2.0));
+                } else {
+                    // normalize to new space
+                    float newToX = (to.x / uResolution.y) * uResolution.x;
+                    float newFromX = (from.x / uResolution.y) * uResolution.x;
+                    dist = 0.04 / sqrt(
+                        pow(newFromX - newToX, 2.0) + pow(from.y - to.y, 2.0));
+                }
+
+
+                return dist;
+            }
+
+            float smoothmax(float a, float b, float k) {
+                return log (exp(k * a) + exp(k * b)) / k; 
+            }
+
+            void main() {
+                vec2 uv = gl_FragCoord.xy / uResolution;
+
+                mat3 transformCoordMatrix = mat3(
+                  1., 0., 0.,
+                  0., -1., 0.,
+                  0., 1., 1.
+                );
+
+                vec3 newRandBlobPos = transformCoordMatrix * vec3(uRandBlobLocation, 1.);
+                vec3 newMousePos =  transformCoordMatrix * vec3(uMousePos, 1.);
+                float dist1 = uniformCircle(uv, newMousePos.xy);
+                float dist2 = uniformCircle(uv, newRandBlobPos.xy);
+
+                gl_FragColor = vec4(vec3(floor(smoothmax(dist1, dist2, 2.))), 1.0);
+            }
+        `;
+
+    const shaderProgram = initShaderProgram(gl, vsSource, fSource);
+
+    const programInfo = {
+      program: shaderProgram,
+      attribLocations: {
+        vertexPosition: gl.getAttribLocation(shaderProgram, "aVertexPosition"),
+      },
+      uniformLocations: {
+        uResolution: gl.getUniformLocation(shaderProgram, "uResolution"),
+        uMousePos: gl.getUniformLocation(shaderProgram, "uMousePos"),
+        uRandBlobLocation: gl.getUniformLocation(
+          shaderProgram,
+          "uRandBlobLocation"
+        ),
+      },
+    };
+
+    const { positionBuffer } = initBuffers(gl);
+
+    draw((delta) => {
+      randBlobLocation.updateBlob();
+      drawScene(
+        gl,
+        programInfo,
+        positionBuffer,
+        delta,
+        mousePos,
+        randBlobLocation
+      );
+    });
+  </script>
+</html>
