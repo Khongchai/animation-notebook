@@ -1,0 +1,198 @@
+<!-- full-screen square -->
+<!-- Available uniforms: uResoltuion, uMousePos -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Meta balls</title>
+    <style>
+      html,
+      body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+        height: 100%;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="glcanvas"></canvas>
+  </body>
+  <script>
+    // Play around here.
+    const fSource = `
+            precision highp float;
+
+            uniform vec2 uResolution;
+            // Because you keep forgetting, gl_FragCoord is 0,0 at the bottom left.
+            // This is already flipped to match glsl coord.
+            uniform vec2 uMousePos;
+
+            void main() {
+              vec2 st = gl_FragCoord.xy / uResolution;
+              vec4 rect = vec4(0.2, 0.3, 0.4, 0.5);
+              vec2 hv = step(rect.xy, st) * step(st, rect.zw);
+              float onOff = hv.x * hv.y;
+
+              gl_FragColor = vec4(vec3(onOff), 1.0);
+            }
+        `;
+
+    const vsSource = `
+            attribute vec4 aVertexPosition;
+
+            void main() {
+                gl_Position = aVertexPosition;
+            }
+        `;
+  </script>
+  <script>
+    // Main animation loop
+    function draw(callback) {
+      let then = 0;
+
+      function _draw(now) {
+        now *= 0.001;
+        const deltaTime = now - then;
+        then = now;
+
+        callback(deltaTime);
+
+        requestAnimationFrame(_draw);
+      }
+
+      requestAnimationFrame(_draw);
+    }
+
+    // Init a full-screen canvas
+    function initBuffers(gl) {
+      const positionBuffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+      // prettier-ignore
+      const positions = [
+        1.0,  1.0, 
+        1.0, -1.0,
+       -1.0,  1.0,
+       -1.0, -1.0
+      ];
+      gl.bufferData(
+        gl.ARRAY_BUFFER,
+        new Float32Array(positions),
+        gl.STATIC_DRAW
+      );
+
+      return {
+        positionBuffer,
+      };
+    }
+
+    function drawScene(gl, programInfo, positionBuffer, delta, mousePos) {
+      // Clear draw buffer
+      gl.clearColor(0.0, 0.0, 0.0, 1.0);
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+      gl.useProgram(programInfo.program);
+
+      {
+        const numComponents = 2;
+        const type = gl.FLOAT;
+        const normalize = false;
+        const stride = 0;
+        const offset = 0;
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+        gl.vertexAttribPointer(
+          programInfo.attribLocations.vertexPosition,
+          numComponents,
+          type,
+          normalize,
+          stride,
+          offset
+        );
+        gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
+      }
+
+      gl.uniform2fv(
+        programInfo.uniformLocations.uResolution,
+        new Float32Array([gl.canvas.width, gl.canvas.height])
+      );
+
+      if (mousePos) {
+        gl.uniform2fv(
+          programInfo.uniformLocations.uMousePos,
+          new Float32Array([mousePos.x, mousePos.y])
+        );
+      }
+
+      {
+        const offset = 0;
+        const vertexCount = 4;
+        gl.drawArrays(gl.TRIANGLE_STRIP, offset, vertexCount);
+      }
+    }
+
+    function initShaderProgram(gl, vsSource, fsSource) {
+      const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vsSource);
+      const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fsSource);
+      const shaderProgram = gl.createProgram();
+      gl.attachShader(shaderProgram, vertexShader);
+      gl.attachShader(shaderProgram, fragmentShader);
+      gl.linkProgram(shaderProgram);
+
+      return shaderProgram;
+    }
+
+    function loadShader(gl, type, source) {
+      const shader = gl.createShader(type);
+      gl.shaderSource(shader, source);
+      gl.compileShader(shader);
+      return shader;
+    }
+    function resize(canvas) {
+      // set canvas buffer size to canvas's CSS size.
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+    }
+    const canvas = document.getElementById("glcanvas");
+    const gl = canvas.getContext("webgl", { preserveDrawingBuffer: false });
+    const dpr = Math.min(devicePixelRatio, 2);
+    const mousePos = { x: 0, y: 0 };
+
+    window.addEventListener("resize", (e) => {
+      resize(canvas);
+    });
+
+    window.addEventListener("mousemove", (e) => {
+      mousePos.x = e.x / window.innerWidth;
+      const flippedY = window.innerHeight - e.y;
+      mousePos.y = flippedY / window.innerHeight;
+    });
+
+    resize(canvas);
+
+    const shaderProgram = initShaderProgram(gl, vsSource, fSource);
+
+    const programInfo = {
+      program: shaderProgram,
+      attribLocations: {
+        vertexPosition: gl.getAttribLocation(shaderProgram, "aVertexPosition"),
+      },
+      uniformLocations: {
+        uResolution: gl.getUniformLocation(shaderProgram, "uResolution"),
+        uMousePos: gl.getUniformLocation(shaderProgram, "uMousePos"),
+      },
+    };
+
+    const { positionBuffer } = initBuffers(gl);
+
+    draw((delta) => {
+      drawScene(gl, programInfo, positionBuffer, delta, mousePos);
+    });
+  </script>
+</html>
