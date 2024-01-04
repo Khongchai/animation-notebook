@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      /* everything full screen */
+      body,
+      html,
+      canvas {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+    </style>
+  </head>
+
+  <body>
+    <canvas id="canvas"></canvas>
+  </body>
+  <script>
+    const canvas = document.getElementById("canvas");
+
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth * devicePixelRatio;
+    canvas.height = window.innerHeight * devicePixelRatio;
+
+    let loopCount = 0;
+
+    let store = [];
+
+    let i = 0;
+
+    const garbageWorker = new Worker("garbageWorker.js");
+
+    /**
+     * @param {number} time
+     */
+    function main(time) {
+      loopCount += 1;
+      store.push(new Float64Array(5000000).buffer);
+      if (loopCount % 10 === 0) {
+        const prevStore = store;
+        store = [];
+        garbageWorker.postMessage(prevStore, prevStore);
+      }
+      // a simple circle that movces from left to right
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.beginPath();
+      ctx.arc(
+        (Math.asin(Math.sin(time * 0.003)) / (Math.PI / 2)) *
+          (canvas.width / 2) +
+          canvas.width / 2,
+        canvas.height / 2,
+        50,
+        0,
+        2 * Math.PI
+      );
+      ctx.fill();
+
+      requestAnimationFrame(main.bind(this));
+    }
+
+    main();
+  </script>
+</html>
