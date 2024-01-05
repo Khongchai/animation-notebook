@@ -41,11 +41,12 @@
      */
     function main(time) {
       loopCount += 1;
-      store.push(new Float64Array(5000000).buffer);
-      if (loopCount % 10 === 0) {
-        const prevStore = store;
+
+      store.push(new Float64Array(2500000).buffer);
+      if (loopCount % 2 === 0) {
+        store.push(new Float64Array(2500000).buffer);
+        garbageWorker.postMessage(store, store);
         store = [];
-        garbageWorker.postMessage(prevStore, prevStore);
       }
       // a simple circle that movces from left to right
       ctx.clearRect(0, 0, canvas.width, canvas.height);
