@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      html,
+      body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+      }
+
+      .test-block {
+        display: block;
+        width: 200px;
+        height: 400px;
+        margin-bottom: 2rem;
+        background: hotpink;
+        opacity: 0.2;
+        scroll-snap-align: center;
+      }
+
+      #containing-block {
+        display: block;
+        height: 100vh;
+        overflow: scroll;
+        background: black;
+        width: 100%;
+        scroll-snap-type: y mandatory;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="containing-block">
+      <div class="test-block"></div>
+      <div class="test-block"></div>
+      <div class="test-block"></div>
+      <div class="test-block"></div>
+      <div class="test-block"></div>
+      <div class="test-block"></div>
+      <div class="test-block"></div>
+      <div class="test-block"></div>
+      <div class="test-block"></div>
+      <div class="test-block"></div>
+      <div class="test-block"></div>
+      <div class="test-block"></div>
+      <div class="test-block"></div>
+      <div class="test-block"></div>
+      <div class="test-block"></div>
+      <div class="test-block"></div>
+      <div class="test-block"></div>
+      <div class="test-block"></div>
+      <div class="test-block"></div>
+      <div class="test-block"></div>
+    </div>
+  </body>
+  <script>
+    // @ts-check
+  </script>
+  <script type="module">
+    import { showLatestValue } from "../common/showLatestValue.js";
+
+    window.addEventListener("scroll", (e) => {
+      showLatestValue(window.scrollY);
+    });
+  </script>
+</html>
