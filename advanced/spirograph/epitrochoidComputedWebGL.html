@@ -1,249 +1,243 @@
 <!-- Pretty noice result: around 0.24 - 0.27 seconds for webGL and 1.7 for canvas :D -->
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-  <meta charset="UTF-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title></title>
-  <style>
-    html,
-    body {
-      border: 0;
-      padding: 0;
-      margin: 0;
-      height: 100%;
-    }
-
-    canvas {
-      display: block;
-      width: 100%;
-      height: 100%;
-    }
-  </style>
-</head>
-<script src="calcPoints.js"></script>
-
-<body>
-  <canvas id="canvas"></canvas>
-</body>
-<script>
-  function computedEpitrochoid(data, theta, rodLength) {
-    if (data.length < 2) {
-      throw new Error("Provide at least 2 cycloids");
-    }
-
-    const finalPoint = { x: 0, y: 0 };
-
-    // This is not faster than the loop below, but we can now pass it
-    // to rust...with hope that it will be faster.
-    for (let i = 0; i < data.length; i++) {
-      const currentData = data[i];
-
-      finalPoint.x +=
-        (currentData[0] + currentData[1]) *
-        Math.cos(theta * currentData[3] - Math.PI * 0.5 * currentData[2]);
-      finalPoint.y +=
-        (currentData[0] + currentData[1]) *
-        Math.sin(theta * currentData[3] + Math.PI * 0.5 * currentData[2]);
-    }
-
-    finalPoint.x = finalPoint.x + rodLength * Math.cos(theta);
-    finalPoint.y = finalPoint.y + rodLength * Math.sin(theta);
-
-    return finalPoint;
-  }
-
-  function calcLines(points, theta, step, data, rodLength) {
-    const arr = [];
-    let previousPoint;
-    let currentPoint;
-
-    for (let i = 0; i < points; i++) {
-      theta += step;
-
-      const newPoint = computedEpitrochoid(data, theta, rodLength);
-
-      // First point.
-      if (!previousPoint) {
-        previousPoint = newPoint;
-      } else {
-        currentPoint = newPoint;
-        arr.push(
-          previousPoint.x,
-          previousPoint.y,
-          currentPoint.x,
-          currentPoint.y
-        );
-
-        previousPoint = currentPoint;
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      html,
+      body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+        height: 100%;
       }
+
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <script src="calcPoints.js"></script>
+
+  <body>
+    <canvas id="canvas"></canvas>
+  </body>
+  <script>
+    function computedEpitrochoid(data, theta, rodLength) {
+      if (data.length < 2) {
+        throw new Error("Provide at least 2 cycloids");
+      }
+
+      const finalPoint = { x: 0, y: 0 };
+
+      // This is not faster than the loop below, but we can now pass it
+      // to rust...with hope that it will be faster.
+      for (let i = 0; i < data.length; i++) {
+        const currentData = data[i];
+
+        finalPoint.x +=
+          (currentData[0] + currentData[1]) *
+          Math.cos(theta * currentData[3] - Math.PI * 0.5 * currentData[2]);
+        finalPoint.y +=
+          (currentData[0] + currentData[1]) *
+          Math.sin(theta * currentData[3] + Math.PI * 0.5 * currentData[2]);
+      }
+
+      finalPoint.x = finalPoint.x + rodLength * Math.cos(theta);
+      finalPoint.y = finalPoint.y + rodLength * Math.sin(theta);
+
+      return finalPoint;
     }
 
-    return arr;
-  }
-</script>
-<script>
-  const stopwatch = {
-    _time: 0,
-    start: function () {
-      this._time = performance.now();
-    },
-    stop: function () {
-      this._time = performance.now() - this._time;
-    },
-    report: function () {
-      console.log("Process took " + this._time + " ms");
-    },
-  };
-</script>
-<script type="module">
-  import initFractionalLcm, {
-    fractional_lcm,
-  } from "./calc_points/pkg/calc_points.js";
-  import initCalcLines, {
-    calc_lines,
-  } from "./calc_lines/calc_lines/pkg/calc_lines.js";
+    function calcLines(points, theta, step, data, rodLength) {
+      const arr = [];
+      let previousPoint;
+      let currentPoint;
 
-  async function main() {
-    await initFractionalLcm();
-    await initCalcLines();
+      for (let i = 0; i < points; i++) {
+        theta += step;
 
-    const enableDebug = false;
+        const newPoint = computedEpitrochoid(data, theta, rodLength);
 
-    const canvas = document.getElementById("canvas");
+        // First point.
+        if (!previousPoint) {
+          previousPoint = newPoint;
+        } else {
+          currentPoint = newPoint;
+          arr.push(
+            previousPoint.x,
+            previousPoint.y,
+            currentPoint.x,
+            currentPoint.y
+          );
 
-    let previousPoint = null;
+          previousPoint = currentPoint;
+        }
+      }
 
-    let currentPoint = {
-      x: 0,
-      y: 0,
+      return arr;
+    }
+  </script>
+  <script>
+    const stopwatch = {
+      _time: 0,
+      start: function () {
+        this._time = performance.now();
+      },
+      stop: function () {
+        this._time = performance.now() - this._time;
+      },
+      report: function () {
+        console.log("Process took " + this._time + " ms");
+      },
     };
+  </script>
+  <script type="module">
+    import initFractionalLcm, {
+      fractional_lcm,
+    } from "./calc_points/pkg/calc_points.js";
+    import initCalcLines, {
+      calc_lines,
+    } from "./calc_lines/calc_lines/pkg/calc_lines.js";
 
-    const baseStepsRequiredForACircle = 550;
+    async function main() {
+      await initFractionalLcm();
+      await initCalcLines();
 
-    const step = (Math.PI * 2) / baseStepsRequiredForACircle;
+      const enableDebug = false;
 
-    const betaScale = 10;
-    const gammaScale = 20;
-    const deltaScale = 15;
+      const canvas = document.getElementById("canvas");
 
-    const lcmResult = fractional_lcm([
-      betaScale,
-      gammaScale,
-      deltaScale,
-    ]);
-    console.log("lcm result: " + lcmResult);
+      let previousPoint = null;
 
-    const points = baseStepsRequiredForACircle * lcmResult + 1;
-    console.log("Points amount: " + points);
+      let currentPoint = {
+        x: 0,
+        y: 0,
+      };
 
-    const cycloids = [
-      // Base Circle
-      {
-        radius: 300,
-      },
-      {
-        radius: 100,
-        rotationDirection: "counterclockwise",
-        rodLengthScale: 0,
-        thetaScale: betaScale,
-        isOutsideOfParent: true,
-      },
-      {
-        radius: 50,
-        rotationDirection: "clockwise",
-        rodLengthScale: 0,
-        thetaScale: gammaScale,
-        isOutsideOfParent: true,
-      },
-      {
-        radius: 25,
-        rotationDirection: "clockwise",
-        rodLengthScale: 1.23,
-        thetaScale: deltaScale,
-        isOutsideOfParent: true,
-      },
+      const baseStepsRequiredForACircle = 550;
 
-    ];
-    const lastCycloid = cycloids[cycloids.length - 1];
-    const rodLength = lastCycloid.radius * lastCycloid.rodLengthScale;
+      const step = (Math.PI * 2) / baseStepsRequiredForACircle;
 
-    let endingSameAsFirstCount = 0;
+      const betaScale = 10;
+      const gammaScale = 20;
+      const deltaScale = 15;
 
-    const kindOfEqual = (num1, num2) =>
-      parseFloat(num1.toFixed(2)) === parseFloat(num2.toFixed(2));
+      const lcmResult = fractional_lcm([betaScale, gammaScale, deltaScale]);
+      console.log("lcm result: " + lcmResult);
 
-    const webGLDrawer = initWebGL(
-      canvas,
-      `
+      const points = baseStepsRequiredForACircle * lcmResult + 1;
+      console.log("Points amount: " + points);
+
+      const cycloids = [
+        // Base Circle
+        {
+          radius: 300,
+        },
+        {
+          radius: 100,
+          rotationDirection: "counterclockwise",
+          rodLengthScale: 0,
+          thetaScale: betaScale,
+          isOutsideOfParent: true,
+        },
+        {
+          radius: 50,
+          rotationDirection: "clockwise",
+          rodLengthScale: 0,
+          thetaScale: gammaScale,
+          isOutsideOfParent: true,
+        },
+        {
+          radius: 25,
+          rotationDirection: "clockwise",
+          rodLengthScale: 1.23,
+          thetaScale: deltaScale,
+          isOutsideOfParent: true,
+        },
+      ];
+      const lastCycloid = cycloids[cycloids.length - 1];
+      const rodLength = lastCycloid.radius * lastCycloid.rodLengthScale;
+
+      let endingSameAsFirstCount = 0;
+
+      const kindOfEqual = (num1, num2) =>
+        parseFloat(num1.toFixed(2)) === parseFloat(num2.toFixed(2));
+
+      const webGLDrawer = initWebGL(
+        canvas,
+        `
             precision highp float;
             void main() {
                   gl_FragColor = vec4(1.0, 0.5, 0.7, 1.0);
                 }
       `
-    );
-    webGLDrawer.setColor("pink");
-
-    const lines = [];
-
-    const draw = () => {
-      let theta = 0;
-
-      // An attempt at optimizing the function.
-      const dataForComputedEpitrochoid = [];
-      for (let i = 1; i < cycloids.length; i++) {
-        const parentCycloid = cycloids[i - 1];
-        const thisCycloid = cycloids[i];
-        dataForComputedEpitrochoid.push([
-          parentCycloid.radius,
-          thisCycloid.isOutsideOfParent
-            ? thisCycloid.radius
-            : -thisCycloid.radius,
-          thisCycloid.rotationDirection === "clockwise" ? 1 : 0,
-          thisCycloid.thetaScale,
-        ]);
-      }
-
-      stopwatch.start();
-
-      const lines = calc_lines(
-        points,
-        theta,
-        step,
-        dataForComputedEpitrochoid,
-        rodLength
       );
-      // const lines = calcLines(
-      //   points,
-      //   theta,
-      //   step,
-      //   dataForComputedEpitrochoid,
-      //   rodLength
-      // );
+      webGLDrawer.setColor("pink");
 
-      webGLDrawer.drawLines(lines);
-      stopwatch.stop();
-      stopwatch.report();
-    };
+      const lines = [];
 
-    draw();
+      const draw = () => {
+        let theta = 0;
 
-    window.onresize = () => {
-      resize(canvas, dpr, webGLDrawer.gl);
+        // An attempt at optimizing the function.
+        const dataForComputedEpitrochoid = [];
+        for (let i = 1; i < cycloids.length; i++) {
+          const parentCycloid = cycloids[i - 1];
+          const thisCycloid = cycloids[i];
+          dataForComputedEpitrochoid.push([
+            parentCycloid.radius,
+            thisCycloid.isOutsideOfParent
+              ? thisCycloid.radius
+              : -thisCycloid.radius,
+            thisCycloid.rotationDirection === "clockwise" ? 1 : 0,
+            thisCycloid.thetaScale,
+          ]);
+        }
+
+        stopwatch.start();
+
+        const lines = calc_lines(
+          points,
+          theta,
+          step,
+          dataForComputedEpitrochoid,
+          rodLength
+        );
+        // const lines = calcLines(
+        //   points,
+        //   theta,
+        //   step,
+        //   dataForComputedEpitrochoid,
+        //   rodLength
+        // );
+
+        webGLDrawer.drawLines(lines);
+        stopwatch.stop();
+        stopwatch.report();
+      };
+
       draw();
-    };
-  }
 
-  main();
-</script>
-<!-- webgl setup stuff -->
-<script>
-  const dpr = Math.min(devicePixelRatio, 2);
+      window.onresize = () => {
+        resize(canvas, dpr, webGLDrawer.gl);
+        draw();
+      };
+    }
 
-  function initWebGL(canvas, fragmentShader) {
-    const vsSource = `
+    main();
+  </script>
+  <!-- webgl setup stuff -->
+  <script>
+    const dpr = Math.min(devicePixelRatio, 2);
+
+    function initWebGL(canvas, fragmentShader) {
+      const vsSource = `
         attribute vec2 a_position;
 
         uniform mat3 u_matrix;
@@ -252,132 +246,131 @@
             gl_Position = vec4((u_matrix * vec3(a_position, 1)).xy, 0, 1);
         }
         `;
-    const fSource = fragmentShader;
+      const fSource = fragmentShader;
 
-    const gl = canvas.getContext("webgl2");
-    const shaderProgram = initShaderProgram(gl, vsSource, fSource);
-    const programInfo = {
-      program: shaderProgram,
-      attributeLocations: {
-        aPosition: gl.getAttribLocation(shaderProgram, "a_position"),
-      },
-      uniformLocations: {
-        uMatrix: gl.getUniformLocation(shaderProgram, "u_matrix"),
-      },
-    };
+      const gl = canvas.getContext("webgl2");
+      const shaderProgram = initShaderProgram(gl, vsSource, fSource);
+      const programInfo = {
+        program: shaderProgram,
+        attributeLocations: {
+          aPosition: gl.getAttribLocation(shaderProgram, "a_position"),
+        },
+        uniformLocations: {
+          uMatrix: gl.getUniformLocation(shaderProgram, "u_matrix"),
+        },
+      };
 
-    resize(canvas, dpr, gl);
+      resize(canvas, dpr, gl);
 
-    gl.useProgram(programInfo.program);
+      gl.useProgram(programInfo.program);
 
-    const positionBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-    gl.vertexAttribPointer(
-      programInfo.attributeLocations.aPositio2,
-      2,
-      gl.FLOAT,
-      false,
-      0,
-      0
-    );
-    gl.enableVertexAttribArray(programInfo.attributeLocations.aPosition);
+      const positionBuffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+      gl.vertexAttribPointer(
+        programInfo.attributeLocations.aPositio2,
+        2,
+        gl.FLOAT,
+        false,
+        0,
+        0
+      );
+      gl.enableVertexAttribArray(programInfo.attributeLocations.aPosition);
 
-    return {
-      gl,
-      program: programInfo.program,
-      setColor: function (hex) {
-        // TODO
-      },
-      // Setup code should be outside of this method.
-      drawLine: function (x1, y1, x2, y2) {
-        // Set the matrix.
-        gl.uniformMatrix3fv(
-          programInfo.uniformLocations.uMatrix,
-          false,
-          projectionMatrix
-        );
+      return {
+        gl,
+        program: programInfo.program,
+        setColor: function (hex) {
+          // TODO
+        },
+        // Setup code should be outside of this method.
+        drawLine: function (x1, y1, x2, y2) {
+          // Set the matrix.
+          gl.uniformMatrix3fv(
+            programInfo.uniformLocations.uMatrix,
+            false,
+            projectionMatrix
+          );
 
-        gl.bufferData(
-          gl.ARRAY_BUFFER,
-          new Float32Array([x1, y1, x2, y2]),
-          gl.STATIC_DRAW
-        );
+          gl.bufferData(
+            gl.ARRAY_BUFFER,
+            new Float32Array([x1, y1, x2, y2]),
+            gl.STATIC_DRAW
+          );
 
-        gl.drawArrays(gl.LINES, 0, 2);
-      },
-      /**
-       * @param {{x1: number, y1: number, x2: number, y2: number}[]} lines
-       */
-      drawLines: function (lines) {
-        const w = gl.canvas.width;
-        const h = gl.canvas.height;
-        const projectionMatrix = projectionAndTranslation(w, h, w / 2, h / 2);
+          gl.drawArrays(gl.LINES, 0, 2);
+        },
+        /**
+         * @param {{x1: number, y1: number, x2: number, y2: number}[]} lines
+         */
+        drawLines: function (lines) {
+          const w = gl.canvas.width;
+          const h = gl.canvas.height;
+          const projectionMatrix = projectionAndTranslation(w, h, w / 2, h / 2);
 
-        gl.uniformMatrix3fv(
-          programInfo.uniformLocations.uMatrix,
-          false,
-          projectionMatrix
-        );
-        gl.bufferData(
-          gl.ARRAY_BUFFER,
-          new Float32Array(lines),
-          gl.STATIC_DRAW
-        );
+          gl.uniformMatrix3fv(
+            programInfo.uniformLocations.uMatrix,
+            false,
+            projectionMatrix
+          );
+          gl.bufferData(
+            gl.ARRAY_BUFFER,
+            new Float32Array(lines),
+            gl.STATIC_DRAW
+          );
 
-        // Not much difference between LINES and LINE_STRIP
-        gl.drawArrays(gl.LINES, 0, lines.length / 2);
-      },
-    };
-  }
+          // Not much difference between LINES and LINE_STRIP
+          gl.drawArrays(gl.LINES, 0, lines.length / 2);
+        },
+      };
+    }
 
-  function initShaderProgram(gl, vSource, fSource) {
-    const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vSource);
-    const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fSource);
+    function initShaderProgram(gl, vSource, fSource) {
+      const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vSource);
+      const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fSource);
 
-    const shaderProgram = gl.createProgram();
-    gl.attachShader(shaderProgram, vertexShader);
-    gl.attachShader(shaderProgram, fragmentShader);
-    gl.linkProgram(shaderProgram);
+      const shaderProgram = gl.createProgram();
+      gl.attachShader(shaderProgram, vertexShader);
+      gl.attachShader(shaderProgram, fragmentShader);
+      gl.linkProgram(shaderProgram);
 
-    return shaderProgram;
-  }
+      return shaderProgram;
+    }
 
-  function loadShader(gl, type, source) {
-    const shader = gl.createShader(type);
-    gl.shaderSource(shader, source);
-    gl.compileShader(shader);
-    return shader;
-  }
+    function loadShader(gl, type, source) {
+      const shader = gl.createShader(type);
+      gl.shaderSource(shader, source);
+      gl.compileShader(shader);
+      return shader;
+    }
 
-  function resize(canvas, dpr, gl) {
-    // set canvas buffer size to canvas's CSS size.
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width * dpr;
-    canvas.height = rect.height * dpr;
-    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-  }
+    function resize(canvas, dpr, gl) {
+      // set canvas buffer size to canvas's CSS size.
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+    }
 
-  function projectionAndTranslation(width, height, x, y) {
-    const dst = new Float32Array(9);
-    // Note: This matrix flips the Y axis so 0 is at the top.
-    // src: https://webglfundamentals.org/webgl/resources/m3.js
+    function projectionAndTranslation(width, height, x, y) {
+      const dst = new Float32Array(9);
+      // Note: This matrix flips the Y axis so 0 is at the top.
+      // src: https://webglfundamentals.org/webgl/resources/m3.js
 
-    // calculate translation using width and height
-    const _x = (x / width) * 2 - 1;
-    const _y = (y / height) * 2 - 1;
+      // calculate translation using width and height
+      const _x = (x / width) * 2 - 1;
+      const _y = (y / height) * 2 - 1;
 
-    dst[0] = 2 / width;
-    dst[1] = 0;
-    dst[2] = 0;
-    dst[3] = 0;
-    dst[4] = -2 / height;
-    dst[5] = 0;
-    dst[6] = _x;
-    dst[7] = _y;
-    dst[8] = 1;
+      dst[0] = 2 / width;
+      dst[1] = 0;
+      dst[2] = 0;
+      dst[3] = 0;
+      dst[4] = -2 / height;
+      dst[5] = 0;
+      dst[6] = _x;
+      dst[7] = _y;
+      dst[8] = 1;
 
-    return dst;
-  }
-</script>
-
+      return dst;
+    }
+  </script>
 </html>
