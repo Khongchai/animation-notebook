@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      html,
+      body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+        width: 100%;
+        height: 100%;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+      <canvas id="canvas"></canvas>
+    </div>
+  </body>
+  <script>
+    // @ts-check
+    const canvas = /** @type HTMLCanvasElement */ (
+      document.getElementById("canvas")
+    );
+    const w = window.innerWidth * devicePixelRatio;
+    const h = window.innerHeight * devicePixelRatio;
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = /** @type CanvasRenderingContext2D */ (canvas.getContext("2d"));
+
+    if (!ctx) throw new Error("2d context not supported");
+
+    /**
+     * @param {number} x point x
+     * @param {number} y point y
+     * @param {number} angle angle in radians
+     * @param {number} px pivot x
+     * @param {number} py pivot y
+     * @returns {[number, number] }
+     */
+    function rotateAroundPivot(x, y, angle, px, py) {
+      // Translate point to origin (pivot point becomes origin)
+      let xTranslated = x - px;
+      let yTranslated = y - py;
+
+      // Rotate around origin
+      let xRotated =
+        xTranslated * Math.cos(angle) - yTranslated * Math.sin(angle);
+      let yRotated =
+        xTranslated * Math.sin(angle) + yTranslated * Math.cos(angle);
+
+      // Translate point back
+      xRotated += px;
+      yRotated += py;
+
+      return [xRotated, yRotated];
+    }
+
+    // center 0
+    ctx.translate(w / 2, h / 2);
+
+    /**
+     * @param {number} time
+     */
+    function main(time) {
+      console.log(time);
+      ctx.clearRect(-w / 2, -h / 2, w, h);
+
+      const theta = time * 0.001;
+
+      ctx.beginPath();
+      ctx.moveTo(...rotateAroundPivot(0, -100, theta, 0, 100));
+      ctx.lineTo(...rotateAroundPivot(0, 100, theta, 0, 100));
+      ctx.stroke();
+
+      requestAnimationFrame(main);
+    }
+
+    main(0);
+  </script>
+</html>
