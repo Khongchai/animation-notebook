@@ -1,4 +1,3 @@
-<!-- full-screen red square -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -93,6 +92,8 @@
         new Float32Array([gl.canvas.width, gl.canvas.height])
       );
 
+      gl.uniform1f(programInfo.uniformLocations.uTime, delta);
+
       if (mousePos) {
         gl.uniform2fv(
           programInfo.uniformLocations.uMousePos,
@@ -173,12 +174,83 @@
 
     const fSource = `
             precision highp float;
+
+            float random (in vec2 _st) {
+                return fract(sin(dot(_st.xy,
+                                    vec2(12.9898,78.233)))*
+                    43758.5453123);
+            }
+
+            // Based on Morgan McGuire @morgan3d
+            // https://www.shadertoy.com/view/4dS3Wd
+            float noise (in vec2 _st) {
+                vec2 i = floor(_st);
+                vec2 f = fract(_st);
+
+                // Four corners in 2D of a tile
+                float a = random(i);
+                float b = random(i + vec2(1.0, 0.0));
+                float c = random(i + vec2(0.0, 1.0));
+                float d = random(i + vec2(1.0, 1.0));
+
+                vec2 u = f * f * (3.0 - 2.0 * f);
+
+                return mix(a, b, u.x) +
+                        (c - a)* u.y * (1.0 - u.x) +
+                        (d - b) * u.x * u.y;
+            }
+
+            #define NUM_OCTAVES 5
+            // Hurst at 1.0 results in G = 0.5, which is a classic fbm
+            #define HURST 1.0
+
+            const mat2 rotation = mat2( 0.80,  0.60, -0.60,  0.80 );
+
+            float fbm( in vec2 x )
+            {    
+                float G = exp2(-HURST);
+                float frequency = 1.0;
+                float amplitude = 1.0;
+                float acc = 0.0;
+                float shift = 200.0;
+                for( int i=0; i<NUM_OCTAVES; i++ )
+                {
+                    acc += amplitude*noise(frequency*x*rotation + shift);
+                    frequency *= 2.0;
+                    amplitude *= G;
+                }
+                return acc;
+            }
             
             uniform vec2 uResolution;
             uniform vec2 uMousePos;
+            uniform float uTime;
 
             void main() {
-                gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+              vec2 st = gl_FragCoord.xy/uResolution.xy*3.0;
+
+              // first fbm iteration: q = fbm(st)
+              vec2 q = vec2(0.);
+              q.x = fbm(st + 0.00 * uTime);
+              q.y = fbm(st + vec2(1.0));
+            
+              // second fbm iteration: r = fbm(st + q)
+              vec2 r = vec2(0.);
+              r.x = fbm(st + 1.0*q + 0.05 * uTime);
+              r.y = fbm(st + 1.0*q+ 0.1 * uTime);
+
+              // third fbm iteration: f = fbm(st + (fbm(st + fbm(st)))) = fbm(st + r);
+              float f = fbm(st+r);
+
+              vec3 color = mix(vec3(0.101961,0.619608,0.666667),
+                vec3(0.666667,0.666667,0.498039),
+                clamp((f*f),-0.360,1.0));
+
+              color = mix(color,
+                vec3(0.666667,1,1),
+                clamp(length(r.x),0.0,1.0));
+
+              gl_FragColor = vec4(vec3(f*color) * 0.4, 1.0);
             }
         `;
 
@@ -191,14 +263,17 @@
       },
       uniformLocations: {
         uResolution: gl.getUniformLocation(shaderProgram, "uResolution"),
+        uTime: gl.getUniformLocation(shaderProgram, "uTime"),
         uMousePos: gl.getUniformLocation(shaderProgram, "uMousePos"),
       },
     };
 
     const { positionBuffer } = initBuffers(gl);
 
+    let deltaAcc = 0;
     draw((delta) => {
-      drawScene(gl, programInfo, positionBuffer, delta, mousePos);
+      deltaAcc += delta;
+      drawScene(gl, programInfo, positionBuffer, deltaAcc, mousePos);
     });
   </script>
 </html>
