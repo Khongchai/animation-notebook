@@ -202,7 +202,7 @@
 
             #define NUM_OCTAVES 5
             // Hurst at 1.0 results in G = 0.5, which is a classic fbm
-            #define HURST 1.0
+            #define HURST 1.2
 
             const mat2 rotation = mat2( 0.80,  0.60, -0.60,  0.80 );
 
@@ -231,19 +231,19 @@
 
               // first fbm iteration: q = fbm(st)
               vec2 q = vec2(0.);
-              q.x = fbm(st + 0.00 * uTime);
+              q.x = fbm(st + 2.00 * uTime);
               q.y = fbm(st + vec2(1.0));
             
               // second fbm iteration: r = fbm(st + q)
               vec2 r = vec2(0.);
               r.x = fbm(st + 1.0*q + 0.05 * uTime);
-              r.y = fbm(st + 1.0*q+ 0.1 * uTime);
+              r.y = fbm(st + 1.0*q+ 0.4 * uTime);
 
               // third fbm iteration: f = fbm(st + (fbm(st + fbm(st)))) = fbm(st + r);
               float f = fbm(st+r);
 
-              vec3 color = mix(vec3(0.101961,0.619608,0.666667),
-                vec3(0.666667,0.666667,0.498039),
+              vec3 color = mix(vec3(0.101961,0.6,0.5),
+                vec3(0.6,0.,0.4),
                 clamp((f*f),-0.360,1.0));
 
               color = mix(color,
