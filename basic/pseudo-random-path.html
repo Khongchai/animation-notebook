@@ -1,0 +1,91 @@
+<!-- Pseudo random path like BM but with uniformly distributed increments. -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      html,
+      body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+      }
+      canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+      <canvas id="canvas"></canvas>
+    </div>
+  </body>
+  <script>
+    function run(callback) {
+      let then = 0;
+
+      function _draw(now) {
+        now *= 0.001;
+        const deltaTime = now - then;
+        then = now;
+
+        callback(deltaTime);
+
+        requestAnimationFrame(_draw);
+      }
+
+      requestAnimationFrame(_draw);
+    }
+  </script>
+  <script>
+    // @ts-check
+  </script>
+  <script>
+    const canvas = /** @type {HTMLCanvasElement} */ (
+      document.getElementById("canvas")
+    );
+    const w = window.innerWidth * devicePixelRatio;
+    const h = window.innerHeight * devicePixelRatio;
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      throw new Error("Canvas context not found");
+    }
+
+    let path = {
+      x: w / 2,
+      y: h / 2,
+    };
+    let prevPath = { ...path };
+
+    const scalars = {
+      x: 10,
+      y: 8,
+    };
+
+    function draw() {
+      for (let i = 0; i < 1000; i++) {
+        prevPath.x = path.x;
+        prevPath.y = path.y;
+
+        const dirX = Math.random() > 0.5 ? 1 : -1;
+        const dirY = Math.random() > 0.5 ? 1 : -1;
+        path.x = prevPath.x + Math.random() * scalars.x * dirX;
+        path.y = prevPath.y + Math.random() * scalars.y * dirY;
+
+        ctx.beginPath();
+        ctx.moveTo(prevPath.x, prevPath.y);
+        ctx.lineTo(path.x, path.y);
+        ctx.stroke();
+      }
+    }
+
+    run(draw);
+  </script>
+</html>
