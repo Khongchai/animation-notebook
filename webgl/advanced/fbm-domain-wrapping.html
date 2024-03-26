@@ -63,7 +63,10 @@
       };
     }
 
-    function drawScene(gl, programInfo, positionBuffer, delta, mousePos) {
+    function drawScene(gl, programInfo, positionBuffer, delta) {
+      lerpedMousePos[0] += (mousePos.x - lerpedMousePos[0]) * 0.06;
+      lerpedMousePos[1] += (mousePos.y - lerpedMousePos[1]) * 0.06;
+
       gl.clearColor(0.0, 0.0, 0.0, 1.0);
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
@@ -95,10 +98,7 @@
       gl.uniform1f(programInfo.uniformLocations.uTime, delta);
 
       if (mousePos) {
-        gl.uniform2fv(
-          programInfo.uniformLocations.uMousePos,
-          new Float32Array([mousePos.x, mousePos.y])
-        );
+        gl.uniform2fv(programInfo.uniformLocations.uMousePos, lerpedMousePos);
       }
 
       {
@@ -152,6 +152,7 @@
     }
     const dpr = Math.min(devicePixelRatio, 2);
     const mousePos = { x: 0, y: 0 };
+    const lerpedMousePos = new Float32Array([mousePos.x, mousePos.y]);
 
     window.addEventListener("resize", (e) => {
       resize(canvas, gl);
@@ -226,8 +227,16 @@
             uniform vec2 uMousePos;
             uniform float uTime;
 
+            vec2 something = vec2(0.0, 0.0);
+
             void main() {
-              vec2 st = gl_FragCoord.xy/uResolution.xy*3.0;
+              vec2 st = (gl_FragCoord.xy/uResolution.xy)*5.0;
+
+              st.x += uMousePos.x * 2.0;
+              st.y -= uMousePos.y * 2.0;
+
+              st.x += uTime * 1.0;
+              st.y += uTime * 1.0;
 
               // first fbm iteration: q = fbm(st)
               vec2 q = vec2(0.);
@@ -273,7 +282,7 @@
     let deltaAcc = 0;
     draw((delta) => {
       deltaAcc += delta;
-      drawScene(gl, programInfo, positionBuffer, deltaAcc, mousePos);
+      drawScene(gl, programInfo, positionBuffer, deltaAcc);
     });
   </script>
 </html>
