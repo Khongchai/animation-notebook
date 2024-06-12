@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body style="background: grey">
+    <div
+      id="move-me"
+      style="
+        background: black;
+        width: 100px;
+        height: 100px;
+        top: 0;
+        left: 0;
+        border-radius: 8px;
+        cursor: pointer;
+        position: fixed;
+        transition: background 0.2s;
+      "
+    ></div>
+  </body>
+  <script>
+    // @ts-check
+
+    const moveMe = document.getElementById("move-me");
+
+    const newPos = {
+      x: 0,
+      y: 0,
+    };
+    const lerpedPos = {
+      x: 0,
+      y: 0,
+    };
+
+    if (!moveMe) {
+      throw new Error("Element not found");
+    }
+
+    const rafCancellable = {
+      /**
+       * @type {Map<string, number | undefined>}
+       */
+      rafIds: new Map(),
+      /**
+       * @param {string} id
+       * @param {() => void} fn
+       */
+      schedule(id, fn) {
+        const existingId = this.rafIds.get(id);
+        if (typeof existingId === "number") {
+          console.log("Cancelled");
+          cancelAnimationFrame(existingId);
+        }
+
+        this.rafIds.set(
+          id,
+          requestAnimationFrame(() => {
+            console.log("Called");
+            this.rafIds.delete(id);
+            fn();
+          })
+        );
+      },
+    };
+
+    /**
+     * @param {PointerEvent} event
+     */
+    moveMe.onpointerdown = (event) => {
+      moveMe.setPointerCapture(event.pointerId);
+      moveMe.style.backgroundColor = "brown";
+      const current = moveMe.getBoundingClientRect();
+      const downPosition = {
+        x: event.clientX - current.left,
+        y: event.clientY - current.top,
+      };
+      moveMe.onpointermove = (event) => {
+        rafCancellable.schedule("haha", () => {
+          newPos.x = event.clientX - downPosition.x;
+          newPos.y = event.clientY - downPosition.y;
+        });
+      };
+    };
+
+    moveMe.onpointerup = (event) => {
+      moveMe.onpointermove = null;
+      moveMe.releasePointerCapture(event.pointerId);
+      moveMe.style.backgroundColor = "black";
+    };
+
+    function loop() {
+      lerpedPos.x = lerpedPos.x + (newPos.x - lerpedPos.x) * 0.1;
+      lerpedPos.y = lerpedPos.y + (newPos.y - lerpedPos.y) * 0.1;
+      if (moveMe) {
+        moveMe.style.transform = `translate(${lerpedPos.x}px, ${lerpedPos.y}px)`;
+      }
+
+      requestAnimationFrame(loop);
+    }
+
+    loop();
+  </script>
+</html>
