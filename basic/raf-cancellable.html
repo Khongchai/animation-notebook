@@ -53,6 +53,7 @@
         if (typeof existingId === "number") {
           console.log("Cancelled");
           cancelAnimationFrame(existingId);
+          this.rafIds.delete(id);
         }
 
         this.rafIds.set(
