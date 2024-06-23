@@ -8,22 +8,25 @@
     <title></title>
     <style>
       html,
-      body {
+      body,
+      canvas {
         border: 0;
         padding: 0;
         margin: 0;
+        width: 100%;
+        height: 100%;
       }
     </style>
   </head>
   <body onload="draw();">
-    <div><canvas id="canvas"></canvas></div>
+    <canvas id="canvas"></canvas>
   </body>
   <script src="../classes/particle3.js"></script>
   <script>
     let canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
-    var width = window.innerWidth;
-    var height = window.innerHeight;
+    const width = window.innerWidth * devicePixelRatio;
+    const height = window.innerHeight * devicePixelRatio;
     canvas.width = width;
     canvas.height = height;
     const mouse = {
@@ -47,14 +50,20 @@
     const k = 0.6;
 
     const draw = () => {
-      springTo2(delayedMouse1, mouse, k, 300, 0.7);
+      springTo1(delayedMouse1, mouse, k, 300, 0.7);
 
       ctx.fillStyle = "rgba(0, 0, 0, 1)";
       ctx.fillRect(0, 0, width, height);
 
       ctx.fillStyle = "darkgreen";
       ctx.beginPath();
-      ctx.arc(delayedMouse1.x, delayedMouse1.y, 20, 0, Math.PI * 2);
+      ctx.arc(
+        delayedMouse1.x + width / 2,
+        delayedMouse1.y + height / 2,
+        20,
+        0,
+        Math.PI * 2
+      );
       ctx.fill();
 
       requestAnimationFrame(draw);
@@ -65,17 +74,17 @@
         t is the target
         k is the spring constant
     */
-    function springTo1(o, t, k) {
+    function springTo1(obj, to, k) {
       // Grab the change
-      const dx = t.x - o.x;
-      const dy = t.y - o.y;
+      const dx = to.x - obj.x;
+      const dy = to.y - obj.y;
 
       // Hooke's law = F = -kx
-      o.vx = (o.vx + dx) * k;
-      o.vy = (o.vy + dy) * k;
+      obj.vx = (obj.vx + dx) * k;
+      obj.vy = (obj.vy + dy) * k;
 
-      o.x += o.vx;
-      o.y += o.vy;
+      obj.x += obj.vx;
+      obj.y += obj.vy;
     }
 
     // Same as above but can add length
