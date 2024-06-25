@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      html,
+      body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+        width: 100%;
+        height: 100%;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+  </body>
+  <script>
+    // @ts-check
+    let tick = 0;
+    function draw(callback) {
+      callback(tick);
+
+      tick++;
+      requestAnimationFrame(() => draw(callback));
+    }
+  </script>
+  <script></script>
+  <script>
+    const canvas = /** @type {HTMLCanvasElement} */ (
+      document.getElementById("canvas")
+    );
+    const w = window.innerWidth * devicePixelRatio;
+    const h = window.innerHeight * devicePixelRatio;
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = /** @type {CanvasRenderingContext2D} */ (
+      canvas.getContext("2d")
+    );
+
+    /**
+     * @param {number[][]} a
+     * @param {number[][]} b
+     */
+    function matmul(a, b) {
+      const rowsA = a.length;
+      const colsA = a[0].length;
+      const rowsB = b.length;
+      const colsB = b[0].length;
+
+      if (colsA !== rowsB) {
+        throw new Error("Columns of A must match rows of B");
+      }
+
+      const result = Array.from({ length: rowsA }, () => Array(colsB).fill(0));
+
+      for (let i = 0; i < rowsA; i++) {
+        for (let j = 0; j < colsB; j++) {
+          for (let k = 0; k < colsA; k++) {
+            result[i][j] += a[i][k] * b[k][j];
+          }
+        }
+      }
+
+      return result;
+    }
+
+    /**
+     * @param {number} count
+     * @return {number[][][]}
+     */
+    function createVectors(count) {
+      return Array.from({ length: count }, () => [[0], [0], [0]]);
+    }
+
+    /**
+     * @type {[number, number, number][]}
+     */
+    const projectionMatrix = [
+      [1, 0, 0],
+      [0, 1, 0],
+      [0, 0, 1],
+    ];
+    const vectors = createVectors(4);
+    const something = 2;
+    (vectors[0][0][0] = -50), (vectors[0][0][1] = -50);
+    (vectors[1][0][0] = 50), (vectors[1][0][1] = -50);
+    (vectors[2][0][0] = -50), (vectors[2][0][1] = 50);
+    (vectors[3][0][0] = 50), (vectors[3][0][1] = 50);
+
+    draw(() => {
+      ctx.fillStyle = "black";
+      ctx.fillRect(0, 0, w, h);
+
+      ctx.save();
+      ctx.translate(w / 2, h / 2);
+
+      for (const v of vectors) {
+        const projected = matmul(projectionMatrix, v);
+        console.log(projected);
+        ctx.fillStyle = "white";
+        ctx.beginPath();
+        ctx.arc(projected[0][0], projected[0][1], 10, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.restore();
+    });
+  </script>
+</html>

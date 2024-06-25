@@ -30,7 +30,15 @@
       x: 0,
       y: 0,
     };
-    const lerpedPos = {
+    const pos = {
+      x: 0,
+      y: 0,
+    };
+    const velocity = {
+      x: 0,
+      y: 0,
+    };
+    const acceleration = {
       x: 0,
       y: 0,
     };
@@ -44,6 +52,8 @@
       x: 50,
       y: 50,
     };
+    const damping = 0.9; // damping factor for velocity
+    const stiffness = 0.2; // stiffness factor for acceleration
 
     if (!moveMe) {
       throw new Error("Element not found");
@@ -107,14 +117,22 @@
     };
 
     function loop() {
-      lerpedPos.x = lerpedPos.x + (newPos.x - lerpedPos.x) * 0.1;
-      lerpedPos.y = lerpedPos.y + (newPos.y - lerpedPos.y) * 0.1;
+      // Second-order motion for position
+      acceleration.x = (newPos.x - pos.x) * stiffness;
+      acceleration.y = (newPos.y - pos.y) * stiffness;
+      velocity.x = velocity.x * damping + acceleration.x;
+      velocity.y = velocity.y * damping + acceleration.y;
+      pos.x += velocity.x;
+      pos.y += velocity.y;
+
+      // First-order motion for size
       springedSize.dx = (springedSize.dx + (oldSize.x - springedSize.x)) * 0.6;
       springedSize.dy = (springedSize.dy + (oldSize.y - springedSize.y)) * 0.4;
       springedSize.x += springedSize.dx;
       springedSize.y += springedSize.dy;
+
       if (moveMe) {
-        moveMe.style.transform = `translate(${lerpedPos.x}px, ${lerpedPos.y}px)`;
+        moveMe.style.transform = `translate(${pos.x}px, ${pos.y}px)`;
         moveMe.style.width = `${springedSize.x}px`;
         moveMe.style.height = `${springedSize.y}px`;
       }
