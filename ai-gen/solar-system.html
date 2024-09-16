@@ -28,6 +28,7 @@
       let cameraAngleX = 0;
       let cameraAngleY = 0;
       let zoomLevel = 1;
+      const axisLength = 100;
 
       function init() {
         const planetData = [
@@ -121,8 +122,32 @@
         ctx.fill();
       }
 
+      function drawAxis(x, y, z, color) {
+        const rotatedY = rotateY(x, z, cameraAngleY);
+        const rotatedX = rotateX(y, rotatedY.z, cameraAngleX);
+        const projected = project(rotatedY.x, rotatedX.y, rotatedX.z);
+        const origin = project(0, 0, 0);
+
+        ctx.beginPath();
+        ctx.moveTo(origin.x, origin.y);
+        ctx.lineTo(projected.x, projected.y);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Draw axis label
+        ctx.fillStyle = color;
+        ctx.font = "12px Arial";
+        ctx.fillText(color.toUpperCase(), projected.x, projected.y);
+      }
+
       function animate() {
         ctx.clearRect(0, 0, width, height);
+
+        // Draw axes
+        drawAxis(axisLength, 0, 0, "red"); // X-axis
+        drawAxis(0, axisLength, 0, "green"); // Y-axis
+        drawAxis(0, 0, axisLength, "blue"); // Z-axis
 
         planets.forEach((planet, index) => {
           if (index === 0) {
