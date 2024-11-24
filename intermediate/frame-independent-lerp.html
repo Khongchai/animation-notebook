@@ -40,7 +40,7 @@
       });
 
       // FPS for testing
-      const FPS = 30;
+      const FPS = 120;
       const frameTimeMs = 1000 / FPS;
       let lastFrameTimeMs = 0;
 
@@ -49,6 +49,7 @@
       // precision is how "close" you want `a` to be to `b` at time `t`
       function smoothLerp(a, b, precision, deltaTime, t) {
         const _t = 1 - precision ** (deltaTime / t);
+        // const _t = 0.95 * (deltaTime / t); // also works but linear
         return a + (b - a) * _t;
       }
 
