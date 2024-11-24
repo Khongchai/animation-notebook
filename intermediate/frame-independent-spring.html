@@ -32,37 +32,41 @@
       let currentX = 0;
       let currentY = 0;
       let lastTimeMs = null;
+      const fps = 120;
+      const fpsTime = 1000 / fps;
 
-      const drag = 0.7;
+      const springStrength = 50; // Higher value = faster spring motion
+      const damping = 5; // Damping factor
 
       let vx = 0;
       let vy = 0;
 
       document.addEventListener("mousemove", (e) => {
-        startTime = performance.now();
         mouseX = e.clientX;
         mouseY = e.clientY;
       });
 
-      // FPS for testing
-      const FPS = 60;
-      const frameTimeMs = 1000 / FPS;
-      let lastFrameTimeMs = 0;
-
       function animate(timestampMs) {
-        const shouldThrottle = timestampMs - lastFrameTimeMs >= frameTimeMs;
-        if (shouldThrottle) {
-          const deltaTimeSeconds =
-            (timestampMs - (lastTimeMs || timestampMs)) / 1000;
+        if (timestampMs - (lastTimeMs ?? 0) >= fpsTime) {
+          const deltaTimeSeconds = (timestampMs - lastTimeMs) / 1000;
           lastTimeMs = timestampMs;
-          lastFrameTimeMs = timestampMs;
 
-          vx = (vx + (mouseX - currentX)) * drag;
-          vy = (vy + (mouseY - currentY)) * drag;
+          // Calculate spring forces
+          const dx = mouseX - currentX;
+          const dy = mouseY - currentY;
 
-          currentX += vx;
-          currentY += vy;
+          const ax = springStrength * dx - damping * vx;
+          const ay = springStrength * dy - damping * vy;
 
+          // Update velocities
+          vx += ax * deltaTimeSeconds;
+          vy += ay * deltaTimeSeconds;
+
+          // Update positions
+          currentX += vx * deltaTimeSeconds;
+          currentY += vy * deltaTimeSeconds;
+
+          // Update follower's position
           follower.style.transform = `translate(${currentX - 10}px, ${
             currentY - 10
           }px)`;
