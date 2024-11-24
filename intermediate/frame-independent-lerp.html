@@ -9,7 +9,6 @@
         margin: 0;
         height: 100vh;
         overflow: hidden;
-        cursor: none;
         background: black;
       }
       #follower {
@@ -32,7 +31,7 @@
         mouseY = 0;
       let currentX = 0,
         currentY = 0;
-      let lastTime = null;
+      let lastTimeMs = null;
 
       document.addEventListener("mousemove", (e) => {
         startTime = performance.now();
@@ -40,23 +39,33 @@
         mouseY = e.clientY;
       });
 
+      // FPS for testing
+      const FPS = 120;
+      const frameTimeMs = 1000 / FPS;
+      let lastFrameTimeMs = 0;
+
       // https://x.com/FreyaHolmer/status/1757836988495847568?lang=en
       // https://www.desmos.com/calculator/szmbo16qqz?lang=de
-      function smoothLerp(a, b, precision, deltaTime, time) {
-        const t = 1 - precision ** (deltaTime / time);
-        return a + (b - a) * t;
+      // precision is how "close" you want `a` to be to `b` at time `t`
+      function smoothLerp(a, b, precision, deltaTime, t) {
+        const _t = 1 - precision ** (deltaTime / t);
+        return a + (b - a) * _t;
       }
 
-      function animate(timestamp) {
-        const deltaTime = (timestamp - (lastTime || timestamp)) / 1000;
-        lastTime = timestamp;
+      function animate(timestampMs) {
+        const shouldThrottle = timestampMs - lastFrameTimeMs >= frameTimeMs;
+        if (shouldThrottle) {
+          const deltaTimeSeconds =
+            (timestampMs - (lastTimeMs || timestampMs)) / 1000;
+          lastTimeMs = timestampMs;
+          lastFrameTimeMs = timestampMs;
+          currentX = smoothLerp(currentX, mouseX, 0.05, deltaTimeSeconds, 1);
+          currentY = smoothLerp(currentY, mouseY, 0.05, deltaTimeSeconds, 1);
 
-        currentX = smoothLerp(currentX, mouseX, 0.1, deltaTime, 1);
-        currentY = smoothLerp(currentY, mouseY, 0.1, deltaTime, 1);
-
-        follower.style.transform = `translate(${currentX - 10}px, ${
-          currentY - 10
-        }px)`;
+          follower.style.transform = `translate(${currentX - 10}px, ${
+            currentY - 10
+          }px)`;
+        }
 
         requestAnimationFrame(animate);
       }
