@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smooth Mouse Follower</title>
+    <style>
+      body {
+        margin: 0;
+        height: 100vh;
+        overflow: hidden;
+        cursor: none;
+        background: black;
+      }
+      #follower {
+        position: fixed;
+        width: 20px;
+        height: 20px;
+        background-color: #3498db;
+        border-radius: 50%;
+        pointer-events: none;
+        transition: width 0.3s, height 0.3s;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="follower"></div>
+
+    <script>
+      const follower = document.getElementById("follower");
+      let mouseX = 0,
+        mouseY = 0;
+      let currentX = 0,
+        currentY = 0;
+      let lastTime = null;
+
+      document.addEventListener("mousemove", (e) => {
+        startTime = performance.now();
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+      });
+
+      // https://x.com/FreyaHolmer/status/1757836988495847568?lang=en
+      // https://www.desmos.com/calculator/szmbo16qqz?lang=de
+      function smoothLerp(a, b, precision, deltaTime, time) {
+        const t = 1 - precision ** (deltaTime / time);
+        return a + (b - a) * t;
+      }
+
+      function animate(timestamp) {
+        const deltaTime = (timestamp - (lastTime || timestamp)) / 1000;
+        lastTime = timestamp;
+
+        currentX = smoothLerp(currentX, mouseX, 0.1, deltaTime, 1);
+        currentY = smoothLerp(currentY, mouseY, 0.1, deltaTime, 1);
+
+        follower.style.transform = `translate(${currentX - 10}px, ${
+          currentY - 10
+        }px)`;
+
+        requestAnimationFrame(animate);
+      }
+
+      requestAnimationFrame(animate);
+
+      document.addEventListener("mousedown", () => {
+        follower.style.width = "30px";
+        follower.style.height = "30px";
+      });
+
+      document.addEventListener("mouseup", () => {
+        follower.style.width = "20px";
+        follower.style.height = "20px";
+      });
+    </script>
+  </body>
+</html>
