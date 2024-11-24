@@ -24,52 +24,56 @@
   </head>
   <body>
     <div id="follower"></div>
+    <div id="follower2"></div>
 
     <script>
       const follower = document.getElementById("follower");
+      const follower2 = document.getElementById("follower2");
       let mouseX = 0;
       let mouseY = 0;
       let currentX = 0;
       let currentY = 0;
       let lastTimeMs = null;
-      const fps = 120;
-      const fpsTime = 1000 / fps;
-
-      const springStrength = 50; // Higher value = faster spring motion
-      const damping = 5; // Damping factor
 
       let vx = 0;
       let vy = 0;
+      let ax = 0;
+      let ay = 0;
 
       document.addEventListener("mousemove", (e) => {
+        startTime = performance.now();
         mouseX = e.clientX;
         mouseY = e.clientY;
       });
 
+      // FPS for testing
+      const FPS = 120;
+      const frameTimeMs = 1000 / FPS;
+      let lastFrameTimeMs = 0;
+
       function animate(timestampMs) {
-        if (timestampMs - (lastTimeMs ?? 0) >= fpsTime) {
-          const deltaTimeSeconds = (timestampMs - lastTimeMs) / 1000;
+        const shouldThrottle = timestampMs - lastFrameTimeMs >= frameTimeMs;
+        if (shouldThrottle) {
+          const deltaTimeSeconds =
+            (timestampMs - (lastTimeMs || timestampMs)) / 1000;
           lastTimeMs = timestampMs;
+          lastFrameTimeMs = timestampMs;
 
-          // Calculate spring forces
-          const dx = mouseX - currentX;
-          const dy = mouseY - currentY;
+          const springStrength = 0.05;
+          const damping = 0.79;
 
-          const ax = springStrength * dx - damping * vx;
-          const ay = springStrength * dy - damping * vy;
+          ax = (mouseX - currentX) * springStrength;
+          ay = (mouseY - currentY) * springStrength;
 
-          // Update velocities
-          vx += ax * deltaTimeSeconds;
-          vy += ay * deltaTimeSeconds;
+          vx = (vx + ax) * damping;
+          vy = (vy + ay) * damping;
 
-          // Update positions
-          currentX += vx * deltaTimeSeconds;
-          currentY += vy * deltaTimeSeconds;
+          currentX += vx;
+          currentY += vy;
 
-          // Update follower's position
-          follower.style.transform = `translate(${currentX - 10}px, ${
-            currentY - 10
-          }px)`;
+          follower.style.transform = `translate(
+            ${currentX - 10}px, ${currentY - 10}px
+          )`;
         }
 
         requestAnimationFrame(animate);
