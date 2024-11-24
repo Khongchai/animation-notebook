@@ -47,20 +47,18 @@
       });
 
       // FPS for testing
-      const FPS = 120;
+      const FPS = 30;
       const frameTimeMs = 1000 / FPS;
-      let lastFrameTimeMs = 0;
 
       function animate(timestampMs) {
-        const shouldThrottle = timestampMs - lastFrameTimeMs >= frameTimeMs;
+        const shouldThrottle = timestampMs - lastTimeMs >= frameTimeMs;
         if (shouldThrottle) {
           const deltaTimeSeconds =
             (timestampMs - (lastTimeMs || timestampMs)) / 1000;
           lastTimeMs = timestampMs;
-          lastFrameTimeMs = timestampMs;
 
-          const springStrength = 0.05;
-          const damping = 0.79;
+          const springStrength = 100;
+          const damping = 10;
 
           forceX = (mouseX - currentX) * springStrength;
           forceY = (mouseY - currentY) * springStrength;
@@ -68,12 +66,15 @@
           // mass is 1 so acceleration === force (from f = ma)
           const ax = forceX;
           const ay = forceY;
+          vx += ax * deltaTimeSeconds;
+          vy += ay * deltaTimeSeconds;
 
-          vx = (vx + ax) * damping;
-          vy = (vy + ay) * damping;
+          vx *= Math.exp(-damping * deltaTimeSeconds);
+          vy *= Math.exp(-damping * deltaTimeSeconds);
 
-          currentX += vx;
-          currentY += vy;
+          // Update position
+          currentX += vx * deltaTimeSeconds;
+          currentY += vy * deltaTimeSeconds;
 
           follower.style.transform = `translate(
             ${currentX - 10}px, ${currentY - 10}px
