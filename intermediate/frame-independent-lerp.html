@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smooth Mouse Follower</title>
+    <style>
+      body {
+        margin: 0;
+        height: 100vh;
+        overflow: hidden;
+        background: black;
+      }
+      #follower {
+        position: fixed;
+        width: 20px;
+        height: 20px;
+        background-color: #3498db;
+        border-radius: 50%;
+        pointer-events: none;
+        transition: width 0.3s, height 0.3s;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="follower"></div>
+
+    <script>
+      const follower = document.getElementById("follower");
+      let mouseX = 0,
+        mouseY = 0;
+      let currentX = 0,
+        currentY = 0;
+      let lastTimeMs = null;
+
+      document.addEventListener("mousemove", (e) => {
+        startTime = performance.now();
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+      });
+
+      // FPS for testing
+      const FPS = 120;
+      const frameTimeMs = 1000 / FPS;
+      let lastFrameTimeMs = 0;
+
+      // https://x.com/FreyaHolmer/status/1757836988495847568?lang=en
+      // https://www.desmos.com/calculator/szmbo16qqz?lang=de
+      // precision is how "close" you want `a` to be to `b` at time `t`
+      function smoothLerp(a, b, precision, deltaTime, t) {
+        const _t = 1 - precision ** (deltaTime / t);
+        // const _t = 0.95 * (deltaTime / t); // also works but linear
+        return a + (b - a) * _t;
+      }
+
+      function animate(timestampMs) {
+        const shouldThrottle = timestampMs - lastFrameTimeMs >= frameTimeMs;
+        if (shouldThrottle) {
+          const deltaTimeSeconds =
+            (timestampMs - (lastTimeMs || timestampMs)) / 1000;
+          lastTimeMs = timestampMs;
+          lastFrameTimeMs = timestampMs;
+          currentX = smoothLerp(currentX, mouseX, 0.05, deltaTimeSeconds, 1);
+          currentY = smoothLerp(currentY, mouseY, 0.05, deltaTimeSeconds, 1);
+
+          follower.style.transform = `translate(${currentX - 10}px, ${
+            currentY - 10
+          }px)`;
+        }
+
+        requestAnimationFrame(animate);
+      }
+
+      requestAnimationFrame(animate);
+
+      document.addEventListener("mousedown", () => {
+        follower.style.width = "30px";
+        follower.style.height = "30px";
+      });
+
+      document.addEventListener("mouseup", () => {
+        follower.style.width = "20px";
+        follower.style.height = "20px";
+      });
+    </script>
+  </body>
+</html>
