@@ -130,6 +130,7 @@
     }
     function rotate(particlesArray, rotationAngles, radius, centerZ) {
       lerpedMousePos.x = lerp(lerpedMousePos.x, currentMouse.x, 0.1);
+      lerpedMousePos.y = lerp(lerpedMousePos.y, currentMouse.y, 0.1);
       rotationAngles.baseY = rotationAngles.initialY + lerpedMousePos.x * 0.001;
       rotationAngles.baseX = rotationAngles.initialX + lerpedMousePos.y * 0.001;
       particlesArray.forEach((p) => {
@@ -141,7 +142,8 @@
           Math.sin(p.initialZ + rotationAngles.baseY) * radius;
 
         // x rotation
-        // p.y = p.y + rotationAngles.baseX;
+        p.y = p.initialY + Math.cos(p.initialZ + rotationAngles.baseX) * radius;
+        p.z = p.z + 1000 + Math.sin(p.initialZ + rotationAngles.baseX) * radius;
       });
     }
     function listenToRotation() {
