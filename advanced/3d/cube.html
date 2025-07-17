@@ -81,10 +81,12 @@
       }
 
       function project([x, y, z]) {
+        const centerX = canvas.width / 2;
+        const centerY = canvas.width / 2;
         // set to one to see orthographic
         const scale = 500 / (500 + z);
-        const px = x * scale + canvas.width / 2;
-        const py = y * scale + canvas.height / 2;
+        const px = x * scale + centerX;
+        const py = y * scale + centerY;
         return [px, py];
       }
 
