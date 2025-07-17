@@ -38,8 +38,10 @@
     const focalLength = 700;
 
     const rotationAngles = {
-      base: 0,
-      initial: 0,
+      baseY: 0,
+      initialY: 0,
+      baseX: 0,
+      initialX: 0,
     };
 
     const mouseDownPos = {
@@ -80,7 +82,9 @@
           y: Math.random() * -canvas.height * 2,
           z: Math.random() * 4000,
           radius: Math.random() * 3 + 2,
-          color: "rgba(240, 94, 27, 0.7)",
+          color: `rgba(${100 + Math.random() * 140}, ${
+            Math.random() * 94
+          }, ${27}, 0.7)`,
           shadowColor: "rgba(300, 94, 27, 0.9)",
         };
         newParticle.initialZ = newParticle.z;
@@ -126,13 +130,18 @@
     }
     function rotate(particlesArray, rotationAngles, radius, centerZ) {
       lerpedMousePos.x = lerp(lerpedMousePos.x, currentMouse.x, 0.1);
-      rotationAngles.base = rotationAngles.initial + lerpedMousePos.x * 0.001;
+      rotationAngles.baseY = rotationAngles.initialY + lerpedMousePos.x * 0.001;
+      rotationAngles.baseX = rotationAngles.initialX + lerpedMousePos.y * 0.001;
       particlesArray.forEach((p) => {
-        p.x = p.initialX + Math.cos(p.initialZ + rotationAngles.base) * radius;
+        // y rotation
+        p.x = p.initialX + Math.cos(p.initialZ + rotationAngles.baseY) * radius;
         p.z =
           p.initialZ +
           1000 +
-          Math.sin(p.initialZ + rotationAngles.base) * radius;
+          Math.sin(p.initialZ + rotationAngles.baseY) * radius;
+
+        // x rotation
+        // p.y = p.y + rotationAngles.baseX;
       });
     }
     function listenToRotation() {
@@ -149,9 +158,12 @@
       window.addEventListener("mousemove", (e) => {
         if (mouseDown) {
           const x = e.clientX;
+          const y = e.clientY;
           const deltaX = x - mouseDownPos.x;
+          const deltaY = y - mouseDownPos.y;
 
           currentMouse.x = mouseUpPos.x + deltaX;
+          currentMouse.y = mouseUpPos.y + deltaY;
         }
       });
     }
