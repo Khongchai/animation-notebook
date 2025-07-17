@@ -50,11 +50,11 @@
       x: 0,
       y: 0,
     };
-    const mousePos = {
+    const mouseUpPos = {
       x: 0,
       y: 0,
     };
-    const mouseDelta = {
+    const currentMouse = {
       x: 0,
       y: 0,
     };
@@ -125,7 +125,7 @@
       });
     }
     function rotate(particlesArray, rotationAngles, radius, centerZ) {
-      lerpedMousePos.x = lerp(lerpedMousePos.x, mouseDelta.x, 0.1);
+      lerpedMousePos.x = lerp(lerpedMousePos.x, currentMouse.x, 0.1);
       rotationAngles.base = rotationAngles.initial + lerpedMousePos.x * 0.001;
       particlesArray.forEach((p) => {
         p.x = p.initialX + Math.cos(p.initialZ + rotationAngles.base) * radius;
@@ -142,14 +142,16 @@
         mouseDown = true;
       });
       window.addEventListener("mouseup", (e) => {
+        mouseUpPos.x = currentMouse.x;
+        mouseUpPos.y = currentMouse.y;
         mouseDown = false;
       });
       window.addEventListener("mousemove", (e) => {
         if (mouseDown) {
-          mousePos.x = e.clientX;
-          mousePos.y = e.clientY;
+          const x = e.clientX;
+          const deltaX = x - mouseDownPos.x;
 
-          mouseDelta.x = mousePos.x - mouseDownPos.x;
+          currentMouse.x = mouseUpPos.x + deltaX;
         }
       });
     }
