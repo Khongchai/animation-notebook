@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>3D Rotating Cube</title>
+    <style>
+      body {
+        margin: 0;
+        background: #000;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="cubeCanvas"></canvas>
+    <script>
+      const canvas = document.getElementById("cubeCanvas");
+      const ctx = canvas.getContext("2d");
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      const cubeSize = 100;
+      const vertices = [
+        [-1, -1, -1],
+        [1, -1, -1],
+        [1, 1, -1],
+        [-1, 1, -1],
+        [-1, -1, 1],
+        [1, -1, 1],
+        [1, 1, 1],
+        [-1, 1, 1],
+      ].map((p) => p.map((v) => v * cubeSize));
+
+      const edges = [
+        [0, 1],
+        [1, 2],
+        [2, 3],
+        [3, 0],
+        [4, 5],
+        [5, 6],
+        [6, 7],
+        [7, 4],
+        [0, 4],
+        [1, 5],
+        [2, 6],
+        [3, 7],
+      ];
+
+      let angleX = 0;
+      let angleY = 0;
+      let angleZ = 0;
+
+      function rotate([x, y, z], ax, ay, az) {
+        // X rotation
+        let sin = Math.sin(ax),
+          cos = Math.cos(ax);
+        let dy = y * cos - z * sin;
+        let dz = y * sin + z * cos;
+        y = dy;
+        z = dz;
+
+        // Y rotation
+        sin = Math.sin(ay);
+        cos = Math.cos(ay);
+        let dx = x * cos + z * sin;
+        dz = -x * sin + z * cos;
+        x = dx;
+        z = dz;
+
+        // Z rotation
+        sin = Math.sin(az);
+        cos = Math.cos(az);
+        dx = x * cos - y * sin;
+        dy = x * sin + y * cos;
+        x = dx;
+        y = dy;
+
+        return [x, y, z];
+      }
+
+      function project([x, y, z]) {
+        // set to one to see orthographic
+        const scale = 500 / (500 + z);
+        const px = x * scale + canvas.width / 2;
+        const py = y * scale + canvas.height / 2;
+        return [px, py];
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const rotated = vertices.map((v) => rotate(v, angleX, angleY, angleZ));
+        const projected = rotated.map(project);
+
+        ctx.strokeStyle = "#0ff";
+        ctx.lineWidth = 2;
+
+        for (const [i, j] of edges) {
+          const [x1, y1] = projected[i];
+          const [x2, y2] = projected[j];
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x2, y2);
+          ctx.stroke();
+        }
+
+        angleX += 0.01;
+        angleY += 0.013;
+        angleZ += 0.007;
+
+        requestAnimationFrame(draw);
+      }
+
+      draw();
+    </script>
+  </body>
+</html>
