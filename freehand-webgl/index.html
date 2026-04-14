@@ -42,15 +42,6 @@
         pointer-events: none;
       }
     </style>
-    <script type="importmap">
-      {
-        "imports": {
-          "robust-predicates": "https://esm.sh/robust-predicates@3.0.2",
-          "perfect-freehand": "https://esm.sh/perfect-freehand@1.2.2",
-          "earcut": "https://esm.sh/earcut@2.2.4"
-        }
-      }
-    </script>
   </head>
   <body>
     <canvas id="gl"></canvas>
@@ -61,7 +52,57 @@
     </div>
     <script type="module">
       import { getStroke } from "perfect-freehand";
-      import earcut from "earcut";
+      import libtess from "libtess";
+
+      // Set up a reusable libtess tesselator. Uses the NONZERO winding rule so
+      // self-intersecting outlines (sharp corners in perfect-freehand strokes)
+      // tessellate as their union — no stray triangles, no flicker.
+      const tessy = (() => {
+        const t = new libtess.GluTesselator();
+        t.gluTessCallback(
+          libtess.gluEnum.GLU_TESS_VERTEX_DATA,
+          (data, out) => out.push(data[0], data[1]),
+        );
+        t.gluTessCallback(libtess.gluEnum.GLU_TESS_BEGIN, (type) => {
+          if (type !== libtess.primitiveType.GL_TRIANGLES)
+            console.warn("libtess: expected GL_TRIANGLES, got", type);
+        });
+        t.gluTessCallback(libtess.gluEnum.GLU_TESS_ERROR, (err) =>
+          console.error("libtess error:", err),
+        );
+        t.gluTessCallback(
+          libtess.gluEnum.GLU_TESS_COMBINE,
+          (coords) => [coords[0], coords[1], coords[2]],
+        );
+        // Registering an (even empty) edge-flag callback forces libtess to
+        // emit independent GL_TRIANGLES rather than strips/fans.
+        t.gluTessCallback(libtess.gluEnum.GLU_TESS_EDGE_FLAG, () => {});
+        return t;
+      })();
+
+      /**
+       * Tesselate a polygon (possibly self-intersecting) into a flat array of
+       * triangle vertex coordinates: [x0,y0, x1,y1, x2,y2, ...]. Every 3
+       * consecutive pairs form one triangle.
+       * @param {[number, number][]} points
+       * @returns {number[]}
+       */
+      const tessellate = (points) => {
+        const out = [];
+        tessy.gluTessProperty(
+          libtess.gluEnum.GLU_TESS_WINDING_RULE,
+          libtess.windingRule.GLU_TESS_WINDING_NONZERO,
+        );
+        tessy.gluTessNormal(0, 0, 1);
+        tessy.gluTessBeginPolygon(out);
+        tessy.gluTessBeginContour();
+        for (const [x, y] of points) {
+          tessy.gluTessVertex([x, y, 0], [x, y]);
+        }
+        tessy.gluTessEndContour();
+        tessy.gluTessEndPolygon();
+        return out;
+      };
 
       const average = (a, b) => (a + b) / 2;
       function getSvgPathFromStroke(points, closed = true) {
@@ -203,17 +244,11 @@
         );
         const path = getSvgPathFromStroke(outline);
         const points = parseSvgPathToPoints(path);
-
         if (points.length < 3) return null;
-        const flat = new Float64Array(points.length * 2);
-        for (let i = 0; i < points.length; i++) {
-          flat[2 * i] = points[i][0];
-          flat[2 * i + 1] = points[i][1];
-        }
-        // earcut treats `flat` as an ordered polygon boundary and returns
-        // triangle indices that fill only the polygon's interior.
-        const tris = earcut(flat);
-        return { flat, tris, original: points };
+        // libtess resolves self-intersections via the NONZERO winding rule and
+        // emits triangle vertex coords directly (no index array needed).
+        const verts = tessellate(points);
+        return verts;
       };
 
       const render = () => {
@@ -224,16 +259,12 @@
 
         const drawStroke = (pts) => {
           const t = triangulate(pts);
-          if (!t) return;
-          // expand outline points into triangle vertices (x,y) in device pixels
-          const verts = new Float32Array(t.tris.length * 2);
-          for (let i = 0; i < t.tris.length; i++) {
-            const idx = t.tris[i];
-            verts[2 * i] = t.flat[2 * idx] * dpr;
-            verts[2 * i + 1] = t.flat[2 * idx + 1] * dpr;
-          }
+          if (!t || t.length < 6) return;
+          // scale to device pixels for the GL viewport
+          const verts = new Float32Array(t.length);
+          for (let i = 0; i < t.length; i++) verts[i] = t[i] * dpr;
           gl.bufferData(gl.ARRAY_BUFFER, verts, gl.STREAM_DRAW);
-          gl.drawArrays(gl.TRIANGLES, 0, t.tris.length);
+          gl.drawArrays(gl.TRIANGLES, 0, t.length / 2);
         };
 
         for (const s of strokes) {
