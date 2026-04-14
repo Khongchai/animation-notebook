@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Freehand + Delaunator</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #111;
+        overflow: hidden;
+      }
+      canvas {
+        display: block;
+        position: absolute;
+        inset: 0;
+        width: 100vw;
+        height: 100vh;
+        cursor: crosshair;
+        touch-action: none;
+      }
+      #c2d {
+        pointer-events: none;
+      }
+      body.mode-2d #gl {
+        display: none;
+      }
+      body.mode-2d #c2d {
+        pointer-events: auto;
+      }
+      body.mode-gl #c2d {
+        display: none;
+      }
+      #hint {
+        position: fixed;
+        top: 10px;
+        left: 12px;
+        color: #888;
+        font: 12px monospace;
+        pointer-events: none;
+      }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "robust-predicates": "https://esm.sh/robust-predicates@3.0.2",
+          "perfect-freehand": "https://esm.sh/perfect-freehand@1.2.2",
+          "earcut": "https://esm.sh/earcut@2.2.4"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <canvas id="gl"></canvas>
+    <canvas id="c2d"></canvas>
+    <div id="hint">
+      drag to draw &middot; double-click to clear &middot; press [t] to toggle
+      renderer (webgl / 2d)
+    </div>
+    <script type="module">
+      import { getStroke } from "perfect-freehand";
+      import earcut from "earcut";
+
+      const average = (a, b) => (a + b) / 2;
+      function getSvgPathFromStroke(points, closed = true) {
+        const len = points.length;
+
+        if (len < 4) {
+          return ``;
+        }
+
+        let a = points[0];
+        let b = points[1];
+        const c = points[2];
+
+        let result = `M${a[0].toFixed(2)},${a[1].toFixed(2)} Q${b[0].toFixed(
+          2,
+        )},${b[1].toFixed(2)} ${average(b[0], c[0]).toFixed(2)},${average(
+          b[1],
+          c[1],
+        ).toFixed(2)} T`;
+
+        for (let i = 2, max = len - 1; i < max; i++) {
+          a = points[i];
+          b = points[i + 1];
+          result += `${average(a[0], b[0]).toFixed(2)},${average(
+            a[1],
+            b[1],
+          ).toFixed(2)} `;
+        }
+
+        if (closed) {
+          result += "Z";
+        }
+
+        return result;
+      }
+
+      const canvas = document.getElementById("gl");
+      const canvas2d = document.getElementById("c2d");
+      const ctx = canvas2d.getContext("2d");
+      const gl = canvas.getContext("webgl", { antialias: true });
+      if (!gl) throw new Error("WebGL not supported");
+
+      let mode = "gl"; // "gl" | "2d"
+      document.body.classList.add("mode-gl");
+      const setMode = (m) => {
+        mode = m;
+        document.body.classList.remove("mode-gl", "mode-2d");
+        document.body.classList.add(`mode-${m}`);
+        render();
+      };
+      window.addEventListener("keydown", (e) => {
+        if (e.key === "t" || e.key === "T")
+          setMode(mode === "gl" ? "2d" : "gl");
+      });
+
+      const dpr = window.devicePixelRatio || 1;
+      const resize = () => {
+        for (const c of [canvas, canvas2d]) {
+          c.width = c.clientWidth * dpr;
+          c.height = c.clientHeight * dpr;
+        }
+        gl.viewport(0, 0, canvas.width, canvas.height);
+      };
+
+      const vs = `
+        attribute vec2 a_position;
+        uniform vec2 u_resolution;
+        void main() {
+          vec2 clip = (a_position / u_resolution) * 2.0 - 1.0;
+          gl_Position = vec4(clip.x, -clip.y, 0.0, 1.0);
+        }
+      `;
+      const fs = `
+        precision mediump float;
+        uniform vec4 u_color;
+        void main() { gl_FragColor = u_color; }
+      `;
+
+      const compile = (type, src) => {
+        const s = gl.createShader(type);
+        gl.shaderSource(s, src);
+        gl.compileShader(s);
+        if (!gl.getShaderParameter(s, gl.COMPILE_STATUS))
+          throw new Error(gl.getShaderInfoLog(s));
+        return s;
+      };
+      const program = gl.createProgram();
+      gl.attachShader(program, compile(gl.VERTEX_SHADER, vs));
+      gl.attachShader(program, compile(gl.FRAGMENT_SHADER, fs));
+      gl.linkProgram(program);
+      if (!gl.getProgramParameter(program, gl.LINK_STATUS))
+        throw new Error(gl.getProgramInfoLog(program));
+      gl.useProgram(program);
+
+      const posLoc = gl.getAttribLocation(program, "a_position");
+      const resLoc = gl.getUniformLocation(program, "u_resolution");
+      const colorLoc = gl.getUniformLocation(program, "u_color");
+      const buffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+      gl.enableVertexAttribArray(posLoc);
+      gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
+
+      /** @type {Array<Array<[number, number, number]>>} committed strokes (input points w/ pressure) */
+      const strokes = [];
+      /** @type {Array<[number, number, number]> | null} */
+      let current = null;
+
+      const strokeOptions = {
+        size: 16,
+        thinning: 0.6,
+        smoothing: 0.5,
+        streamline: 0.5,
+        simulatePressure: true,
+        last: true,
+      };
+
+      /**
+       * Parse an SVG path string (as produced by getSvgPathFromStroke — i.e. only
+       * M / Q / T / Z commands with comma-separated `x,y` pairs) into an array of
+       * 2D points. We don't distinguish control vs. endpoint here because for
+       * triangulation we just want the point set; control points sit on the stroke
+       * outline anyway and endpoints are midpoints between them.
+       * @param {string} path
+       * @returns {[number, number][]}
+       */
+      const parseSvgPathToPoints = (path) => {
+        const points = [];
+        const re = /(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/g;
+        let m;
+        while ((m = re.exec(path)) !== null) {
+          points.push([parseFloat(m[1]), parseFloat(m[2])]);
+        }
+        return points;
+      };
+
+      const triangulate = (inputPoints) => {
+        const outline = /** @type {[number, number][]} */ (
+          getStroke(inputPoints, strokeOptions)
+        );
+        const path = getSvgPathFromStroke(outline);
+        const points = parseSvgPathToPoints(path);
+
+        if (points.length < 3) return null;
+        const flat = new Float64Array(points.length * 2);
+        for (let i = 0; i < points.length; i++) {
+          flat[2 * i] = points[i][0];
+          flat[2 * i + 1] = points[i][1];
+        }
+        // earcut treats `flat` as an ordered polygon boundary and returns
+        // triangle indices that fill only the polygon's interior.
+        const tris = earcut(flat);
+        return { flat, tris, original: points };
+      };
+
+      const render = () => {
+        gl.clearColor(0.07, 0.07, 0.07, 1);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.uniform2f(resLoc, canvas.width, canvas.height);
+        gl.uniform4f(colorLoc, 0.4, 0.8, 1.0, 1.0);
+
+        const drawStroke = (pts) => {
+          const t = triangulate(pts);
+          if (!t) return;
+          // expand outline points into triangle vertices (x,y) in device pixels
+          const verts = new Float32Array(t.tris.length * 2);
+          for (let i = 0; i < t.tris.length; i++) {
+            const idx = t.tris[i];
+            verts[2 * i] = t.flat[2 * idx] * dpr;
+            verts[2 * i + 1] = t.flat[2 * idx + 1] * dpr;
+          }
+          gl.bufferData(gl.ARRAY_BUFFER, verts, gl.STREAM_DRAW);
+          gl.drawArrays(gl.TRIANGLES, 0, t.tris.length);
+        };
+
+        for (const s of strokes) {
+          drawStroke(s);
+        }
+        if (current && current.length > 1) drawStroke(current);
+      };
+
+      const pointerPos = (e) => {
+        const r = canvas.getBoundingClientRect();
+        return [e.clientX - r.left, e.clientY - r.top, e.pressure || 0.5];
+      };
+
+      canvas.addEventListener("pointerdown", (e) => {
+        canvas.setPointerCapture(e.pointerId);
+        current = [pointerPos(e)];
+        render();
+      });
+      canvas.addEventListener("pointermove", (e) => {
+        if (!current) return;
+        current.push(pointerPos(e));
+        render();
+      });
+      const endStroke = (e) => {
+        if (!current) return;
+        current.push(pointerPos(e));
+        if (current.length > 1) strokes.push(current);
+        current = null;
+        render();
+      };
+      canvas.addEventListener("pointerup", endStroke);
+      canvas.addEventListener("pointercancel", endStroke);
+      canvas.addEventListener("dblclick", () => {
+        strokes.length = 0;
+        current = null;
+        render();
+      });
+
+      window.addEventListener("resize", () => {
+        resize();
+        render();
+      });
+      resize();
+      render();
+    </script>
+  </body>
+</html>
