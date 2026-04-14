@@ -8,8 +8,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "libtess": "^1.2.2",
-    "perfect-freehand": "^1.2.3"
+    "perfect-freehand": "^1.2.3",
+    "tess2": "^1.0.0"
   },
   "devDependencies": {
     "vite": "^8.0.8"

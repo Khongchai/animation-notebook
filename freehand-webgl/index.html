@@ -52,55 +52,37 @@
     </div>
     <script type="module">
       import { getStroke } from "perfect-freehand";
-      import libtess from "libtess";
-
-      // Set up a reusable libtess tesselator. Uses the NONZERO winding rule so
-      // self-intersecting outlines (sharp corners in perfect-freehand strokes)
-      // tessellate as their union — no stray triangles, no flicker.
-      const tessy = (() => {
-        const t = new libtess.GluTesselator();
-        t.gluTessCallback(
-          libtess.gluEnum.GLU_TESS_VERTEX_DATA,
-          (data, out) => out.push(data[0], data[1]),
-        );
-        t.gluTessCallback(libtess.gluEnum.GLU_TESS_BEGIN, (type) => {
-          if (type !== libtess.primitiveType.GL_TRIANGLES)
-            console.warn("libtess: expected GL_TRIANGLES, got", type);
-        });
-        t.gluTessCallback(libtess.gluEnum.GLU_TESS_ERROR, (err) =>
-          console.error("libtess error:", err),
-        );
-        t.gluTessCallback(
-          libtess.gluEnum.GLU_TESS_COMBINE,
-          (coords) => [coords[0], coords[1], coords[2]],
-        );
-        // Registering an (even empty) edge-flag callback forces libtess to
-        // emit independent GL_TRIANGLES rather than strips/fans.
-        t.gluTessCallback(libtess.gluEnum.GLU_TESS_EDGE_FLAG, () => {});
-        return t;
-      })();
+      import Tess2 from "tess2";
 
       /**
        * Tesselate a polygon (possibly self-intersecting) into a flat array of
        * triangle vertex coordinates: [x0,y0, x1,y1, x2,y2, ...]. Every 3
-       * consecutive pairs form one triangle.
+       * consecutive pairs form one triangle. Uses the NONZERO winding rule so
+       * self-intersections are resolved as their union.
        * @param {[number, number][]} points
        * @returns {number[]}
        */
       const tessellate = (points) => {
-        const out = [];
-        tessy.gluTessProperty(
-          libtess.gluEnum.GLU_TESS_WINDING_RULE,
-          libtess.windingRule.GLU_TESS_WINDING_NONZERO,
-        );
-        tessy.gluTessNormal(0, 0, 1);
-        tessy.gluTessBeginPolygon(out);
-        tessy.gluTessBeginContour();
-        for (const [x, y] of points) {
-          tessy.gluTessVertex([x, y, 0], [x, y]);
+        const contour = new Array(points.length * 2);
+        for (let i = 0; i < points.length; i++) {
+          contour[2 * i] = points[i][0];
+          contour[2 * i + 1] = points[i][1];
         }
-        tessy.gluTessEndContour();
-        tessy.gluTessEndPolygon();
+        const res = Tess2.tesselate({
+          contours: [contour],
+          windingRule: Tess2.WINDING_NONZERO,
+          elementType: Tess2.POLYGONS,
+          polySize: 3,
+          vertexSize: 2,
+        });
+        // res.vertices: flat [x,y,x,y,...] deduped vertices
+        // res.elements: flat triangle index array (3 per tri)
+        const out = new Array(res.elements.length * 2);
+        for (let i = 0; i < res.elements.length; i++) {
+          const v = res.elements[i];
+          out[2 * i] = res.vertices[2 * v];
+          out[2 * i + 1] = res.vertices[2 * v + 1];
+        }
         return out;
       };
 
