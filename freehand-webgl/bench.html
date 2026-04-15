@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Tess2 JS vs WASM benchmark</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 20px;
+        background: #111;
+        color: #ddd;
+        font: 13px/1.5 ui-monospace, Menlo, monospace;
+      }
+      h1 {
+        font-size: 14px;
+        margin: 0 0 12px;
+      }
+      button {
+        background: #222;
+        color: #ddd;
+        border: 1px solid #444;
+        padding: 6px 12px;
+        cursor: pointer;
+        font: inherit;
+        margin-right: 8px;
+      }
+      button:hover {
+        background: #333;
+      }
+      table {
+        border-collapse: collapse;
+        margin-top: 16px;
+      }
+      th,
+      td {
+        border: 1px solid #333;
+        padding: 6px 10px;
+        text-align: right;
+      }
+      th {
+        background: #1a1a1a;
+        text-align: left;
+      }
+      td:first-child,
+      th:first-child {
+        text-align: left;
+      }
+      .faster {
+        color: #6f6;
+      }
+      .slower {
+        color: #f66;
+      }
+      #log {
+        white-space: pre;
+        margin-top: 12px;
+        color: #888;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Tess2: pure JS vs. libtess2 WASM</h1>
+    <div>
+      <button id="run">Run benchmark</button>
+      <label>
+        iterations:
+        <input id="iters" type="number" value="50" min="1" style="width:60px;background:#222;color:#ddd;border:1px solid #444;padding:2px 6px;font:inherit;"/>
+      </label>
+      <label style="margin-left:12px">
+        warmup:
+        <input id="warm" type="number" value="5" min="0" style="width:60px;background:#222;color:#ddd;border:1px solid #444;padding:2px 6px;font:inherit;"/>
+      </label>
+    </div>
+    <div id="out"></div>
+    <div id="log"></div>
+
+    <script type="module">
+      import Tess2JS from "tess2";
+      import { createTess2 } from "./tess2-wasm/tess2.js";
+
+      const log = (msg) => {
+        document.getElementById("log").textContent += msg + "\n";
+      };
+
+      // --- Test data generators (all return flat [x0,y0,x1,y1,...] contours).
+
+      // A star polygon with self-intersections — exercises the trapezoidation
+      // heavily via the NONZERO winding rule.
+      const star = (cx, cy, r, points, skip) => {
+        const out = new Array(points * 2);
+        for (let i = 0; i < points; i++) {
+          const a = ((i * skip) / points) * Math.PI * 2;
+          out[2 * i] = cx + Math.cos(a) * r;
+          out[2 * i + 1] = cy + Math.sin(a) * r;
+        }
+        return out;
+      };
+
+      // A noisy closed polygon (simulates a perfect-freehand outline).
+      const noisyBlob = (cx, cy, r, n, seed) => {
+        let s = seed;
+        const rand = () => {
+          s = (s * 1664525 + 1013904223) | 0;
+          return ((s >>> 0) / 0xffffffff);
+        };
+        const out = new Array(n * 2);
+        for (let i = 0; i < n; i++) {
+          const a = (i / n) * Math.PI * 2;
+          const rr = r * (0.7 + 0.6 * rand());
+          out[2 * i] = cx + Math.cos(a) * rr;
+          out[2 * i + 1] = cy + Math.sin(a) * rr;
+        }
+        return out;
+      };
+
+      // N disjoint blobs packed in a grid — simulates "user pasted lots of shapes".
+      const manyBlobs = (n, pointsEach) => {
+        const cols = Math.ceil(Math.sqrt(n));
+        const contours = [];
+        for (let i = 0; i < n; i++) {
+          const col = i % cols;
+          const row = Math.floor(i / cols);
+          contours.push(noisyBlob(100 + col * 80, 100 + row * 80, 30, pointsEach, i + 1));
+        }
+        return contours;
+      };
+
+      const CASES = [
+        { name: "small blob (32 pts)",       contours: [noisyBlob(200, 200, 100, 32, 1)] },
+        { name: "medium blob (256 pts)",     contours: [noisyBlob(200, 200, 100, 256, 1)] },
+        { name: "large blob (2048 pts)",     contours: [noisyBlob(200, 200, 100, 2048, 1)] },
+        { name: "star 7/3 (14 pts, self-intersecting)", contours: [star(200, 200, 100, 14, 3)] },
+        { name: "star 23/9 (46 pts)",        contours: [star(200, 200, 100, 46, 9)] },
+        { name: "100 blobs × 32 pts",        contours: manyBlobs(100, 32) },
+        { name: "500 blobs × 32 pts",        contours: manyBlobs(500, 32) },
+        { name: "1000 blobs × 16 pts",       contours: manyBlobs(1000, 16) },
+      ];
+
+      const runOnce = (lib, contours) => {
+        const res = lib.tesselate({
+          contours,
+          windingRule: lib.WINDING_NONZERO,
+          elementType: lib.POLYGONS,
+          polySize: 3,
+          vertexSize: 2,
+        });
+        // Touch the output so it isn't optimized away.
+        return (res.elements && res.elements.length) || 0;
+      };
+
+      const bench = (lib, contours, iters, warmup) => {
+        for (let i = 0; i < warmup; i++) runOnce(lib, contours);
+        const samples = new Float64Array(iters);
+        for (let i = 0; i < iters; i++) {
+          const t0 = performance.now();
+          runOnce(lib, contours);
+          samples[i] = performance.now() - t0;
+        }
+        samples.sort();
+        const sum = samples.reduce((a, b) => a + b, 0);
+        return {
+          mean: sum / iters,
+          median: samples[Math.floor(iters / 2)],
+          min: samples[0],
+          max: samples[iters - 1],
+          p95: samples[Math.min(iters - 1, Math.floor(iters * 0.95))],
+        };
+      };
+
+      const fmt = (n) => n.toFixed(3) + " ms";
+
+      document.getElementById("run").addEventListener("click", async () => {
+        const iters = +document.getElementById("iters").value;
+        const warm = +document.getElementById("warm").value;
+        const out = document.getElementById("out");
+        out.innerHTML = "";
+        document.getElementById("log").textContent = "";
+
+        log("loading WASM module…");
+        const TessWasm = await createTess2();
+        log("ready. running " + iters + " iters (" + warm + " warmup) per case…\n");
+
+        const table = document.createElement("table");
+        table.innerHTML = `
+          <tr>
+            <th>case</th>
+            <th>tris</th>
+            <th>JS median</th>
+            <th>JS mean</th>
+            <th>WASM median</th>
+            <th>WASM mean</th>
+            <th>speedup (median)</th>
+          </tr>`;
+        out.appendChild(table);
+
+        for (const c of CASES) {
+          const tris = runOnce(TessJSAdapter, c.contours);
+          // Yield so the UI paints the row-in-progress.
+          await new Promise((r) => setTimeout(r));
+          const js = bench(TessJSAdapter, c.contours, iters, warm);
+          await new Promise((r) => setTimeout(r));
+          const wa = bench(TessWasm, c.contours, iters, warm);
+          const speed = js.median / wa.median;
+          const row = table.insertRow();
+          row.innerHTML = `
+            <td>${c.name}</td>
+            <td>${tris}</td>
+            <td>${fmt(js.median)}</td>
+            <td>${fmt(js.mean)}</td>
+            <td>${fmt(wa.median)}</td>
+            <td>${fmt(wa.mean)}</td>
+            <td class="${speed > 1 ? "faster" : "slower"}">${speed.toFixed(2)}×</td>`;
+        }
+        log("\ndone.");
+      });
+
+      // The tess2 npm package exposes a slightly different surface than our
+      // WASM wrapper — unify them behind the same .tesselate signature.
+      const TessJSAdapter = {
+        WINDING_NONZERO: Tess2JS.WINDING_NONZERO,
+        POLYGONS: Tess2JS.POLYGONS,
+        tesselate: (opts) => Tess2JS.tesselate(opts),
+      };
+    </script>
+  </body>
+</html>
