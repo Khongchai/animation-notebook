@@ -142,9 +142,11 @@
 
       const dpr = window.devicePixelRatio || 1;
       const resize = () => {
+        const w = window.innerWidth;
+        const h = window.innerHeight;
         for (const c of [canvas, canvas2d]) {
-          c.width = c.clientWidth * dpr;
-          c.height = c.clientHeight * dpr;
+          c.width = w * dpr;
+          c.height = h * dpr;
         }
         gl.viewport(0, 0, canvas.width, canvas.height);
       };
@@ -233,7 +235,8 @@
         return verts;
       };
 
-      const render = () => {
+      const renderGL = () => {
+        console.time("gl");
         gl.clearColor(0.07, 0.07, 0.07, 1);
         gl.clear(gl.COLOR_BUFFER_BIT);
         gl.uniform2f(resLoc, canvas.width, canvas.height);
@@ -242,48 +245,73 @@
         const drawStroke = (pts) => {
           const t = triangulate(pts);
           if (!t || t.length < 6) return;
-          // scale to device pixels for the GL viewport
           const verts = new Float32Array(t.length);
           for (let i = 0; i < t.length; i++) verts[i] = t[i] * dpr;
           gl.bufferData(gl.ARRAY_BUFFER, verts, gl.STREAM_DRAW);
           gl.drawArrays(gl.TRIANGLES, 0, t.length / 2);
         };
 
-        for (const s of strokes) {
-          drawStroke(s);
-        }
+        for (const s of strokes) drawStroke(s);
         if (current && current.length > 1) drawStroke(current);
+        console.timeEnd("gl");
       };
 
-      const pointerPos = (e) => {
-        const r = canvas.getBoundingClientRect();
+      const render2D = () => {
+        console.time("2d");
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.fillStyle = "#121212";
+        ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
+        ctx.fillStyle = "rgb(102, 204, 255)";
+
+        const drawStroke = (pts) => {
+          const outline = getStroke(pts, strokeOptions);
+          const path = getSvgPathFromStroke(outline);
+          if (!path) return;
+          ctx.fill(new Path2D(path));
+        };
+
+        for (const s of strokes) drawStroke(s);
+        if (current && current.length > 1) drawStroke(current);
+        console.timeEnd("2d");
+      };
+
+      const render = () => {
+        if (mode === "gl") renderGL();
+        else render2D();
+      };
+
+      const pointerPos = (e, target) => {
+        const r = target.getBoundingClientRect();
         return [e.clientX - r.left, e.clientY - r.top, e.pressure || 0.5];
       };
 
-      canvas.addEventListener("pointerdown", (e) => {
-        canvas.setPointerCapture(e.pointerId);
-        current = [pointerPos(e)];
-        render();
-      });
-      canvas.addEventListener("pointermove", (e) => {
+      const endStroke = (e, target) => {
         if (!current) return;
-        current.push(pointerPos(e));
-        render();
-      });
-      const endStroke = (e) => {
-        if (!current) return;
-        current.push(pointerPos(e));
+        current.push(pointerPos(e, target));
         if (current.length > 1) strokes.push(current);
         current = null;
         render();
       };
-      canvas.addEventListener("pointerup", endStroke);
-      canvas.addEventListener("pointercancel", endStroke);
-      canvas.addEventListener("dblclick", () => {
-        strokes.length = 0;
-        current = null;
-        render();
-      });
+
+      for (const target of [canvas, canvas2d]) {
+        target.addEventListener("pointerdown", (e) => {
+          target.setPointerCapture(e.pointerId);
+          current = [pointerPos(e, target)];
+          render();
+        });
+        target.addEventListener("pointermove", (e) => {
+          if (!current) return;
+          current.push(pointerPos(e, target));
+          render();
+        });
+        target.addEventListener("pointerup", (e) => endStroke(e, target));
+        target.addEventListener("pointercancel", (e) => endStroke(e, target));
+        target.addEventListener("dblclick", () => {
+          strokes.length = 0;
+          current = null;
+          render();
+        });
+      }
 
       window.addEventListener("resize", () => {
         resize();
