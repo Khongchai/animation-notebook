@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Unistroke Recognizer ($1)</title>
+    <style>
+      html, body { margin: 0; padding: 0; overflow: hidden; height: 100%; background: #111; font-family: ui-monospace, monospace; color: #eee; }
+      canvas { display: block; cursor: crosshair; }
+      #hud {
+        position: fixed; top: 12px; left: 12px; padding: 10px 14px;
+        background: rgba(0,0,0,0.55); border: 1px solid #333; border-radius: 6px;
+        font-size: 13px; line-height: 1.5; pointer-events: none; user-select: none;
+      }
+      #hud .name { font-size: 18px; color: #7cf; }
+      #hud .dim { color: #888; }
+      #controls {
+        position: fixed; top: 12px; right: 12px; display: flex; gap: 8px;
+        font-size: 12px;
+      }
+      #controls button, #controls label {
+        background: #222; color: #eee; border: 1px solid #333; border-radius: 4px;
+        padding: 6px 10px; cursor: pointer;
+      }
+      #controls input { vertical-align: middle; margin-right: 6px; }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+    <div id="hud">
+      <div class="dim">draw a gesture — released stroke gets matched</div>
+      <div class="dim" id="meta">—</div>
+    </div>
+    <div id="controls">
+      <label><input type="checkbox" id="protractor" checked />Protractor</label>
+      <button id="clear">Clear</button>
+    </div>
+  </body>
+  <script src="./unistroke-recognizer.js"></script>
+  <script>
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const metaEl = document.getElementById("meta");
+    const protractorEl = document.getElementById("protractor");
+
+    const recognizer = new DollarRecognizer();
+
+    function drawTemplate(templatePoints, userPoints, color) {
+      // Template points are canonical: centered at origin, indicative angle = 0, 250x250.
+      // Re-rotate by the user's indicative angle and fit into the user's bounding box
+      // so the overlay sits on top of the user's stroke in matching orientation.
+      const userAngle = IndicativeAngle(userPoints);
+      const userBox = BoundingBox(userPoints);
+      const userCentroid = Centroid(userPoints);
+      const size = Math.max(userBox.Width, userBox.Height, 40);
+
+      const rotated = RotateBy(templatePoints, userAngle);
+      const tBox = BoundingBox(rotated);
+      const tSize = Math.max(tBox.Width, tBox.Height);
+      const s = size / tSize;
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      for (let i = 0; i < rotated.length; i++) {
+        const x = rotated[i].X * s + userCentroid.X;
+        const y = rotated[i].Y * s + userCentroid.Y;
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function resize() {
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = window.innerWidth * dpr;
+      canvas.height = window.innerHeight * dpr;
+      canvas.style.width = window.innerWidth + "px";
+      canvas.style.height = window.innerHeight + "px";
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = "#fff";
+    }
+    resize();
+    window.addEventListener("resize", resize);
+
+    let drawing = false;
+    let points = [];
+
+    function pos(e) {
+      const t = e.touches ? e.touches[0] : e;
+      return { x: t.clientX, y: t.clientY };
+    }
+
+    function start(e) {
+      drawing = true;
+      points = [];
+      const p = pos(e);
+      points.push(new Point(p.x, p.y));
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y);
+    }
+
+    function move(e) {
+      if (!drawing) return;
+      const p = pos(e);
+      points.push(new Point(p.x, p.y));
+      ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+    }
+
+    function end() {
+      if (!drawing) return;
+      drawing = false;
+      if (points.length < 5) {
+        metaEl.textContent = "too short";
+        return;
+      }
+      const userPoints = points.slice();
+      const r = recognizer.Recognize(points, protractorEl.checked);
+      metaEl.textContent = `score ${r.Score.toFixed(3)} · ${r.Time}ms · ${userPoints.length} pts`;
+      if (r.Score <= 0) return;
+      const match = recognizer.Unistrokes.find((u) => u.Name === r.Name);
+      if (!match) return;
+      drawTemplate(match.Points, userPoints, "#7cf");
+    }
+
+    canvas.addEventListener("mousedown", start);
+    canvas.addEventListener("mousemove", move);
+    window.addEventListener("mouseup", end);
+
+    canvas.addEventListener("touchstart", (e) => { e.preventDefault(); start(e); });
+    canvas.addEventListener("touchmove", (e) => { e.preventDefault(); move(e); });
+    window.addEventListener("touchend", end);
+
+    document.getElementById("clear").addEventListener("click", () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      metaEl.textContent = "—";
+    });
+  </script>
+</html>
