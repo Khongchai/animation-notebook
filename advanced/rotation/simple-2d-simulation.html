@@ -64,7 +64,12 @@
 
     let count = 0;
     draw((dt) => {
-      ω += α * dt;
+      // forward
+      // ω += α * dt;
+      // angle += ω * dt;
+
+      // complete stop
+      ω = Math.max(0, ω + -α * dt);
       angle += ω * dt;
 
       ctx.clearRect(0, 0, w, h);
