@@ -51,12 +51,15 @@
 
     const radius = 200;
 
-    draw((t) => {
-      const theta = t * 0.01;
-      const rotation = {
-        x: theta,
-        y: theta,
-      };
+    const angularMomentum = {
+      angle: 0,
+      // angular velocity
+      // constant per frame. t not used yet.
+      omega: 0.01,
+    };
+
+    draw(() => {
+      angularMomentum.angle += angularMomentum.omega;
 
       ctx.clearRect(0, 0, w, h);
 
@@ -70,12 +73,12 @@
       // spokes
       const spokesCount = 4;
       for (let i = 0; i < spokesCount; i++) {
-        const angle = (i / spokesCount) * Math.PI * 2;
+        const spokeAngle = (i / spokesCount) * Math.PI * 2;
         ctx.beginPath();
         ctx.moveTo(w / 2, h / 2);
         ctx.lineTo(
-          Math.cos(rotation.x + angle) * radius + w / 2,
-          Math.sin(rotation.y + angle) * radius + h / 2,
+          Math.cos(angularMomentum.angle + spokeAngle) * radius + w / 2,
+          Math.sin(angularMomentum.angle + spokeAngle) * radius + h / 2,
         );
         ctx.stroke();
       }
