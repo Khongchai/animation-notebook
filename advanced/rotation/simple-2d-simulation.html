@@ -54,17 +54,13 @@
 
     const radius = 200;
 
-    const angleAndVelocity = {
-      angle: 0,
-      // angular velocity
-      // constant per frame. t not used yet.
-      omega: 0.01,
-    };
+    let angle = 0;
 
-    draw((t) => {
-      // new version
-      angleAndVelocity.angle += angleAndVelocity.omega;
-      const angle = angleAndVelocity.angle;
+    let count = 0;
+    draw((dt) => {
+      // one full turn takes (2 * Math.PI) / (16.67 / 1000) frames
+      const omega = dt;
+      angle += omega;
 
       ctx.clearRect(0, 0, w, h);
 
@@ -85,6 +81,13 @@
           Math.cos(angle + spokeAngle) * radius + w / 2,
           Math.sin(angle + spokeAngle) * radius + h / 2,
         );
+        if (i === 0) {
+          ctx.strokeStyle = "green";
+          ctx.lineWidth = 10;
+        } else {
+          ctx.strokeStyle = "white";
+          ctx.lineWidth = 1;
+        }
         ctx.stroke();
       }
     });
