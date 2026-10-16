@@ -68,13 +68,20 @@
       // ω += α * dt;
       // angle += ω * dt;
 
-      // first friction variant
-      // ω = Math.max(0, ω + -α * dt);
-      // angle += ω * dt;
+      // two friction variants, one constant, the other depends on velocity (omega) itself.
+      {
+        // first friction variant
+        // this one is friction that stays the same (alpha is contant) like
+        // rubbing brake pad, or a bearing
+        // ω = Math.max(0, ω + -α * dt);
+        // angle += ω * dt;
 
-      // second friction variant
-      ω *= 0.99;
-      angle += ω * dt;
+        // second friction variant
+        // this variant of friction depends on omega itself (air resistance for example)
+        α = -(ω * 0.1);
+        ω = ω + α * dt;
+        angle += ω * dt;
+      }
 
       ctx.clearRect(0, 0, w, h);
 
