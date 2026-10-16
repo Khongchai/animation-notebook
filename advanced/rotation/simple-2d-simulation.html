@@ -38,7 +38,7 @@
         const dt = next - last;
         last = next;
         const timeSinceLastFrameSeconds = dt / 1000;
-        callback(timeSinceLastFrameSeconds);
+        callback(Math.min(timeSinceLastFrameSeconds, 0.1));
         draw(callback);
       });
     }
