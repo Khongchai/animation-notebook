@@ -57,21 +57,20 @@
 
     const radius = 200;
 
+    // velocity
     let omega = Math.PI * 2;
+    // acceleration
     let alpha = Math.PI * 2 * (1 / 10);
     let friction = Math.PI * 2 * (5 / 10);
     let angle = 0;
+    const drag = 0.6;
 
     let count = 0;
     draw((dt) => {
-      // constant friction from braking.
-      omega += -friction * dt;
-      // dynamic drag from the air
-      const drag = 0.6;
-      omega = omega + -(omega * drag) * dt;
-      omega += alpha * dt;
+      // note to self, drag multiples omega because it depends on velocity
+      omega = (omega - friction * dt) * (1 - drag * dt) + alpha * dt;
       omega = Math.max(0, omega);
-      angle += omega * dt;
+      angle = angle + omega * dt;
 
       ctx.clearRect(0, 0, w, h);
 
@@ -135,8 +134,8 @@
         {
           title: "α (rad/s²)",
           lines: [
-            { name: "α", color: "#ff6b6b", get: () => alpha },
-            { name: "αNeg", color: "#ffa94d", get: () => -alpha },
+            { name: "drive α", color: "#ff6b6b", get: () => alpha },
+            { name: "net α", color: "#ffa94d", get: () => netAlpha },
           ],
         },
         {
@@ -152,10 +151,20 @@
       /** @type {{ t: number, v: number[][] }[]} */
       let samples = [];
       let t0 = /** @type {number | null} */ (null);
+      let prevNow = /** @type {number | null} */ (null);
+      let prevOmega = omega;
+      let netAlpha = 0;
 
       function frame(/** @type {number} */ now) {
         if (t0 == null) t0 = now;
         const t = (now - t0) / 1000;
+
+        if (prevNow != null) {
+          const step = Math.min((now - prevNow) / 1000, 0.1);
+          if (step > 0) netAlpha = (omega - prevOmega) / step;
+        }
+        prevNow = now;
+        prevOmega = omega;
 
         samples.push({
           t,
