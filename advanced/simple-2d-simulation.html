@@ -51,21 +51,34 @@
 
     const radius = 200;
 
-    ctx.beginPath();
-    ctx.arc(w / 2, h / 2, radius, 0, Math.PI * 2);
-    ctx.strokeStyle = "white";
-    ctx.stroke();
+    draw((t) => {
+      const theta = t * 0.01;
+      const rotation = {
+        x: theta,
+        y: theta,
+      };
 
-    const spokesCount = 4;
-    for (let i = 0; i < spokesCount; i++) {
-      const angle = (i / spokesCount) * Math.PI * 2;
+      ctx.clearRect(0, 0, w, h);
+
+      // circle
+      // doesn't have anything to do with the rotation I'm about to try out
       ctx.beginPath();
-      ctx.moveTo(w / 2, h / 2);
-      ctx.lineTo(
-        Math.cos(angle) * radius + w / 2,
-        Math.sin(angle) * radius + h / 2,
-      );
+      ctx.arc(w / 2, h / 2, radius, 0, Math.PI * 2);
+      ctx.strokeStyle = "white";
       ctx.stroke();
-    }
+
+      // spokes
+      const spokesCount = 4;
+      for (let i = 0; i < spokesCount; i++) {
+        const angle = (i / spokesCount) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(w / 2, h / 2);
+        ctx.lineTo(
+          Math.cos(rotation.x + angle) * radius + w / 2,
+          Math.sin(rotation.y + angle) * radius + h / 2,
+        );
+        ctx.stroke();
+      }
+    });
   </script>
 </html>
