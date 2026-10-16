@@ -78,7 +78,8 @@
 
         // second friction variant
         // this variant of friction depends on omega itself (air resistance for example)
-        α = -(ω * 0.1);
+        // 0.6 came from 0.99. Try re-arranging the equation and 0.6 will come out.
+        α = -(ω * 0.6);
         ω = ω + α * dt;
         angle += ω * dt;
       }
