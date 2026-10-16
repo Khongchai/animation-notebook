@@ -29,9 +29,12 @@
   <script>
     // @ts-check
     // Not used in the example below.
-    let last = 0;
+    let last = /** @type {number | null} */ (null);
     function draw(/** @type {(t: number) => void} */ callback) {
       requestAnimationFrame((next) => {
+        if (last == null) {
+          last = next;
+        }
         const dt = next - last;
         last = next;
         const timeSinceLastFrameSeconds = dt / 1000;
