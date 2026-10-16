@@ -57,32 +57,21 @@
 
     const radius = 200;
 
-    // velociy in radians per second.
-    let ω = Math.PI * 2;
-    let α = Math.PI * 2 * (1 / 10);
+    let omega = Math.PI * 2;
+    let alpha = Math.PI * 2 * (1 / 10);
+    let friction = Math.PI * 2 * (5 / 10);
     let angle = 0;
 
     let count = 0;
     draw((dt) => {
-      // forward
-      // ω += α * dt;
-      // angle += ω * dt;
-
-      // two friction variants, one constant, the other depends on velocity (omega) itself.
-      {
-        // first friction variant
-        // this one is friction that stays the same (alpha is contant) like
-        // rubbing brake pad, or a bearing
-        // ω = Math.max(0, ω + -α * dt);
-        // angle += ω * dt;
-
-        // second friction variant
-        // this variant of friction depends on omega itself (air resistance for example)
-        // 0.6 came from 0.99. Try re-arranging the equation and 0.6 will come out.
-        α = -(ω * 0.6);
-        ω = ω + α * dt;
-        angle += ω * dt;
-      }
+      // constant friction from braking.
+      omega += -friction * dt;
+      // dynamic drag from the air
+      const drag = 0.6;
+      omega = omega + -(omega * drag) * dt;
+      omega += alpha * dt;
+      omega = Math.max(0, omega);
+      angle += omega * dt;
 
       ctx.clearRect(0, 0, w, h);
 
@@ -94,6 +83,10 @@
       ctx.stroke();
 
       // spokes
+      // const balls = [{
+      //   mass: 1,
+      //   distance:
+      // }]
       const spokesCount = 4;
       for (let i = 0; i < spokesCount; i++) {
         const spokeAngle = (i / spokesCount) * Math.PI * 2;
@@ -142,13 +135,13 @@
         {
           title: "α (rad/s²)",
           lines: [
-            { name: "α", color: "#ff6b6b", get: () => α },
-            { name: "αNeg", color: "#ffa94d", get: () => -α },
+            { name: "α", color: "#ff6b6b", get: () => alpha },
+            { name: "αNeg", color: "#ffa94d", get: () => -alpha },
           ],
         },
         {
           title: "ω (rad/s)",
-          lines: [{ name: "ω", color: "#4dabf7", get: () => ω }],
+          lines: [{ name: "ω", color: "#4dabf7", get: () => omega }],
         },
         {
           title: "angle (rad)",
