@@ -61,10 +61,11 @@
 
     // velociy in radians per second.
     let ω = Math.PI * 2;
-    let α = 0;
+    let α = Math.PI * 2 * (1 / 10);
 
     let count = 0;
     draw((dt) => {
+      ω += α * dt;
       angle += ω * dt;
 
       ctx.clearRect(0, 0, w, h);
