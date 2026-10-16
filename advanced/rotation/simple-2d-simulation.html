@@ -60,13 +60,11 @@
     // velociy in radians per second.
     let ω = Math.PI * 2;
     let α = Math.PI * 2 * (1 / 10);
-    let αNeg = -α;
     let angle = 0;
 
     let count = 0;
     draw((dt) => {
-      // ω += α * dt;
-      ω += αNeg * dt;
+      ω += α * dt;
       angle += ω * dt;
 
       ctx.clearRect(0, 0, w, h);
@@ -98,5 +96,179 @@
         ctx.stroke();
       }
     });
+  </script>
+  <!-- Visualization area by claude -->
+  <script>
+    // Reads α, αNeg, ω, angle from the script above (top-level `let`s are
+    // shared between classic <script> tags) and plots their full history.
+    (() => {
+      const GRAPH_HEIGHT = 0.4; // fraction of the screen height
+      const MAX_SAMPLES = 2000; // thin out history past this to stay fast
+
+      // Overlay canvas pinned to the bottom of the screen
+      const gc = document.createElement("canvas");
+      gc.style.cssText =
+        "position:fixed;left:0;bottom:0;width:100%;" +
+        `height:${GRAPH_HEIGHT * 100}%;pointer-events:none;`;
+      document.body.appendChild(gc);
+      const g = /** @type {CanvasRenderingContext2D} */ (gc.getContext("2d"));
+      const dpr = devicePixelRatio;
+
+      function resize() {
+        gc.width = gc.clientWidth * dpr;
+        gc.height = gc.clientHeight * dpr;
+      }
+      resize();
+      addEventListener("resize", resize);
+
+      const panels = [
+        {
+          title: "α (rad/s²)",
+          lines: [
+            { name: "α", color: "#ff6b6b", get: () => α },
+            { name: "αNeg", color: "#ffa94d", get: () => -α },
+          ],
+        },
+        {
+          title: "ω (rad/s)",
+          lines: [{ name: "ω", color: "#4dabf7", get: () => ω }],
+        },
+        {
+          title: "angle (rad)",
+          lines: [{ name: "angle", color: "#69db7c", get: () => angle }],
+        },
+      ];
+
+      /** @type {{ t: number, v: number[][] }[]} */
+      let samples = [];
+      let t0 = /** @type {number | null} */ (null);
+
+      function frame(/** @type {number} */ now) {
+        if (t0 == null) t0 = now;
+        const t = (now - t0) / 1000;
+
+        samples.push({
+          t,
+          v: panels.map((p) => p.lines.map((l) => l.get())),
+        });
+
+        // Keep every other point once we have too many (always keep the newest)
+        if (samples.length > MAX_SAMPLES) {
+          const lastIndex = samples.length - 1;
+          samples = samples.filter((_, i) => i % 2 === 0 || i === lastIndex);
+        }
+
+        render(t);
+        requestAnimationFrame(frame);
+      }
+
+      function render(/** @type {number} */ t) {
+        const W = gc.width;
+        const H = gc.height;
+        g.clearRect(0, 0, W, H);
+        g.fillStyle = "rgba(0,0,0,0.75)";
+        g.fillRect(0, 0, W, H);
+
+        const pad = 10 * dpr;
+        const labelW = 70 * dpr;
+        const panelH = H / panels.length;
+        const font = 12 * dpr;
+        g.font = `${font}px system-ui, sans-serif`;
+        g.textBaseline = "middle";
+
+        // Time axis always spans 0 → now
+        const tSpan = Math.max(t, 1e-6);
+
+        panels.forEach((panel, pi) => {
+          const top = pi * panelH + pad;
+          const bottom = (pi + 1) * panelH - pad;
+          const left = labelW;
+          const right = W - pad;
+          const plotH = bottom - top;
+          const plotW = right - left;
+
+          // y range: fit all data, always include 0
+          let min = 0;
+          let max = 0;
+          for (const s of samples) {
+            for (const v of s.v[pi]) {
+              if (v < min) min = v;
+              if (v > max) max = v;
+            }
+          }
+          if (max - min < 1e-6) {
+            max += 1;
+            min -= 1;
+          }
+          const margin = (max - min) * 0.1;
+          max += margin;
+          min -= margin;
+
+          const yOf = (/** @type {number} */ v) =>
+            bottom - ((v - min) / (max - min)) * plotH;
+          const xOf = (/** @type {number} */ st) => left + (st / tSpan) * plotW;
+
+          // frame
+          g.strokeStyle = "rgba(255,255,255,0.15)";
+          g.lineWidth = 1 * dpr;
+          g.setLineDash([]);
+          g.strokeRect(left, top, plotW, plotH);
+
+          // zero line
+          g.strokeStyle = "rgba(255,255,255,0.35)";
+          g.setLineDash([4 * dpr, 4 * dpr]);
+          g.beginPath();
+          g.moveTo(left, yOf(0));
+          g.lineTo(right, yOf(0));
+          g.stroke();
+          g.setLineDash([]);
+
+          // axis numbers
+          g.fillStyle = "rgba(255,255,255,0.5)";
+          g.textAlign = "right";
+          g.fillText(max.toFixed(2), left - 6 * dpr, top + font / 2);
+          g.fillText(min.toFixed(2), left - 6 * dpr, bottom - font / 2);
+          g.fillText("0", left - 6 * dpr, yOf(0));
+
+          // time labels on the bottom panel
+          if (pi === panels.length - 1) {
+            g.textAlign = "left";
+            g.fillText("0s", left + 4 * dpr, bottom - font / 2);
+            g.textAlign = "right";
+            g.fillText(`${t.toFixed(1)}s`, right - 4 * dpr, bottom - font / 2);
+          }
+
+          // lines
+          panel.lines.forEach((line, li) => {
+            g.strokeStyle = line.color;
+            g.lineWidth = 2 * dpr;
+            g.beginPath();
+            samples.forEach((s, i) => {
+              const x = xOf(s.t);
+              const y = yOf(s.v[pi][li]);
+              if (i === 0) g.moveTo(x, y);
+              else g.lineTo(x, y);
+            });
+            g.stroke();
+          });
+
+          // title + live values
+          g.textAlign = "left";
+          g.fillStyle = "white";
+          let x = left + 8 * dpr;
+          const y = top + font;
+          g.fillText(panel.title, x, y);
+          x += g.measureText(panel.title).width + 16 * dpr;
+          panel.lines.forEach((line) => {
+            const text = `${line.name} = ${line.get().toFixed(3)}`;
+            g.fillStyle = line.color;
+            g.fillText(text, x, y);
+            x += g.measureText(text).width + 16 * dpr;
+          });
+        });
+      }
+
+      requestAnimationFrame(frame);
+    })();
   </script>
 </html>
