@@ -29,12 +29,15 @@
   <script>
     // @ts-check
     // Not used in the example below.
-    let tick = 0;
+    let last = 0;
     function draw(/** @type {(t: number) => void} */ callback) {
-      callback(tick);
-
-      tick++;
-      requestAnimationFrame(() => draw(callback));
+      requestAnimationFrame((next) => {
+        const dt = next - last;
+        last = next;
+        const timeSinceLastFrameSeconds = dt / 1000;
+        callback(timeSinceLastFrameSeconds);
+        draw(callback);
+      });
     }
   </script>
   <script>
@@ -51,15 +54,17 @@
 
     const radius = 200;
 
-    const angularMomentum = {
+    const angleAndVelocity = {
       angle: 0,
       // angular velocity
       // constant per frame. t not used yet.
       omega: 0.01,
     };
 
-    draw(() => {
-      angularMomentum.angle += angularMomentum.omega;
+    draw((t) => {
+      // new version
+      angleAndVelocity.angle += angleAndVelocity.omega;
+      const angle = angleAndVelocity.angle;
 
       ctx.clearRect(0, 0, w, h);
 
@@ -77,8 +82,8 @@
         ctx.beginPath();
         ctx.moveTo(w / 2, h / 2);
         ctx.lineTo(
-          Math.cos(angularMomentum.angle + spokeAngle) * radius + w / 2,
-          Math.sin(angularMomentum.angle + spokeAngle) * radius + h / 2,
+          Math.cos(angle + spokeAngle) * radius + w / 2,
+          Math.sin(angle + spokeAngle) * radius + h / 2,
         );
         ctx.stroke();
       }
