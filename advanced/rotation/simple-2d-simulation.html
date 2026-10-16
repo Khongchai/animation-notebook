@@ -57,15 +57,16 @@
 
     const radius = 200;
 
-    let angle = 0;
-
     // velociy in radians per second.
     let ω = Math.PI * 2;
     let α = Math.PI * 2 * (1 / 10);
+    let αNeg = -α;
+    let angle = 0;
 
     let count = 0;
     draw((dt) => {
-      ω += α * dt;
+      // ω += α * dt;
+      ω += αNeg * dt;
       angle += ω * dt;
 
       ctx.clearRect(0, 0, w, h);
