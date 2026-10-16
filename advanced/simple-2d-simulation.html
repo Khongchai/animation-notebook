@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+    <style>
+      html,
+      body {
+        border: 0;
+        padding: 0;
+        margin: 0;
+        width: 100%;
+        height: 100%;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body style="background: black">
+    <div>
+      <canvas id="canvas"></canvas>
+    </div>
+  </body>
+  <script>
+    // @ts-check
+    // Not used in the example below.
+    let tick = 0;
+    function draw(/** @type {(t: number) => void} */ callback) {
+      callback(tick);
+
+      tick++;
+      requestAnimationFrame(() => draw(callback));
+    }
+  </script>
+  <script>
+    const canvas = /** @type {HTMLCanvasElement} */ (
+      document.getElementById("canvas")
+    );
+    const w = window.innerWidth * devicePixelRatio;
+    const h = window.innerHeight * devicePixelRatio;
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = /** @type {CanvasRenderingContext2D} */ (
+      canvas.getContext("2d")
+    );
+
+    const radius = 200;
+
+    ctx.beginPath();
+    ctx.arc(w / 2, h / 2, radius, 0, Math.PI * 2);
+    ctx.strokeStyle = "white";
+    ctx.stroke();
+
+    const spokesCount = 4;
+    for (let i = 0; i < spokesCount; i++) {
+      const angle = (i / spokesCount) * Math.PI * 2;
+      ctx.beginPath();
+      ctx.moveTo(w / 2, h / 2);
+      ctx.lineTo(
+        Math.cos(angle) * radius + w / 2,
+        Math.sin(angle) * radius + h / 2,
+      );
+      ctx.stroke();
+    }
+  </script>
+</html>
