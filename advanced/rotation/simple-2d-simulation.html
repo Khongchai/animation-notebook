@@ -68,8 +68,12 @@
       // ω += α * dt;
       // angle += ω * dt;
 
-      // complete stop
-      ω = Math.max(0, ω + -α * dt);
+      // first friction variant
+      // ω = Math.max(0, ω + -α * dt);
+      // angle += ω * dt;
+
+      // second friction variant
+      ω *= 0.99;
       angle += ω * dt;
 
       ctx.clearRect(0, 0, w, h);
