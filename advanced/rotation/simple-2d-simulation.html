@@ -68,7 +68,11 @@
     let count = 0;
     draw((dt) => {
       // note to self, drag multiples omega because it depends on velocity
-      omega = (omega - friction * dt) * (1 - drag * dt) + alpha * dt;
+      const brake = friction;
+      const _drag = drag * omega;
+      const drive = alpha;
+      const netAlpha = drive - (brake + _drag);
+      omega += netAlpha * dt;
       omega = Math.max(0, omega);
       angle = angle + omega * dt;
 
