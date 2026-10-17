@@ -79,25 +79,39 @@
       ctx.clearRect(0, 0, w, h);
 
       // circle
-      // doesn't have anything to do with the rotation I'm about to try out
+      // doesn't have anything to do with the rotation.
+      // Just here to make a nice-looking wheel.
       ctx.beginPath();
       ctx.arc(w / 2, h / 2, radius, 0, Math.PI * 2);
       ctx.strokeStyle = "white";
       ctx.stroke();
 
-      // spokes
-      // const balls = [{
-      //   mass: 1,
-      //   distance:
-      // }]
-      const spokesCount = 4;
-      for (let i = 0; i < spokesCount; i++) {
-        const spokeAngle = (i / spokesCount) * Math.PI * 2;
+      // draw spokes and balls
+      const balls = [
+        {
+          mass: 5,
+          r: 0.25,
+        },
+        {
+          mass: 20,
+          r: 0.5,
+        },
+        {
+          mass: 10,
+          r: 0.75,
+        },
+        {
+          mass: 15,
+          r: 1,
+        },
+      ];
+      for (let i = 0; i < balls.length; i++) {
+        const drawAngle = angle + (i / balls.length) * Math.PI * 2;
         ctx.beginPath();
         ctx.moveTo(w / 2, h / 2);
         ctx.lineTo(
-          Math.cos(angle + spokeAngle) * radius + w / 2,
-          Math.sin(angle + spokeAngle) * radius + h / 2,
+          Math.cos(drawAngle) * radius + w / 2,
+          Math.sin(drawAngle) * radius + h / 2,
         );
         if (i === 0) {
           ctx.strokeStyle = "green";
@@ -107,6 +121,17 @@
           ctx.lineWidth = 1;
         }
         ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(
+          w / 2 + Math.cos(drawAngle) * balls[i].r * radius,
+          h / 2 + Math.sin(drawAngle) * balls[i].r * radius,
+          balls[i].mass,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fillStyle = "black";
+        ctx.fill();
       }
     });
   </script>
