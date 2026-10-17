@@ -122,14 +122,10 @@
         }
         ctx.stroke();
 
+        const bx = w / 2 + Math.cos(drawAngle) * balls[i].r * radius;
+        const by = h / 2 + Math.sin(drawAngle) * balls[i].r * radius;
         ctx.beginPath();
-        ctx.arc(
-          w / 2 + Math.cos(drawAngle) * balls[i].r * radius,
-          h / 2 + Math.sin(drawAngle) * balls[i].r * radius,
-          balls[i].mass,
-          0,
-          Math.PI * 2,
-        );
+        ctx.arc(bx, by, balls[i].mass, 0, Math.PI * 2);
         ctx.fillStyle = "black";
         ctx.fill();
       }
