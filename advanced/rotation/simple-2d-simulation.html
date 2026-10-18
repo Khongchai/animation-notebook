@@ -118,14 +118,12 @@
     }
 
     // the fixed angular momentum!
-    const L = omega * ballsMomentOfInertia();
+    let L = omega * ballsMomentOfInertia();
 
     let count = 0;
     draw((dt) => {
       // the updated moment of inertia
       const I = ballsMomentOfInertia();
-      const updatedL = omega * I;
-      const ratio = updatedL / L;
 
       // note to self, drag multiples omega because it depends on velocity
       const brakeTorque = friction;
@@ -136,8 +134,8 @@
       // from F = ma, in this case, it's a = F/m and m is I for
       // this case.
       const netAlpha = netTorque / I;
+      omega = L / I;
       omega += netAlpha * dt;
-      omega = omega / ratio ** 2;
       omega = Math.max(0, omega);
       angle = angle + omega * dt;
 
@@ -178,13 +176,23 @@
     });
   </script>
   <!-- interaction area -->
+  <!-- interaction area -->
   <script>
     const SPEED = 0.5; // r units per second
     const held = { ArrowUp: false, ArrowDown: false };
-    const selected = new Set();
+    let selected = /** @type {number | null} */ (null);
 
-    function toggle(i) {
-      selected.has(i) ? selected.delete(i) : selected.add(i);
+    function select(i) {
+      selected = selected === i ? null : i;
+    }
+
+    function cycle(step) {
+      const n = balls.length;
+      if (selected == null) {
+        selected = Math.floor(Math.random() * n);
+      } else {
+        selected = (selected + step + n) % n;
+      }
     }
 
     function spokeAngle(i) {
@@ -197,9 +205,19 @@
         e.preventDefault();
         return;
       }
-      if (e.key === "Escape") selected.clear();
+      if (e.key === "ArrowRight") {
+        cycle(1);
+        e.preventDefault();
+        return;
+      }
+      if (e.key === "ArrowLeft") {
+        cycle(-1);
+        e.preventDefault();
+        return;
+      }
+      if (e.key === "Escape") selected = null;
       const n = parseInt(e.key);
-      if (n >= 1 && n <= balls.length) toggle(n - 1);
+      if (n >= 1 && n <= balls.length) select(n - 1);
     });
     addEventListener("keyup", (e) => {
       if (e.key in held) held[e.key] = false;
@@ -209,7 +227,7 @@
     addEventListener("click", (e) => {
       const x = e.clientX * devicePixelRatio - w / 2;
       const y = e.clientY * devicePixelRatio - h / 2;
-      if (Math.hypot(x, y) > radius * 1.2) return; // ignore clicks far from the wheel
+      if (Math.hypot(x, y) > radius * 1.2) return;
       const clickAngle = Math.atan2(y, x);
       let best = -1;
       let bestDiff = Infinity;
@@ -221,7 +239,7 @@
           best = i;
         }
       });
-      if (bestDiff < 0.3) toggle(best);
+      if (bestDiff < 0.3) select(best);
     });
 
     let prev = null;
@@ -232,22 +250,23 @@
       const dir = (held.ArrowUp ? 1 : 0) - (held.ArrowDown ? 1 : 0);
       if (dir) {
         balls.forEach((b, i) => {
-          if (selected.size && !selected.has(i)) return;
+          if (selected != null && i !== selected) return;
           b.r = Math.min(1, Math.max(0, b.r + dir * SPEED * dt));
         });
       }
 
-      // highlight selected balls (drawn on top of the main wheel)
-      selected.forEach((i) => {
-        const a = spokeAngle(i);
-        const bx = w / 2 + Math.cos(a) * balls[i].r * radius;
-        const by = h / 2 + Math.sin(a) * balls[i].r * radius;
+      // highlight the selected ball (drawn on top of the main wheel)
+      if (selected != null) {
+        const a = spokeAngle(selected);
+        const b = balls[selected];
+        const bx = w / 2 + Math.cos(a) * b.r * radius;
+        const by = h / 2 + Math.sin(a) * b.r * radius;
         ctx.beginPath();
-        ctx.arc(bx, by, balls[i].mass + 6, 0, Math.PI * 2);
+        ctx.arc(bx, by, b.mass + 6, 0, Math.PI * 2);
         ctx.strokeStyle = "yellow";
         ctx.lineWidth = 3;
         ctx.stroke();
-      });
+      }
 
       requestAnimationFrame(tick);
     }
