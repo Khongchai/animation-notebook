@@ -100,7 +100,7 @@
       const dragTorque = drag * omega;
       const driveTorque = alpha;
       const netTorque = driveTorque - (brakeTorque + dragTorque);
-      // from F = ma, in this case, it's a = m/F and m is I for
+      // from F = ma, in this case, it's a = F/m and m is I for
       // this case.
       const netAlpha = netTorque / I;
       omega += netAlpha * dt;
