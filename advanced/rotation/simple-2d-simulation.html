@@ -65,7 +65,7 @@
     );
 
     // velocity
-    let omega = 0;
+    let omega = 10;
     // acceleration
     let alpha = Math.PI * 2 * 100000;
     console.info("starting");
@@ -109,23 +109,35 @@
         r: 1,
       },
     ];
-    // moment of inertia
-    const I = balls.reduce((prev, cur) => {
-      const perpendicularDistance = cur.r * radius;
-      return prev + cur.mass * perpendicularDistance ** 2;
-    }, 0);
+    function ballsMomentOfInertia() {
+      const out = balls.reduce((prev, cur) => {
+        const perpendicularDistance = cur.r * radius;
+        return prev + cur.mass * perpendicularDistance ** 2;
+      }, 0);
+      return out;
+    }
+
+    // the fixed angular momentum!
+    const L = omega * ballsMomentOfInertia();
 
     let count = 0;
     draw((dt) => {
+      // the updated moment of inertia
+      const I = ballsMomentOfInertia();
+      const updatedL = omega * I;
+      const ratio = updatedL / L;
+
       // note to self, drag multiples omega because it depends on velocity
       const brakeTorque = friction;
       const dragTorque = drag * omega;
       const driveTorque = alpha;
-      const netTorque = driveTorque - (brakeTorque + dragTorque);
+      // const netTorque = driveTorque - (brakeTorque + dragTorque);
+      const netTorque = 0;
       // from F = ma, in this case, it's a = F/m and m is I for
       // this case.
       const netAlpha = netTorque / I;
       omega += netAlpha * dt;
+      omega = omega / ratio ** 2;
       omega = Math.max(0, omega);
       angle = angle + omega * dt;
 
@@ -164,6 +176,82 @@
         ctx.fill();
       }
     });
+  </script>
+  <!-- interaction area -->
+  <script>
+    const SPEED = 0.5; // r units per second
+    const held = { ArrowUp: false, ArrowDown: false };
+    const selected = new Set();
+
+    function toggle(i) {
+      selected.has(i) ? selected.delete(i) : selected.add(i);
+    }
+
+    function spokeAngle(i) {
+      return angle + (i / balls.length) * Math.PI * 2;
+    }
+
+    addEventListener("keydown", (e) => {
+      if (e.key in held) {
+        held[e.key] = true;
+        e.preventDefault();
+        return;
+      }
+      if (e.key === "Escape") selected.clear();
+      const n = parseInt(e.key);
+      if (n >= 1 && n <= balls.length) toggle(n - 1);
+    });
+    addEventListener("keyup", (e) => {
+      if (e.key in held) held[e.key] = false;
+    });
+
+    // Click: select the spoke whose direction is closest to the click
+    addEventListener("click", (e) => {
+      const x = e.clientX * devicePixelRatio - w / 2;
+      const y = e.clientY * devicePixelRatio - h / 2;
+      if (Math.hypot(x, y) > radius * 1.2) return; // ignore clicks far from the wheel
+      const clickAngle = Math.atan2(y, x);
+      let best = -1;
+      let bestDiff = Infinity;
+      balls.forEach((_, i) => {
+        const d = clickAngle - spokeAngle(i);
+        const diff = Math.abs(Math.atan2(Math.sin(d), Math.cos(d)));
+        if (diff < bestDiff) {
+          bestDiff = diff;
+          best = i;
+        }
+      });
+      if (bestDiff < 0.3) toggle(best);
+    });
+
+    let prev = null;
+    function tick(now) {
+      const dt = prev == null ? 0 : Math.min((now - prev) / 1000, 0.1);
+      prev = now;
+
+      const dir = (held.ArrowUp ? 1 : 0) - (held.ArrowDown ? 1 : 0);
+      if (dir) {
+        balls.forEach((b, i) => {
+          if (selected.size && !selected.has(i)) return;
+          b.r = Math.min(1, Math.max(0, b.r + dir * SPEED * dt));
+        });
+      }
+
+      // highlight selected balls (drawn on top of the main wheel)
+      selected.forEach((i) => {
+        const a = spokeAngle(i);
+        const bx = w / 2 + Math.cos(a) * balls[i].r * radius;
+        const by = h / 2 + Math.sin(a) * balls[i].r * radius;
+        ctx.beginPath();
+        ctx.arc(bx, by, balls[i].mass + 6, 0, Math.PI * 2);
+        ctx.strokeStyle = "yellow";
+        ctx.lineWidth = 3;
+        ctx.stroke();
+      });
+
+      requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
   </script>
   <!-- Visualization area by claude -->
   <script>
