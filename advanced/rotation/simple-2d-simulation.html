@@ -129,15 +129,12 @@
       const brakeTorque = friction;
       const dragTorque = drag * omega;
       const driveTorque = alpha;
-      // const netTorque = driveTorque - (brakeTorque + dragTorque);
-      const netTorque = 0;
+      const netTorque = driveTorque - (brakeTorque + dragTorque);
       // from F = ma, in this case, it's a = F/m and m is I for
       // this case.
-      const netAlpha = netTorque / I;
+      L = Math.max(0, L + netTorque * dt);
       omega = L / I;
-      omega += netAlpha * dt;
-      omega = Math.max(0, omega);
-      angle = angle + omega * dt;
+      angle += omega * dt;
 
       ctx.clearRect(0, 0, w, h);
 

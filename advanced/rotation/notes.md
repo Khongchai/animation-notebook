@@ -14,3 +14,10 @@ L = (I = mass * (radius ** 2)) * omega
 ```
 
 A skater pulling her arm in reduces `r` significantly, therefore the `I` part is reduced and therefore omega(velocity) must increase.
+
+# Notes
+
+- Angular momentum = L = I * omega: how much rotation the wheel has.
+- Moment of inertia I = Σ m × R², how hard it is to turn.
+- Torque changes L, no torque (external force) L is coserved and stays the same.
+- Friction is a torque. The wheel stops because of it.
