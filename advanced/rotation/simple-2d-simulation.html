@@ -55,23 +55,54 @@
       canvas.getContext("2d")
     );
 
-    const radius = 200;
-
     // velocity
-    let omega = Math.PI * 2;
+    let omega = 0;
     // acceleration
-    let alpha = Math.PI * 2 * (1 / 10);
-    let friction = Math.PI * 2 * (5 / 10);
+    let alpha = Math.PI * 2 * 100000;
+    console.info("starting");
+    setTimeout(() => {
+      console.info("stopping");
+      alpha = 0;
+    }, 5000);
+    let friction = Math.PI * 2 * (100000 * 0.5);
     let angle = 0;
     const drag = 0.6;
+    // draw spokes and balls
+    const radius = 200;
+    const balls = [
+      {
+        mass: 5,
+        r: 0.25,
+      },
+      {
+        mass: 20,
+        r: 0.5,
+      },
+      {
+        mass: 10,
+        r: 0.75,
+      },
+      {
+        mass: 15,
+        r: 1,
+      },
+    ];
+    // moment of inertia
+    const I = balls.reduce((prev, cur) => {
+      const perpendicularDistance = cur.r * radius;
+      return prev + cur.mass * perpendicularDistance ** 2;
+    }, 0);
 
     let count = 0;
     draw((dt) => {
       // note to self, drag multiples omega because it depends on velocity
-      const brake = friction;
-      const _drag = drag * omega;
-      const drive = alpha;
-      const netAlpha = drive - (brake + _drag);
+      const brakeTorque = friction;
+      const dragTorque = drag * omega;
+      const driveTorque = alpha;
+      const netTorque = driveTorque - (brakeTorque + dragTorque);
+      // from F = ma, in this case, it's a = m/F and m is I for
+      // this case.
+      const netAlpha = netTorque / I;
       omega += netAlpha * dt;
       omega = Math.max(0, omega);
       angle = angle + omega * dt;
@@ -85,26 +116,6 @@
       ctx.arc(w / 2, h / 2, radius, 0, Math.PI * 2);
       ctx.strokeStyle = "white";
       ctx.stroke();
-
-      // draw spokes and balls
-      const balls = [
-        {
-          mass: 5,
-          r: 0.25,
-        },
-        {
-          mass: 20,
-          r: 0.5,
-        },
-        {
-          mass: 10,
-          r: 0.75,
-        },
-        {
-          mass: 15,
-          r: 1,
-        },
-      ];
 
       for (let i = 0; i < balls.length; i++) {
         const drawAngle = angle + (i / balls.length) * Math.PI * 2;
