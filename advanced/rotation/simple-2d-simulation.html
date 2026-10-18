@@ -78,6 +78,19 @@
     const drag = 0.6;
     // draw spokes and balls
     const radius = 200;
+    /**
+    Let's say we pull all balls 25% closer.
+    I = mr^2
+    L = I * N
+    L = m * r^2 * μ
+    (0.75 ^2) * L = m * (r * 0.75 * r * 0.75) * μ
+    L = m * (r * 0.75)^2 * μ/(0.75^2)
+
+    Result is 1.777...8x faster spins even with just 25% reduction in distance thanks to
+    the squared in the r.
+
+    And because of the square, if you reduce 75%, r * 0.25, teh result is 16 faster!
+    */
     const balls = [
       {
         mass: 5,
